@@ -48,7 +48,7 @@ class GenerateStubsAction : AnAction() {
         }
 
         val basePath = project.basePath ?: return
-        val outputDir = File(basePath, "typings")
+        val outputDir = File(basePath, ".blender_stubs")
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Generating blender stubs...", true) {
             override fun run(indicator: ProgressIndicator) {
