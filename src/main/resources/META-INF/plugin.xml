@@ -18,4 +18,11 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable
+                parentId="tools"
+                instance="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"
+                id="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"
+                displayName="Blender Probe"/>
+    </extensions>
 </idea-plugin>

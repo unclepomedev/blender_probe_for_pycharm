@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm
 
+import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.OSProcessHandler
 import com.intellij.execution.process.ProcessEvent
@@ -18,13 +19,22 @@ class GenerateStubsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
 
-        val blenderPath = Messages.showInputDialog(
-            project,
-            "Blender executable path:",
-            "Blender Path",
-            Messages.getQuestionIcon()
-        )
-        if (blenderPath.isNullOrBlank()) return
+        val settings = BlenderSettings.getInstance(project)
+        val blenderPath = settings.state.blenderPath
+        if (blenderPath.isBlank()) {
+            val result = Messages.showOkCancelDialog(
+                project,
+                "Blender path is not configured. Please set the path in Settings.",
+                "Configuration Required",
+                "Open Settings",
+                "Cancel",
+                Messages.getWarningIcon()
+            )
+            if (result == Messages.OK) {
+                com.intellij.openapi.options.ShowSettingsUtil.getInstance().showSettingsDialog(project, "Blender Probe")
+            }
+            return
+        }
 
         val basePath = project.basePath ?: return
         val outputDir = File(basePath, "typings")
