@@ -37,7 +37,7 @@ dependencies {
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
         pycharmCommunity("2025.2")
-        pluginVerifier()
+        pluginVerifier("1.398")
         zipSigner()
 //        intellijIdea(providers.gradleProperty("platformVersion"))
 
