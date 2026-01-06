@@ -1,15 +1,21 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.unclepomedev.blenderprobeforpycharm</id>
-    <name>blender_probe_for_pycharm</name>
+    <name>Blender Probe for PyCharm</name>
     <vendor>unclepomedev</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.python</depends>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
 
-    <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.unclepomedev.blenderprobeforpycharm.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.unclepomedev.blenderprobeforpycharm.startup.MyProjectActivity" />
-    </extensions>
+    <actions>
+        <action id="com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction"
+                class="com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction"
+                text="Regenerate Blender Stubs"
+                description="Generates .pyi stubs from a live Blender instance">
+
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>
