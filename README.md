@@ -8,7 +8,8 @@
 
 ## Features
 
-* **Blender API Autocompletion**: Generates Python type stubs (`.pyi`) directly from your running Blender instance. This eliminates red squiggles for `bpy`, `mathutils`, and `bmesh` modules. Generated stubs are automatically marked as a "Source Root" for immediate code insight.
+* **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection and automatically registers them as a Source Root.
+  * Unlike static packages, this guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
 * **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
   * **Visual Feedback**: View results in PyCharm's native test runner UI with green/red bars and tree navigation.
   * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
@@ -40,7 +41,7 @@ To enable code completion for `bpy` modules:
 1.  Open your project in PyCharm.
 2.  Go to **Tools** > **Regenerate Blender Stubs**.
   * *Alternatively, use "Find Action" (Cmd/Ctrl+Shift+A) and search for "Regenerate Blender Stubs".*
-3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root.
+3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root and automatically marked as a Source Root.
 
 > **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is highly recommended to add `.blender_stubs/` to your project's `.gitignore` file.
 
