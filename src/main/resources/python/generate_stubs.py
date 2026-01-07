@@ -1,3 +1,4 @@
+import keyword
 import inspect
 import os
 import sys
@@ -99,8 +100,17 @@ def generate_bpy_types():
             for prop in cls.bl_rna.properties:
                 if prop.identifier == "rna_type": continue
 
+                if keyword.iskeyword(prop.identifier):
+                    raise ValueError(f"FATAL: Found reserved keyword '{prop.identifier}' in Official Blender API. This is a Blender bug.")
+
                 py_type = map_rna_type(prop)
                 content.append(f"    {prop.identifier}: {py_type}")
+                props_written = True
+
+            for func in cls.bl_rna.functions:
+                if keyword.iskeyword(func.identifier):
+                    raise ValueError(f"FATAL: Found reserved keyword '{func.identifier}' in Official Blender API. This is a Blender bug.")
+                content.append(f"    def {func.identifier}(self, *args, **kwargs): ...")
                 props_written = True
 
         if not props_written:
