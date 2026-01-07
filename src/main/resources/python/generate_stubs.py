@@ -103,6 +103,9 @@ def generate_bpy_types():
                 content.append(f"    {prop.identifier}: {py_type}")
                 props_written = True
 
+            for func in cls.bl_rna.functions:
+                content.append(f"    def {func.identifier}(self, ...): ...")
+
         if not props_written:
             content.append("    pass")
 
