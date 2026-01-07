@@ -11,6 +11,7 @@ class BlenderSettingsConfigurable(private val project: Project) : BoundConfigura
 
     private val settings = BlenderSettings.getInstance(project)
 
+    @Suppress("UnstableApiUsage")
     override fun createPanel(): DialogPanel {
         return panel {
             group("General") {

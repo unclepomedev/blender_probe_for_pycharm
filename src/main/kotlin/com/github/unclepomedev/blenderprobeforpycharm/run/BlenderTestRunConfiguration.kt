@@ -26,7 +26,7 @@ class BlenderTestRunConfiguration(
         return BlenderTestSettingsEditor()
     }
 
-    override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState? {
+    override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
         return BlenderTestRunningState(environment, this)
     }
 }
