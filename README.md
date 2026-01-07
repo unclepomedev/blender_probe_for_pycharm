@@ -12,6 +12,7 @@
 * **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
   * **Visual Feedback**: View results in PyCharm's native test runner UI with green/red bars and tree navigation.
   * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
+  * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`, allowing you to import your addon modules directly in tests without manual configuration.
 
 ## Prerequisites
 <!-- Plugin description end -->
@@ -58,11 +59,14 @@ You can run `unittest` scripts inside Blender without leaving PyCharm.
 
 Since the runner uses `--factory-startup` for a clean state, the default scene (Cube, Camera, Light) will be present. It is recommended to clean the scene in your `setUp` method.
 
+> **Note:** The plugin automatically adds your project root to `sys.path`. You can import your local addon modules directly (e.g., `from my_addon import logic`) without manual path setup.
+
 **Example `tests/test_sample.py`:**
 
 ```python
 import unittest
 import bpy
+# from my_addon import logic  <-- Works automatically!
 
 class MyBlenderTest(unittest.TestCase):
     
