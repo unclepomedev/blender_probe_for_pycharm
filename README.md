@@ -1,55 +1,83 @@
-# blender_probe_for_pycharm
+# Blender Probe
 
+**Blender Probe** is a PyCharm plugin designed to streamline Blender Python API (`bpy`) development. It bridges the gap between PyCharm and Blender, providing robust code completion and a fully integrated test runner.
 
-.blender_stubsはignoreすべきと書く
+## Features
 
-![Build](https://github.com/unclepomedev/blender_probe_for_pycharm/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+* **Blender API Autocompletion**: Generates Python type stubs (`.pyi`) directly from your running Blender instance. This eliminates red squiggles for `bpy`, `mathutils`, and `bmesh` modules. Generated stubs are automatically marked as a "Source Root" for immediate code insight.
+* **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
+  * **Visual Feedback**: View results in PyCharm's native test runner UI with green/red bars and tree navigation.
+  * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
 
-## Template ToDo list
-- [x] Create a new [IntelliJ Platform Plugin Template][template] project.
-- [ ] Get familiar with the [template documentation][template].
-- [ ] Adjust the [pluginGroup](./gradle.properties) and [pluginName](./gradle.properties), as well as the [id](./src/main/resources/META-INF/plugin.xml) and [sources package](./src/main/kotlin).
-- [ ] Adjust the plugin description in `README` (see [Tips][docs:plugin-description])
-- [ ] Review the [Legal Agreements](https://plugins.jetbrains.com/docs/marketplace/legal-agreements.html?from=IJPluginTemplate).
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `MARKETPLACE_ID` in the above README badges. You can obtain it once the plugin is published to JetBrains Marketplace.
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
-- [ ] Configure the [CODECOV_TOKEN](https://docs.codecov.com/docs/quick-start) secret for automated test coverage reports on PRs
+## Prerequisites
 
-<!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+* **PyCharm** (Community or Professional) 2025.2+
+* **Blender** 4.2+ or 5.x
+  * *Note: Blender versions 4.1 and older are not supported.*
 
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
+## Configuration
 
-To keep everything working, do not remove `<!-- ... -->` sections. 
-<!-- Plugin description end -->
+Before using the plugin, you must configure the path to your Blender executable.
 
-## Installation
+1.  Go to **Settings/Preferences** > **Tools** > **Blender Probe**.
+2.  Set the **Blender Executable Path**:
+  * **Windows**: `C:\Program Files\Blender Foundation\Blender 5.0\blender.exe`
+  * **macOS**: `/Applications/Blender.app/Contents/MacOS/Blender`
+  * **Linux**: `/usr/bin/blender`
+3.  Click **OK**.
 
-- Using the IDE built-in plugin system:
+## Usage
 
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "blender_probe_for_pycharm"</kbd> >
-  <kbd>Install</kbd>
+### 1. Generating Code Stubs (Autocompletion)
 
-- Using JetBrains Marketplace:
+To enable code completion for `bpy` modules:
 
-  Go to [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID) and install it by clicking the <kbd>Install to ...</kbd> button in case your IDE is running.
+1.  Open your project in PyCharm.
+2.  Go to **Tools** > **Regenerate Blender Stubs**.
+  * *Alternatively, use "Find Action" (Cmd/Ctrl+Shift+A) and search for "Regenerate Blender Stubs".*
+3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root.
 
-  You can also download the [latest release](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID/versions) from JetBrains Marketplace and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+> **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is highly recommended to add `.blender_stubs/` to your project's `.gitignore` file.
 
-- Manually:
+### 2. Running Tests
 
-  Download the [latest release](https://github.com/unclepomedev/blender_probe_for_pycharm/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+You can run `unittest` scripts inside Blender without leaving PyCharm.
 
+1.  Create a standard Python test file (e.g., `tests/test_sample.py`).
+2.  Open **Run/Debug Configurations** (Top right dropdown > Edit Configurations).
+3.  Click the **+** button and select **Blender Test**.
+4.  **Name**: Give it a name (e.g., "All Tests").
+5.  **Test Directory**: Select the folder containing your test scripts.
+6.  Click **Run** (Green Play Button).
 
----
-Plugin based on the [IntelliJ Platform Plugin Template][template].
+#### Writing Tests for Blender Probe
 
-[template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[docs:plugin-description]: https://plugins.jetbrains.com/docs/intellij/plugin-user-experience.html#plugin-description-and-presentation
+Since the runner uses `--factory-startup` for a clean state, the default scene (Cube, Camera, Light) will be present. It is recommended to clean the scene in your `setUp` method.
+
+**Example `tests/test_sample.py`:**
+
+```python
+import unittest
+import bpy
+
+class MyBlenderTest(unittest.TestCase):
+    
+    def setUp(self):
+        # Clear the default scene (Cube, Camera, Light) before each test
+        bpy.ops.wm.read_homefile(use_empty=True)
+
+    def test_create_cube(self):
+        # Verify the scene is empty
+        self.assertEqual(len(bpy.data.objects), 0)
+        
+        # Create a new object
+        bpy.ops.mesh.primitive_cube_add()
+        
+        # Verify creation
+        self.assertEqual(len(bpy.data.objects), 1)
+        self.assertEqual(bpy.context.object.name, "Cube")
+```
+
+## License
+
+Licensed under the MIT License.
