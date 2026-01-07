@@ -1,5 +1,5 @@
 # Blender Probe
-
+<!-- Plugin description -->
 **Blender Probe** is a PyCharm plugin designed to streamline Blender Python API (`bpy`) development. It bridges the gap between PyCharm and Blender, providing robust code completion and a fully integrated test runner.
 
 ## Features
@@ -10,7 +10,7 @@
   * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
 
 ## Prerequisites
-
+<!-- Plugin description end -->
 * **PyCharm** (Community or Professional) 2025.2+
 * **Blender** 4.2+ or 5.x
   * *Note: Blender versions 4.1 and older are not supported.*
