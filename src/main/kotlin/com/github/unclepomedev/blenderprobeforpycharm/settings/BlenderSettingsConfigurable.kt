@@ -17,7 +17,7 @@ class BlenderSettingsConfigurable(private val project: Project) : BoundConfigura
                 row("Blender executable:") {
                     val descriptor = FileChooserDescriptorFactory.createSingleFileOrExecutableAppDescriptor()
                         .withTitle("Select Blender Executable")
-                    textFieldWithBrowseButton(
+                    textFieldWithBrowseButton( // ApiStatus.Experimental
                         project = project,
                         fileChooserDescriptor = descriptor
                     )
