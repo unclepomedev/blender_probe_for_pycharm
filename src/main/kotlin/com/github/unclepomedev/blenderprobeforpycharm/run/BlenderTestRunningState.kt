@@ -43,12 +43,14 @@ class BlenderTestRunningState(
         }
 
         val scriptFile = ScriptResourceUtils.extractResourceScript("python/run_tests.py", "blender_test_runner")
+        val projectPath = project.basePath ?: ""
 
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
             .withParameters("-b", "--factory-startup", "-P", scriptFile.absolutePath, "--", testDir)
             .withCharset(StandardCharsets.UTF_8)
             .withWorkDirectory(project.basePath)
+            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", projectPath)
 
         val processHandler = OSProcessHandler(cmd)
         ProcessTerminatedListener.attach(processHandler)
