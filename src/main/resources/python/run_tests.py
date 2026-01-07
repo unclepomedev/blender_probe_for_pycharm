@@ -2,7 +2,12 @@ import sys
 import os
 import unittest
 
-# ref: https://www.jetbrains.com/help/teamcity/service-messages.html
+project_root = os.environ.get("BLENDER_PROBE_PROJECT_ROOT")
+if project_root and os.path.exists(project_root):
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+        print(f"##teamcity[message text='Added project root to sys.path head: {project_root}' status='NORMAL']")
+
 
 class TeamCityTestResult(unittest.TextTestResult):
     def startTest(self, test):
