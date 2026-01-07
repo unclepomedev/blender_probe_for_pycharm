@@ -2,6 +2,10 @@
 <!-- Plugin description -->
 **Blender Probe** is a PyCharm plugin designed to streamline Blender Python API (`bpy`) development. It bridges the gap between PyCharm and Blender, providing robust code completion and a fully integrated test runner.
 
+> **⚠️ Compatibility Note:**
+> While **Blender Probe** is designed to work across Windows, macOS, and Linux, primary development and extensive testing have been conducted on **macOS**.
+> Windows and Linux support is currently **experimental**. If you encounter any pathing issues or unexpected behavior on these platforms, please [open an issue](https://github.com/unclepomedev/blender_probe_for_pycharm/issues).
+
 ## Features
 
 * **Blender API Autocompletion**: Generates Python type stubs (`.pyi`) directly from your running Blender instance. This eliminates red squiggles for `bpy`, `mathutils`, and `bmesh` modules. Generated stubs are automatically marked as a "Source Root" for immediate code insight.
