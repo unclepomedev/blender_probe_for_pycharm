@@ -328,6 +328,7 @@ def generate_bpy_root():
         "from . import ops as ops",
         "from . import utils as utils",
         "from . import path as path",
+        "from . import msgbus as msgbus",
         "", "data: types.BlendData", "context: types.Context",
     ]
     write_file(BPY_DIR, "__init__.pyi", content)
