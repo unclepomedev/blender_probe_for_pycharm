@@ -1,9 +1,8 @@
-import keyword
+import bpy
 import inspect
+import keyword
 import os
 import sys
-
-import bpy
 
 DEFAULT_OUTPUT_DIR = os.path.join(os.path.dirname(bpy.data.filepath) if bpy.data.filepath else os.getcwd(), "typings")
 
@@ -22,7 +21,6 @@ if "--output" in args:
 BPY_TYPES_DIR = os.path.join(output_dir, "bpy", "types")
 
 
-# Type Mapper: RNA -> Python TypeHint
 def map_rna_type(prop) -> str:
     try:
         type_char = prop.type
@@ -51,6 +49,21 @@ def map_rna_type(prop) -> str:
         return "Any"
 
 
+def format_docstring(doc_str: str, indent: str = "    ") -> str:
+    if not doc_str:
+        return ""
+
+    doc_str = doc_str.replace("\\", "\\\\")
+
+    if '"""' in doc_str:
+        doc_str = doc_str.replace('"""', '\\"\\"\\"')
+
+    if doc_str.endswith('"'):
+        doc_str += " "
+
+    return f'{indent}"""{doc_str}"""'
+
+
 def generate_bpy_types():
     if not os.path.exists(BPY_TYPES_DIR):
         os.makedirs(BPY_TYPES_DIR)
@@ -60,16 +73,18 @@ def generate_bpy_types():
     content = [
         "import sys",
         "import typing",
-        "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence",
+        "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence, TypeVar, Generic",
         "import bpy.types",
         "",
+        "T = TypeVar('T')",
+        "",
         "# Generic definition for collection properties",
-        "class bpy_prop_collection(Sequence[Any]):",
-        "    def values(self) -> List[Any]: ...",
-        "    def items(self) -> List[Tuple[str, Any]]: ...",
-        "    def get(self, key: str, default: Any = None) -> Any: ...",
-        "    def __getitem__(self, key: Union[str, int]) -> Any: ...",
-        "    def __iter__(self) -> typing.Iterator[Any]: ...",
+        "class bpy_prop_collection(Sequence[T], Generic[T]):",
+        "    def values(self) -> List[T]: ...",
+        "    def items(self) -> List[Tuple[str, T]]: ...",
+        "    def get(self, key: str, default: T = None) -> T: ...",
+        "    def __getitem__(self, key: Union[str, int]) -> T: ...",
+        "    def __iter__(self) -> typing.Iterator[T]: ...",
         "    def __len__(self) -> int: ...",
         "",
         "# --- Auto-generated Classes ---",
@@ -91,8 +106,7 @@ def generate_bpy_types():
 
         doc = getattr(cls, "__doc__", None)
         if isinstance(doc, str):
-            doc_clean = doc.replace('"""', "'''")
-            content.append(f'    """{doc_clean}"""')
+            content.append(format_docstring(doc))
 
         props_written = False
 
