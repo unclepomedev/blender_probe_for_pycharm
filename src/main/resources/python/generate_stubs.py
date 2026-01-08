@@ -116,15 +116,18 @@ def map_rna_type(prop) -> str:
 
 
 def get_member_signature(obj):
+    """
+    Get the signature of a function/method.
+    Returns '(*args, **kwargs)' if inspection fails, ensuring valid syntax.
+    """
     try:
-        if inspect.isbuiltin(obj) or inspect.isfunction(obj) or inspect.ismethod(obj):
-            try:
-                return str(inspect.signature(obj))
-            except ValueError:
-                return "(*args, **kwargs)"
+        return str(inspect.signature(obj))
+    except (ValueError, TypeError):
+        pass
     except Exception:
         pass
-    return ""
+
+    return "(*args, **kwargs)"
 
 
 def generate_module_recursive(module_name: str, base_output_dir: str):
@@ -184,8 +187,6 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
 
         elif inspect.isroutine(obj):
             sig = get_member_signature(obj)
-            if not sig: sig = "(*args, **kwargs)"
-
             content.append(f"def {name}{sig} -> Any:")
             content.append(make_doc_block(module_name))
             content.append("    ...")
@@ -313,8 +314,7 @@ def generate_submodules():
     for mod_name in target_modules:
         generate_module_recursive(mod_name, output_dir)
 
-    # Dynamic generation of bpy.ops results in thousands of classes and is too heavy,
-    # so we maintain manual generation as a generic __getattr__ stub.
+    # Manual generation for bpy.ops to avoid overhead
     ops_dir = os.path.join(BPY_DIR, "ops")
     write_file(ops_dir, "__init__.pyi", ["from typing import Any", "def __getattr__(name) -> Any: ..."])
 
