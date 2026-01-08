@@ -51,12 +51,14 @@ class GenerateStubsAction : AnAction() {
         val outputDir = File(basePath, ".blender_stubs")
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Generating blender stubs...", true) {
+            private var virtualOutputDir: VirtualFile? = null
+
             override fun run(indicator: ProgressIndicator) {
                 try {
                     generateStubs(blenderPath, outputDir, indicator)
 
                     indicator.text = "Refreshing file system..."
-                    val virtualOutputDir = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outputDir)
+                    virtualOutputDir = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outputDir)
                     virtualOutputDir?.refresh(false, true)
 
                 } catch (ex: Exception) {
@@ -66,9 +68,8 @@ class GenerateStubsAction : AnAction() {
 
             override fun onSuccess() {
                 Messages.showInfoMessage(project, "Stubs generated in ${outputDir.absolutePath}", "Success")
-                val virtualOutputDir = LocalFileSystem.getInstance().findFileByIoFile(outputDir)
-                if (virtualOutputDir != null) {
-                    markDirectoryAsSourceRoot(project, virtualOutputDir)
+                virtualOutputDir?.let { dir ->
+                    markDirectoryAsSourceRoot(project, dir)
                 }
             }
         })

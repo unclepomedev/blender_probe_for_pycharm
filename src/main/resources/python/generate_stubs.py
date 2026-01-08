@@ -164,14 +164,14 @@ def generate_bpy_types():
 
     prop_col_content = [
         "import typing",
-        "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic",
+        "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic, Optional",
         "",
         "T = TypeVar('T')",
         "",
         "class bpy_prop_collection(Sequence[T], Generic[T]):",
         "    def values(self) -> List[T]: ...",
         "    def items(self) -> List[Tuple[str, T]]: ...",
-        "    def get(self, key: str, default: T = None) -> T: ...",
+        "    def get(self, key: str, default: T = None) -> Optional[T]: ...",
         "    def __getitem__(self, key: Union[str, int]) -> T: ...",
         "    def __iter__(self) -> typing.Iterator[T]: ...",
         "    def __len__(self) -> int: ...",
