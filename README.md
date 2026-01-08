@@ -8,10 +8,12 @@
 
 ## Features
 
-* **Blender API Autocompletion**: Generates Python type stubs (`.pyi`) directly from your running Blender instance. This eliminates red squiggles for `bpy`, `mathutils`, and `bmesh` modules. Generated stubs are automatically marked as a "Source Root" for immediate code insight.
+* **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection and automatically registers them as a Source Root.
+  * Unlike static packages, this guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
 * **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
   * **Visual Feedback**: View results in PyCharm's native test runner UI with green/red bars and tree navigation.
   * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
+  * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`, allowing you to import your addon modules directly in tests without manual configuration.
 
 ## Prerequisites
 <!-- Plugin description end -->
@@ -39,7 +41,7 @@ To enable code completion for `bpy` modules:
 1.  Open your project in PyCharm.
 2.  Go to **Tools** > **Regenerate Blender Stubs**.
   * *Alternatively, use "Find Action" (Cmd/Ctrl+Shift+A) and search for "Regenerate Blender Stubs".*
-3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root.
+3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root and automatically marked as a Source Root.
 
 > **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is highly recommended to add `.blender_stubs/` to your project's `.gitignore` file.
 
@@ -58,11 +60,14 @@ You can run `unittest` scripts inside Blender without leaving PyCharm.
 
 Since the runner uses `--factory-startup` for a clean state, the default scene (Cube, Camera, Light) will be present. It is recommended to clean the scene in your `setUp` method.
 
+> **Note:** The plugin automatically adds your project root to `sys.path`. You can import your local addon modules directly (e.g., `from my_addon import logic`) without manual path setup.
+
 **Example `tests/test_sample.py`:**
 
 ```python
 import unittest
 import bpy
+# from my_addon import logic  <-- Works automatically!
 
 class MyBlenderTest(unittest.TestCase):
     

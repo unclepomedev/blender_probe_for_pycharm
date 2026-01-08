@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-01-08
+
+### Improved
+- **Stub Generation Architecture**: Completely overhauled the generation process to split type definitions into individual `.pyi` files per class. This resolves PyCharm's file size limit warnings (Code Insight not available) and significantly improves indexing performance.
+- **Project Integration**: The generated `.blender_stubs` directory is now automatically marked as a "Source Root" in PyCharm, enabling immediate autocompletion without manual configuration.
+
+### Fixed
+- **Submodule Resolution**: Fixed an issue where dynamically defined submodules (e.g., `gpu_extras.batch`, `mathutils.geometry`) were missing from the stubs.
+- **Type Definitions**:
+    - Correctly implemented Generics for `bpy_prop_collection` for better type inference (e.g., `bpy.data.objects['Cube']` now correctly infers `Object`).
+    - Fixed missing `Optional` return types and imports.
+    - Added proper definitions for `bpy.app.handlers.persistent` and `bpy.props` functions.
+
 ## [0.0.1] - 2026-01-07
 
 ### Added
