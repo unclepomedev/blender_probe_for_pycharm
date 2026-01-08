@@ -6,6 +6,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.python.psi.PyAnnotation
 import com.jetbrains.python.psi.PyCallExpression
+import com.jetbrains.python.psi.PyQualifiedNameOwner
 import com.jetbrains.python.psi.PyReferenceExpression
 
 class BlenderPropertySuppressor : InspectionSuppressor {
@@ -27,9 +28,18 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         val value = annotation.value as? PyCallExpression ?: return false
         val callee = value.callee as? PyReferenceExpression ?: return false
 
+        val resolved = callee.reference.resolve()
+
+        if (resolved != null) {
+            if (resolved is PyQualifiedNameOwner) {
+                val qName = resolved.qualifiedName
+                return qName != null && qName.startsWith("bpy.props")
+            }
+            return false
+        }
         val text = callee.text ?: return false
         @Suppress("UnstableApiUsage")
-        val name = callee.referencedName ?: return false  // ApiStatus.Experimental
+        val name = callee.referencedName ?: return false
 
         return text.startsWith("bpy.props.") || blenderProps.contains(name)
     }
