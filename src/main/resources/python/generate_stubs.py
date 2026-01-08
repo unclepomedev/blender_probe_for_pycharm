@@ -25,12 +25,31 @@ if not output_dir:
 BPY_DIR = os.path.join(output_dir, "bpy")
 BPY_TYPES_DIR = os.path.join(BPY_DIR, "types")
 
+FORCE_MODULES = [
+    "gpu_extras.batch",
+    "gpu_extras.presets",
+    "mathutils.noise",
+    "mathutils.geometry",
+    "mathutils.bvhtree",
+    "mathutils.kdtree",
+    "mathutils.interpolate",
+    "bpy_extras.anim_utils",
+    "bpy_extras.object_utils",
+    "bpy_extras.io_utils",
+    "bpy_extras.image_utils",
+    "bpy_extras.mesh_utils",
+    "bpy_extras.node_utils",
+    "bpy_extras.view3d_utils",
+    "bpy_extras.keyconfig_utils",
+]
+
 EXTRA_MODULES = [
     "blf",
     "gpu",
     "gpu_extras",
     "bmesh",
     "mathutils",
+    "bpy_extras",
     "aud",
     "imbuf",
     "idprop",
@@ -66,10 +85,12 @@ def map_rna_type(prop) -> str:
         elif type_char == 'ENUM':
             return "str"
         elif type_char == 'POINTER':
-            if prop.fixed_type: return f"'{prop.fixed_type.identifier}'"
+            if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
+                return f"'{prop.fixed_type.identifier}'"
             return "Any"
         elif type_char == 'COLLECTION':
-            if prop.fixed_type: return f"bpy_prop_collection['{prop.fixed_type.identifier}']"
+            if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
+                return f"bpy_prop_collection['{prop.fixed_type.identifier}']"
             return "bpy_prop_collection[Any]"
         else:
             return "Any"
@@ -112,9 +133,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
 
     for name, obj in inspect.getmembers(mod):
         if name.startswith("_"): continue
-
-        if inspect.ismodule(obj):
-            continue
+        if inspect.ismodule(obj): continue
 
         if inspect.isclass(obj):
             content.append(f"class {name}:")
@@ -150,11 +169,23 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         else:
             content.append(f"{name}: Any")
 
+    submodules = set()
+
     if is_package:
         for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
-            full_sub_name = f"{module_name}.{sub_name}"
-            content.append(f"from . import {sub_name}")
-            generate_module_recursive(full_sub_name, base_output_dir)
+            submodules.add(sub_name)
+
+    prefix = module_name + "."
+    for force_mod in FORCE_MODULES:
+        if force_mod.startswith(prefix):
+            # "gpu_extras.batch" -> prefix="gpu_extras." -> sub="batch"
+            sub_name = force_mod[len(prefix):].split(".")[0]
+            submodules.add(sub_name)
+
+    for sub_name in sorted(submodules):
+        full_sub_name = f"{module_name}.{sub_name}"
+        content.append(f"from . import {sub_name}")
+        generate_module_recursive(full_sub_name, base_output_dir)
 
     write_file(mod_dir, "__init__.pyi", content)
 
