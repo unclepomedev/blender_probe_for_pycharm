@@ -306,34 +306,17 @@ def generate_bpy_types():
 
 
 def generate_submodules():
-    print("Generating submodules...")
+    print("Generating bpy submodules...")
 
-    app_dir = os.path.join(BPY_DIR, "app")
-    write_file(app_dir, "__init__.pyi", ["from . import handlers as handlers"])
-    handlers_content = [
-        "import typing",
-        "TypeVar = typing.TypeVar",
-        "T = TypeVar('T')",
-        "def persistent(func: T) -> T: ...",
-        "load_post: list", "load_pre: list", "save_post: list", "save_pre: list",
-    ]
-    write_file(app_dir, "handlers.pyi", handlers_content)
+    target_modules = ["bpy.app", "bpy.props", "bpy.utils", "bpy.path", "bpy.msgbus"]
 
-    props_dir = os.path.join(BPY_DIR, "props")
-    props_funcs = ["IntProperty", "FloatProperty", "BoolProperty", "StringProperty",
-                   "EnumProperty", "PointerProperty", "CollectionProperty",
-                   "FloatVectorProperty", "IntVectorProperty", "BoolVectorProperty", "RemoveProperty"]
-    props_content = ["from typing import Any"] + [f"def {f}(*args, **kwargs) -> Any: ..." for f in props_funcs]
-    write_file(props_dir, "__init__.pyi", props_content)
+    for mod_name in target_modules:
+        generate_module_recursive(mod_name, output_dir)
 
-    utils_dir = os.path.join(BPY_DIR, "utils")
-    utils_content = ["from typing import Any", "def register_class(cls: Any): ...",
-                     "def unregister_class(cls: Any): ..."]
-    write_file(utils_dir, "__init__.pyi", utils_content)
-
-    for mod in ["ops", "path"]:
-        mod_dir = os.path.join(BPY_DIR, mod)
-        write_file(mod_dir, "__init__.pyi", ["from typing import Any", "def __getattr__(name) -> Any: ..."])
+    # Dynamic generation of bpy.ops results in thousands of classes and is too heavy,
+    # so we maintain manual generation as a generic __getattr__ stub.
+    ops_dir = os.path.join(BPY_DIR, "ops")
+    write_file(ops_dir, "__init__.pyi", ["from typing import Any", "def __getattr__(name) -> Any: ..."])
 
 
 def generate_bpy_root():
