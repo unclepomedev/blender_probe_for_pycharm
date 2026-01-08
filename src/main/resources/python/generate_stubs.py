@@ -1,11 +1,11 @@
-import bpy
 import importlib
 import inspect
 import keyword
 import os
 import pkgutil
 import sys
-from typing import Any
+
+import bpy
 
 output_dir = None
 args = sys.argv
@@ -25,6 +25,18 @@ if not output_dir:
 BPY_DIR = os.path.join(output_dir, "bpy")
 BPY_TYPES_DIR = os.path.join(BPY_DIR, "types")
 
+EXTRA_MODULES = [
+    "blf",
+    "gpu",
+    "gpu_extras",
+    "bmesh",
+    "mathutils",
+    "bpy_extras",
+    "aud",
+    "imbuf",
+    "idprop",
+]
+
 FORCE_MODULES = [
     "gpu_extras.batch",
     "gpu_extras.presets",
@@ -43,18 +55,6 @@ FORCE_MODULES = [
     "bpy_extras.keyconfig_utils",
 ]
 
-EXTRA_MODULES = [
-    "blf",
-    "gpu",
-    "gpu_extras",
-    "bmesh",
-    "mathutils",
-    "bpy_extras",
-    "aud",
-    "imbuf",
-    "idprop",
-]
-
 
 def write_file(directory: str, filename: str, content: list[str]):
     if not os.path.exists(directory):
@@ -69,6 +69,23 @@ def format_docstring(doc_str: str, indent: str = "    ") -> str:
     doc_str = doc_str.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
     if doc_str.endswith('"'): doc_str += " "
     return f'{indent}"""{doc_str}"""'
+
+
+def get_api_docs_link(module_name: str) -> str:
+    """Generate official Blender Python API documentation link."""
+    base_url = "https://docs.blender.org/api/current/"
+    return f"{base_url}{module_name}.html"
+
+
+def make_doc_block(module_name: str, indent: str = "    ") -> str:
+    """Create a standardized docstring block with the URL."""
+    url = get_api_docs_link(module_name)
+    return (
+        f'{indent}"""\n'
+        f'{indent}Online Documentation:\n'
+        f'{indent}{url}\n'
+        f'{indent}"""'
+    )
 
 
 def map_rna_type(prop) -> str:
@@ -122,7 +139,11 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
     parts = module_name.split(".")
     mod_dir = os.path.join(base_output_dir, *parts)
 
+    module_doc = make_doc_block(module_name, indent="")
+
     content = [
+        module_doc,
+        "",
         "import sys",
         "import typing",
         "from typing import Any, List, Tuple, Dict, Set, Union, Callable",
@@ -137,9 +158,14 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
 
         if inspect.isclass(obj):
             content.append(f"class {name}:")
-            doc = getattr(obj, "__doc__", None)
-            if isinstance(doc, str):
-                content.append(format_docstring(doc))
+
+            doc_lines = []
+            orig_doc = getattr(obj, "__doc__", None)
+            if isinstance(orig_doc, str) and orig_doc.strip():
+                doc_lines.append(format_docstring(orig_doc))
+
+            doc_lines.append(make_doc_block(module_name))
+            content.extend(doc_lines)
 
             has_member = False
             for mem_name, mem_obj in inspect.getmembers(obj):
@@ -159,7 +185,11 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         elif inspect.isroutine(obj):
             sig = get_member_signature(obj)
             if not sig: sig = "(*args, **kwargs)"
-            content.append(f"def {name}{sig} -> Any: ...")
+
+            content.append(f"def {name}{sig} -> Any:")
+            content.append(make_doc_block(module_name))
+            content.append("    ...")
+            content.append("")
 
         elif isinstance(obj, (int, float, str, bool)):
             if isinstance(obj, str):
@@ -175,6 +205,21 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
             submodules.add(sub_name)
 
+    for _name, obj in inspect.getmembers(mod):
+        if inspect.ismodule(obj):
+            if obj.__name__.startswith(module_name + "."):
+                sub_name = obj.__name__.split(".")[-1]
+                submodules.add(sub_name)
+
+    # Explicitly ensure gpu submodules are present.
+    # GPU modules are C-based and often fail dynamic inspection (lazy loading),
+    # so we hardcode the known submodule list to ensure stubs are generated.
+    if module_name == "gpu":
+        submodules.update([
+            "shader", "types", "matrix", "state",
+            "texture", "platform", "select", "capabilities"
+        ])
+
     prefix = module_name + "."
     for force_mod in FORCE_MODULES:
         if force_mod.startswith(prefix):
@@ -184,7 +229,10 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
 
     for sub_name in sorted(submodules):
         full_sub_name = f"{module_name}.{sub_name}"
-        content.append(f"from . import {sub_name}")
+
+        content.append(f"from . import {sub_name} as {sub_name}")
+        content.append(f"# Documentation: {get_api_docs_link(full_sub_name)}")
+
         generate_module_recursive(full_sub_name, base_output_dir)
 
     write_file(mod_dir, "__init__.pyi", content)
@@ -253,7 +301,7 @@ def generate_bpy_types():
         write_file(BPY_TYPES_DIR, f"{name}.pyi", file_content)
         classes_to_export.append(name)
 
-    init_content = [f"from .{cls} import {cls}" for cls in classes_to_export]
+    init_content = [f"from .{cls} import {cls} as {cls}" for cls in classes_to_export]
     write_file(BPY_TYPES_DIR, "__init__.pyi", init_content)
 
 
@@ -261,7 +309,7 @@ def generate_submodules():
     print("Generating submodules...")
 
     app_dir = os.path.join(BPY_DIR, "app")
-    write_file(app_dir, "__init__.pyi", ["from . import handlers"])
+    write_file(app_dir, "__init__.pyi", ["from . import handlers as handlers"])
     handlers_content = [
         "import typing",
         "TypeVar = typing.TypeVar",
@@ -291,8 +339,12 @@ def generate_submodules():
 def generate_bpy_root():
     print("Generating bpy/__init__.pyi")
     content = [
-        "from . import types", "from . import app", "from . import props",
-        "from . import ops", "from . import utils", "from . import path",
+        "from . import types as types",
+        "from . import app as app",
+        "from . import props as props",
+        "from . import ops as ops",
+        "from . import utils as utils",
+        "from . import path as path",
         "", "data: types.BlendData", "context: types.Context",
     ]
     write_file(BPY_DIR, "__init__.pyi", content)
