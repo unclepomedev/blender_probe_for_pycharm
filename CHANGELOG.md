@@ -2,8 +2,6 @@
 
 ## [Unreleased]
 
-## [0.0.2] - 2026-01-08
-
 ### Improved
 - **Stub Generation Architecture**: Completely overhauled the generation process to split type definitions into individual `.pyi` files per class. This resolves PyCharm's file size limit warnings (Code Insight not available) and significantly improves indexing performance.
 - **Project Integration**: The generated `.blender_stubs` directory is now automatically marked as a "Source Root" in PyCharm, enabling immediate autocompletion without manual configuration.
