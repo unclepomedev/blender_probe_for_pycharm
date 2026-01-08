@@ -205,16 +205,19 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
             submodules.add(sub_name)
 
-    for name, obj in inspect.getmembers(mod):
+    for _name, obj in inspect.getmembers(mod):
         if inspect.ismodule(obj):
             if obj.__name__.startswith(module_name + "."):
                 sub_name = obj.__name__.split(".")[-1]
                 submodules.add(sub_name)
 
+    # Explicitly ensure gpu submodules are present.
+    # GPU modules are C-based and often fail dynamic inspection (lazy loading),
+    # so we hardcode the known submodule list to ensure stubs are generated.
     if module_name == "gpu":
         submodules.update([
             "shader", "types", "matrix", "state",
-            "texture", "platform", "select", "capabilities", "compute"
+            "texture", "platform", "select", "capabilities"
         ])
 
     prefix = module_name + "."
@@ -228,7 +231,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         full_sub_name = f"{module_name}.{sub_name}"
 
         content.append(f"from . import {sub_name} as {sub_name}")
-        content.append(make_doc_block(full_sub_name, indent=""))
+        content.append(f"# Documentation: {get_api_docs_link(full_sub_name)}")
 
         generate_module_recursive(full_sub_name, base_output_dir)
 
