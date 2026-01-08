@@ -10,9 +10,15 @@ import com.jetbrains.python.psi.PyReferenceExpression
 
 class BlenderPropertySuppressor : InspectionSuppressor {
 
+    private val blenderProps = setOf(
+        "StringProperty", "IntProperty", "BoolProperty", "FloatProperty",
+        "EnumProperty", "PointerProperty", "CollectionProperty",
+        "FloatVectorProperty", "IntVectorProperty", "BoolVectorProperty",
+        "RemoveProperty"
+    )
+
     override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
         val allowedIds = setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints")
-
         if (toolId !in allowedIds) {
             return false
         }
@@ -20,20 +26,12 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         val annotation = PsiTreeUtil.getParentOfType(element, PyAnnotation::class.java) ?: return false
         val value = annotation.value as? PyCallExpression ?: return false
         val callee = value.callee as? PyReferenceExpression ?: return false
-        val text = callee.text
 
-        return text.contains("Property") && (text.startsWith("bpy.props") || isImportedBlenderProp(callee))
-    }
+        val text = callee.text ?: return false
+        @Suppress("UnstableApiUsage")
+        val name = callee.referencedName ?: return false  // ApiStatus.Experimental
 
-    @Suppress("UnstableApiUsage")
-    private fun isImportedBlenderProp(callee: PyReferenceExpression): Boolean {
-        val name = callee.referencedName ?: return false
-
-        val props = setOf(
-            "StringProperty", "IntProperty", "BoolProperty",
-            "EnumProperty", "FloatProperty", "CollectionProperty", "PointerProperty"
-        )
-        return props.contains(name)
+        return text.startsWith("bpy.props.") || blenderProps.contains(name)
     }
 
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
