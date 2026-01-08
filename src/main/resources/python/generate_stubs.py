@@ -151,7 +151,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
             content.append(f"{name}: Any")
 
     if is_package:
-        for importer, sub_name, is_pkg in pkgutil.iter_modules(mod.__path__):
+        for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
             full_sub_name = f"{module_name}.{sub_name}"
             content.append(f"from . import {sub_name}")
             generate_module_recursive(full_sub_name, base_output_dir)
