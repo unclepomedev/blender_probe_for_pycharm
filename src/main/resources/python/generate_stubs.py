@@ -1,11 +1,11 @@
-import bpy
 import importlib
 import inspect
 import keyword
 import os
 import pkgutil
 import sys
-from typing import Any
+
+import bpy
 
 output_dir = None
 args = sys.argv
@@ -25,6 +25,18 @@ if not output_dir:
 BPY_DIR = os.path.join(output_dir, "bpy")
 BPY_TYPES_DIR = os.path.join(BPY_DIR, "types")
 
+EXTRA_MODULES = [
+    "blf",
+    "gpu",
+    "gpu_extras",
+    "bmesh",
+    "mathutils",
+    "bpy_extras",
+    "aud",
+    "imbuf",
+    "idprop",
+]
+
 FORCE_MODULES = [
     "gpu_extras.batch",
     "gpu_extras.presets",
@@ -41,18 +53,6 @@ FORCE_MODULES = [
     "bpy_extras.node_utils",
     "bpy_extras.view3d_utils",
     "bpy_extras.keyconfig_utils",
-]
-
-EXTRA_MODULES = [
-    "blf",
-    "gpu",
-    "gpu_extras",
-    "bmesh",
-    "mathutils",
-    "bpy_extras",
-    "aud",
-    "imbuf",
-    "idprop",
 ]
 
 
@@ -175,6 +175,18 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
             submodules.add(sub_name)
 
+    for name, obj in inspect.getmembers(mod):
+        if inspect.ismodule(obj):
+            if obj.__name__.startswith(module_name + "."):
+                sub_name = obj.__name__.split(".")[-1]
+                submodules.add(sub_name)
+
+    if module_name == "gpu":
+        submodules.update([
+            "shader", "types", "matrix", "state",
+            "texture", "platform", "select", "capabilities", "compute"
+        ])
+
     prefix = module_name + "."
     for force_mod in FORCE_MODULES:
         if force_mod.startswith(prefix):
@@ -184,7 +196,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
 
     for sub_name in sorted(submodules):
         full_sub_name = f"{module_name}.{sub_name}"
-        content.append(f"from . import {sub_name}")
+        content.append(f"from . import {sub_name} as {sub_name}")
         generate_module_recursive(full_sub_name, base_output_dir)
 
     write_file(mod_dir, "__init__.pyi", content)
@@ -253,7 +265,7 @@ def generate_bpy_types():
         write_file(BPY_TYPES_DIR, f"{name}.pyi", file_content)
         classes_to_export.append(name)
 
-    init_content = [f"from .{cls} import {cls}" for cls in classes_to_export]
+    init_content = [f"from .{cls} import {cls} as {cls}" for cls in classes_to_export]
     write_file(BPY_TYPES_DIR, "__init__.pyi", init_content)
 
 
@@ -261,7 +273,7 @@ def generate_submodules():
     print("Generating submodules...")
 
     app_dir = os.path.join(BPY_DIR, "app")
-    write_file(app_dir, "__init__.pyi", ["from . import handlers"])
+    write_file(app_dir, "__init__.pyi", ["from . import handlers as handlers"])
     handlers_content = [
         "import typing",
         "TypeVar = typing.TypeVar",
@@ -291,8 +303,12 @@ def generate_submodules():
 def generate_bpy_root():
     print("Generating bpy/__init__.pyi")
     content = [
-        "from . import types", "from . import app", "from . import props",
-        "from . import ops", "from . import utils", "from . import path",
+        "from . import types as types",
+        "from . import app as app",
+        "from . import props as props",
+        "from . import ops as ops",
+        "from . import utils as utils",
+        "from . import path as path",
         "", "data: types.BlendData", "context: types.Context",
     ]
     write_file(BPY_DIR, "__init__.pyi", content)
