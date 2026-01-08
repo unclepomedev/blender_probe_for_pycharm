@@ -21,6 +21,9 @@
                 instance="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"
                 id="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"
                 displayName="Blender Probe"/>
-        <configurationType implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType"/>
+        <configurationType
+                implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType"/>
+        <lang.inspectionSuppressor language="Python"
+                                   implementationClass="com.github.unclepomedev.blenderprobeforpycharm.inspection.BlenderPropertySuppressor"/>
     </extensions>
 </idea-plugin>
