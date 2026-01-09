@@ -60,6 +60,17 @@ GPU_SUBMODULES = [
     "texture", "platform", "select", "capabilities"
 ]
 
+APP_SUBMODULES = [
+    "handlers", "translations", "timers", "icons"
+]
+
+COMMON_HEADERS = [
+    "# noinspection PyPep8Naming",
+    "# noqa: N801",
+    "# pylint: disable=invalid-name",
+    "",
+]
+
 
 def write_file(directory: str, filename: str, content: list[str]):
     if not os.path.exists(directory):
@@ -141,12 +152,12 @@ def get_member_signature(obj):
     return "(*args, **kwargs)"
 
 
-def generate_module_recursive(module_name: str, base_output_dir: str):
+def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
     try:
         mod = importlib.import_module(module_name)
     except ImportError:
         print(f"Skipping {module_name} (ImportError)")
-        return
+        return False
 
     print(f"Generating stub for: {module_name}")
 
@@ -155,7 +166,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
 
     module_doc = make_doc_block(module_name, indent="")
 
-    content = [
+    content = COMMON_HEADERS + [
         module_doc,
         "",
         "import sys",
@@ -232,6 +243,9 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         if "compute" in submodules:
             submodules.remove("compute")
 
+    if module_name == "bpy.app":
+        submodules.update(APP_SUBMODULES)
+
     prefix = module_name + "."
     for force_mod in FORCE_MODULES:
         if force_mod.startswith(prefix):
@@ -242,18 +256,18 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
     for sub_name in sorted(submodules):
         full_sub_name = f"{module_name}.{sub_name}"
 
-        content.append(f"from . import {sub_name} as {sub_name}")
-        content.append(f"# Documentation: {get_api_docs_link(full_sub_name)}")
-
-        generate_module_recursive(full_sub_name, base_output_dir)
+        if generate_module_recursive(full_sub_name, base_output_dir):
+            content.append(f"from . import {sub_name} as {sub_name}")
+            content.append(f"# Documentation: {get_api_docs_link(full_sub_name)}")
 
     write_file(mod_dir, "__init__.pyi", content)
+    return True
 
 
 def generate_bpy_types():
     print(f"Generating types to: {BPY_TYPES_DIR}")
 
-    prop_col_content = [
+    prop_col_content = COMMON_HEADERS + [
         "import typing",
         "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic, Optional",
         "",
@@ -276,7 +290,7 @@ def generate_bpy_types():
         cls = getattr(bpy.types, name)
         if not inspect.isclass(cls): continue
 
-        file_content = [
+        file_content = COMMON_HEADERS + [
             "import sys",
             "import typing",
             "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence",
@@ -287,10 +301,27 @@ def generate_bpy_types():
         bases = [b.__name__ for b in cls.__bases__ if b is not object]
         # Preserve order while deduping
         bases = list(dict.fromkeys(bases))
+
+        dependencies = set()
+        if hasattr(cls, "bl_rna"):
+            for prop in cls.bl_rna.properties:
+                if prop.identifier == "rna_type":
+                    continue
+
+                if prop.type in ('POINTER', 'COLLECTION'):
+                    if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
+                        dep = prop.fixed_type.identifier
+                        if dep != name and hasattr(bpy.types, dep):
+                            dependencies.add(dep)
+
         for base in bases:
             file_content.append(f"from .{base} import {base}")
-        bases_str = f"({', '.join(bases)})" if bases else ""
 
+        unique_dependencies = dependencies - set(bases)
+        for dep in sorted(unique_dependencies):
+            file_content.append(f"from .{dep} import {dep}")
+
+        bases_str = f"({', '.join(bases)})" if bases else ""
         file_content.append(f"class {name}{bases_str}:")
 
         doc = getattr(cls, "__doc__", None)
@@ -318,7 +349,7 @@ def generate_bpy_types():
         write_file(BPY_TYPES_DIR, f"{name}.pyi", file_content)
         classes_to_export.append(name)
 
-    init_content = [f"from .{cls} import {cls} as {cls}" for cls in classes_to_export]
+    init_content = COMMON_HEADERS + [f"from .{cls} import {cls} as {cls}" for cls in classes_to_export]
     write_file(BPY_TYPES_DIR, "__init__.pyi", init_content)
 
 
@@ -337,7 +368,7 @@ def generate_submodules():
 
 def generate_bpy_root():
     print("Generating bpy/__init__.pyi")
-    content = [
+    content = COMMON_HEADERS + [
         "from . import types as types",
         "from . import app as app",
         "from . import props as props",
