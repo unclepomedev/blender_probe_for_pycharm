@@ -11,9 +11,9 @@
 * **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection and automatically registers them as a Source Root.
   * Unlike static packages, this guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
   * **Documentation Integration**: Generated stubs include direct links to the official Blender Python API reference within the IDE's Quick Documentation, allowing for instant lookups.
-* **Smart Code Insight**: Automatically suppresses common false-positive warnings in PyCharm to match Blender's conventions.
+* **Code Insight**: Automatically suppresses common false-positive warnings in PyCharm to match Blender's conventions.
   * **PEP 8 Compliance**: Ignores N801 naming warnings for valid Blender classes (e.g., `OBJECT_OT_my_operator`, `MY_PT_panel`).
-  * **Property Handling**: Correctly handles `bpy.props` definitions without triggering type checking errors.
+  * **Property Handling**: Correctly handles `bpy.props` definitions without triggering type-checking errors.
 * **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
   * **Visual Feedback**: View results in PyCharm's native test runner UI with green/red bars and tree navigation.
   * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
