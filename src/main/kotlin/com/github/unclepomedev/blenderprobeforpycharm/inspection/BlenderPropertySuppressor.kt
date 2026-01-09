@@ -62,6 +62,9 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         val text = callee.text ?: return false
         val name = callee.referencedName ?: return false
 
+        // Accept strict "bpy.props.*" prefix OR simple name match as a fallback.
+        // Fallback is needed for cases like "from bpy.props import StringProperty" where resolution fails.
+        // Note: This matches any function with these names, creating a potential false positive trade-off.
         return text.startsWith("bpy.props.") || name in BLENDER_PROPS
     }
 
