@@ -8,20 +8,23 @@ import com.jetbrains.python.psi.*
 
 class BlenderPropertySuppressor : InspectionSuppressor {
 
-    private val blenderProps = setOf(
-        "StringProperty", "IntProperty", "BoolProperty", "FloatProperty",
-        "EnumProperty", "PointerProperty", "CollectionProperty",
-        "FloatVectorProperty", "IntVectorProperty", "BoolVectorProperty",
-        "RemoveProperty"
-    )
+    companion object {
+        private val ALLOWED_IDS = setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints", "PyPep8Naming")
 
-    private val blenderNamingRegex = Regex("^[A-Z][A-Z0-9_]+_[A-Z]{2}_[a-z0-9_]+$")
+        private val BLENDER_PROPS = setOf(
+            "StringProperty", "IntProperty", "BoolProperty", "FloatProperty",
+            "EnumProperty", "PointerProperty", "CollectionProperty",
+            "FloatVectorProperty", "IntVectorProperty", "BoolVectorProperty",
+            "RemoveProperty"
+        )
+
+        // Matches Blender naming convention (e.g. MY_ADDON_OT_op_name). Allows underscores in the prefix.
+        private val BLENDER_NAMING_REGEX = Regex("^[A-Z][A-Z0-9_]+_[A-Z]{2}_[a-z0-9_]+$")
+    }
 
     @Suppress("UnstableApiUsage")
     override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
-        val allowedIds = setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints", "PyPep8Naming")
-
-        if (toolId !in allowedIds) {
+        if (toolId !in ALLOWED_IDS) {
             return false
         }
 
@@ -37,7 +40,7 @@ class BlenderPropertySuppressor : InspectionSuppressor {
 
             if (targetClass != null) {
                 val className = targetClass.name
-                if (className != null && blenderNamingRegex.matches(className)) {
+                if (className != null && BLENDER_NAMING_REGEX.matches(className)) {
                     return true
                 }
             }
@@ -59,7 +62,7 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         val text = callee.text ?: return false
         val name = callee.referencedName ?: return false
 
-        return text.startsWith("bpy.props.") || name in blenderProps
+        return text.startsWith("bpy.props.") || name in BLENDER_PROPS
     }
 
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
