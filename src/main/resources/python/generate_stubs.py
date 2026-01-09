@@ -74,6 +74,12 @@ def format_docstring(doc_str: str, indent: str = "    ") -> str:
 def get_api_docs_link(module_name: str) -> str:
     """Generate official Blender Python API documentation link."""
     base_url = "https://docs.blender.org/api/current/"
+
+    # Special case: idprop root page doesn't exist, redirect to types
+    # see also: https://projects.blender.org/blender/blender/issues/152607
+    if module_name == "idprop":
+        return f"{base_url}idprop.types.html"
+
     return f"{base_url}{module_name}.html"
 
 
@@ -277,6 +283,10 @@ def generate_bpy_types():
         ]
 
         bases = [b.__name__ for b in cls.__bases__]
+        for base in bases:
+            if base == "object": continue
+            file_content.append(f"from .{base} import {base}")
+
         bases_str = f"({', '.join(bases)})" if bases else ""
         file_content.append(f"class {name}{bases_str}:")
 
