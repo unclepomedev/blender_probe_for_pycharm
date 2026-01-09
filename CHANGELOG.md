@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+- **Code Inspection Suppression**: Implemented a custom suppressor to silence false positive warnings in PyCharm.
+    - **Class Naming**: Suppresses PEP 8 naming warnings (N801) for valid Blender class names (e.g., `OBJECT_OT_my_operator`, `MYADDON_PT_panel`).
+    - **Property Definitions**: Suppresses warnings for `bpy.props` types (e.g., `StringProperty`, `IntProperty`) and falls back gracefully when resolution fails.
+- **Documentation Links**: Generated stubs now include direct URLs to the official Blender Python API documentation in their DocStrings for quick reference.
+
+### Fixed
+- **Stub Syntax Error**: Fixed a critical bug where certain methods in the generated stubs were missing parentheses `()`, resulting in invalid Python syntax.
+- **Missing App Modules**: Fixed an issue where submodules under `bpy.app` (such as `handlers`, `timers`, `translations`, `icons`) were not being generated.
+
+## [0.0.2] - 2026-01-08
+
 ### Improved
 - **Stub Generation Architecture**: Completely overhauled the generation process to split type definitions into individual `.pyi` files per class. This resolves PyCharm's file size limit warnings (Code Insight not available) and significantly improves indexing performance.
 - **Project Integration**: The generated `.blender_stubs` directory is now automatically marked as a "Source Root" in PyCharm, enabling immediate autocompletion without manual configuration.
