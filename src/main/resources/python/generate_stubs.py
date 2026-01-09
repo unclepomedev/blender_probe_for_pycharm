@@ -55,6 +55,11 @@ FORCE_MODULES = [
     "bpy_extras.keyconfig_utils",
 ]
 
+GPU_SUBMODULES = [
+    "shader", "types", "matrix", "state",
+    "texture", "platform", "select", "capabilities"
+]
+
 
 def write_file(directory: str, filename: str, content: list[str]):
     if not os.path.exists(directory):
@@ -222,10 +227,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
     # GPU modules are C-based and often fail dynamic inspection (lazy loading),
     # so we hardcode the known submodule list to ensure stubs are generated.
     if module_name == "gpu":
-        submodules.update([
-            "shader", "types", "matrix", "state",
-            "texture", "platform", "select", "capabilities"
-        ])
+        submodules.update(GPU_SUBMODULES)
         # currently not open
         if "compute" in submodules:
             submodules.remove("compute")
@@ -282,12 +284,13 @@ def generate_bpy_types():
             "",
         ]
 
-        bases = [b.__name__ for b in cls.__bases__]
+        bases = [b.__name__ for b in cls.__bases__ if b is not object]
+        # Preserve order while deduping
+        bases = list(dict.fromkeys(bases))
         for base in bases:
-            if base == "object": continue
             file_content.append(f"from .{base} import {base}")
-
         bases_str = f"({', '.join(bases)})" if bases else ""
+
         file_content.append(f"class {name}{bases_str}:")
 
         doc = getattr(cls, "__doc__", None)
