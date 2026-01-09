@@ -50,19 +50,16 @@ class BlenderPropertySuppressor : InspectionSuppressor {
 
         val resolved = callee.reference.resolve()
 
-        if (resolved != null) {
-            if (resolved is PyQualifiedNameOwner) {
-                val qName = resolved.qualifiedName
-                return qName != null && qName.startsWith("bpy.props")
+        if (resolved is PyQualifiedNameOwner) {
+            val qName = resolved.qualifiedName
+            if (qName != null) {
+                return qName.startsWith("bpy.props.")
             }
-            return false
         }
         val text = callee.text ?: return false
-
-        @Suppress("UnstableApiUsage")
         val name = callee.referencedName ?: return false
 
-        return text.startsWith("bpy.props.") || blenderProps.contains(name)
+        return text.startsWith("bpy.props.") || name in blenderProps
     }
 
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
