@@ -28,7 +28,7 @@ class BlenderTestSettingsEditor : SettingsEditor<BlenderTestRunConfiguration>() 
     }
 
     override fun resetEditorFrom(s: BlenderTestRunConfiguration) {
-        testDirField.text = s.testDir ?: ""
+        testDirField.text = s.testDir
     }
 
     override fun applyEditorTo(s: BlenderTestRunConfiguration) {

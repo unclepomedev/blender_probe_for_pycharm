@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
+import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.Executor
 import com.intellij.execution.configurations.*
 import com.intellij.execution.runners.ExecutionEnvironment
@@ -12,7 +13,7 @@ class BlenderTestRunConfiguration(
     name: String
 ) : RunConfigurationBase<BlenderTestRunConfigurationOptions>(project, factory, name) {
 
-    var testDir: String?
+    var testDir: String
         get() = options.testDir
         set(value) {
             options.testDir = value
@@ -28,5 +29,16 @@ class BlenderTestRunConfiguration(
 
     override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
         return BlenderTestRunningState(environment, this)
+    }
+
+    override fun checkConfiguration() {
+        super.checkConfiguration()
+        val settings = BlenderSettings.getInstance(project)
+        if (settings.state.blenderPath.isEmpty()) {
+            throw RuntimeConfigurationException("Blender executable path is not set.")
+        }
+        if (testDir.isEmpty()) {
+            throw RuntimeConfigurationException("Test directory is not specified.")
+        }
     }
 }

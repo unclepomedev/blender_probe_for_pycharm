@@ -38,7 +38,7 @@ class BlenderTestRunningState(
         }
 
         val testDir = configuration.testDir
-        if (testDir.isNullOrEmpty()) {
+        if (testDir.isEmpty()) {
             throw ExecutionException("Test directory is not specified in Run Configuration.")
         }
 
