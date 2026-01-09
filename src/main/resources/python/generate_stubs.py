@@ -294,10 +294,25 @@ def generate_bpy_types():
         bases = [b.__name__ for b in cls.__bases__ if b is not object]
         # Preserve order while deduping
         bases = list(dict.fromkeys(bases))
+
+        dependencies = set()
+        if hasattr(cls, "bl_rna"):
+            for prop in cls.bl_rna.properties:
+                if prop.identifier == "rna_type": continue
+                if prop.type in ('POINTER', 'COLLECTION'):
+                    if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
+                        dep = prop.fixed_type.identifier
+                        if dep != name and hasattr(bpy.types, dep):
+                            dependencies.add(dep)
+
         for base in bases:
             file_content.append(f"from .{base} import {base}")
-        bases_str = f"({', '.join(bases)})" if bases else ""
 
+        for dep in sorted(list(dependencies)):
+            if dep not in bases:
+                file_content.append(f"from .{dep} import {dep}")
+
+        bases_str = f"({', '.join(bases)})" if bases else ""
         file_content.append(f"class {name}{bases_str}:")
 
         doc = getattr(cls, "__doc__", None)
