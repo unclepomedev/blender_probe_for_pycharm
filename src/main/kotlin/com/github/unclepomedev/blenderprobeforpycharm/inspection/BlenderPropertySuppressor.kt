@@ -4,11 +4,7 @@ import com.intellij.codeInspection.InspectionSuppressor
 import com.intellij.codeInspection.SuppressQuickFix
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import com.jetbrains.python.psi.PyAnnotation
-import com.jetbrains.python.psi.PyCallExpression
-import com.jetbrains.python.psi.PyClass
-import com.jetbrains.python.psi.PyQualifiedNameOwner
-import com.jetbrains.python.psi.PyReferenceExpression
+import com.jetbrains.python.psi.*
 
 class BlenderPropertySuppressor : InspectionSuppressor {
 
@@ -30,17 +26,23 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         }
 
         if (toolId == "PyPep8Naming") {
-            val pyClass = element as? PyClass ?: PsiTreeUtil.getParentOfType(element, PyClass::class.java)
+            var targetClass = element as? PyClass
 
-            if (pyClass != null) {
-                val className = pyClass.name
+            if (targetClass == null) {
+                val parent = element.parent
+                if (parent is PyClass && parent.nameIdentifier == element) {
+                    targetClass = parent
+                }
+            }
+
+            if (targetClass != null) {
+                val className = targetClass.name
                 if (className != null && blenderNamingRegex.matches(className)) {
                     return true
                 }
             }
+            return false
         }
-
-        if (toolId == "PyPep8Naming") return false
 
         val annotation = PsiTreeUtil.getParentOfType(element, PyAnnotation::class.java) ?: return false
         val value = annotation.value as? PyCallExpression ?: return false
