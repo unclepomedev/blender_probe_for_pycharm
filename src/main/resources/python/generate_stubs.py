@@ -60,6 +60,10 @@ GPU_SUBMODULES = [
     "texture", "platform", "select", "capabilities"
 ]
 
+APP_SUBMODULES = [
+    "handlers", "translations", "timers", "icons"
+]
+
 
 def write_file(directory: str, filename: str, content: list[str]):
     if not os.path.exists(directory):
@@ -231,6 +235,9 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
         # currently not open
         if "compute" in submodules:
             submodules.remove("compute")
+
+    if module_name == "bpy.app":
+        submodules.update(APP_SUBMODULES)
 
     prefix = module_name + "."
     for force_mod in FORCE_MODULES:
