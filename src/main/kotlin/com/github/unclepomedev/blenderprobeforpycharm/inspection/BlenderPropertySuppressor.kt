@@ -4,23 +4,46 @@ import com.intellij.codeInspection.InspectionSuppressor
 import com.intellij.codeInspection.SuppressQuickFix
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import com.jetbrains.python.psi.PyAnnotation
-import com.jetbrains.python.psi.PyCallExpression
-import com.jetbrains.python.psi.PyQualifiedNameOwner
-import com.jetbrains.python.psi.PyReferenceExpression
+import com.jetbrains.python.psi.*
 
 class BlenderPropertySuppressor : InspectionSuppressor {
 
-    private val blenderProps = setOf(
-        "StringProperty", "IntProperty", "BoolProperty", "FloatProperty",
-        "EnumProperty", "PointerProperty", "CollectionProperty",
-        "FloatVectorProperty", "IntVectorProperty", "BoolVectorProperty",
-        "RemoveProperty"
-    )
+    companion object {
+        private val ALLOWED_IDS = setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints", "PyPep8Naming")
 
+        private val BLENDER_PROPS = setOf(
+            "StringProperty", "IntProperty", "BoolProperty", "FloatProperty",
+            "EnumProperty", "PointerProperty", "CollectionProperty",
+            "FloatVectorProperty", "IntVectorProperty", "BoolVectorProperty",
+            "RemoveProperty"
+        )
+
+        // Matches Blender naming convention (e.g. MY_ADDON_OT_op_name). Allows underscores in the prefix.
+        private val BLENDER_NAMING_REGEX = Regex("^[A-Z][A-Z0-9_]+_[A-Z]{2}_[a-z0-9_]+$")
+    }
+
+    @Suppress("UnstableApiUsage")
     override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
-        val allowedIds = setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints")
-        if (toolId !in allowedIds) {
+        if (toolId !in ALLOWED_IDS) {
+            return false
+        }
+
+        if (toolId == "PyPep8Naming") {
+            var targetClass = element as? PyClass
+
+            if (targetClass == null) {
+                val parent = element.parent
+                if (parent is PyClass && parent.nameIdentifier == element) {
+                    targetClass = parent
+                }
+            }
+
+            if (targetClass != null) {
+                val className = targetClass.name
+                if (className != null && BLENDER_NAMING_REGEX.matches(className)) {
+                    return true
+                }
+            }
             return false
         }
 
@@ -30,18 +53,19 @@ class BlenderPropertySuppressor : InspectionSuppressor {
 
         val resolved = callee.reference.resolve()
 
-        if (resolved != null) {
-            if (resolved is PyQualifiedNameOwner) {
-                val qName = resolved.qualifiedName
-                return qName != null && qName.startsWith("bpy.props")
+        if (resolved is PyQualifiedNameOwner) {
+            val qName = resolved.qualifiedName
+            if (qName != null) {
+                return qName.startsWith("bpy.props.")
             }
-            return false
         }
         val text = callee.text ?: return false
-        @Suppress("UnstableApiUsage")
         val name = callee.referencedName ?: return false
 
-        return text.startsWith("bpy.props.") || blenderProps.contains(name)
+        // Accept strict "bpy.props.*" prefix OR simple name match as a fallback.
+        // Fallback is needed for cases like "from bpy.props import StringProperty" where resolution fails.
+        // Note: This matches any function with these names, creating a potential false positive trade-off.
+        return text.startsWith("bpy.props.") || name in BLENDER_PROPS
     }
 
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
