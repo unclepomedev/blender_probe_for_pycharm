@@ -220,6 +220,9 @@ def generate_module_recursive(module_name: str, base_output_dir: str):
             "shader", "types", "matrix", "state",
             "texture", "platform", "select", "capabilities"
         ])
+        # currently not open
+        if "compute" in submodules:
+            submodules.remove("compute")
 
     prefix = module_name + "."
     for force_mod in FORCE_MODULES:
