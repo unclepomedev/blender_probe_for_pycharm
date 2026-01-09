@@ -36,7 +36,7 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        pycharmCommunity("2024.3.6")
+        pycharmCommunity("2024.3.6") // test in 2025.x is unstable
         bundledPlugin("PythonCore")
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
