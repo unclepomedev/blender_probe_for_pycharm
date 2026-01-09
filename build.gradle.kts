@@ -40,7 +40,6 @@ dependencies {
         pluginVerifier("1.398")
         zipSigner()
         bundledPlugin("PythonCore")
-//        intellijIdea(providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
