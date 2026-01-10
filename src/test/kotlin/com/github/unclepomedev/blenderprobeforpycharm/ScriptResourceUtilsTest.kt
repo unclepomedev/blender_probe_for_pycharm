@@ -45,7 +45,7 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
             ScriptResourceUtils.extractResourceScript("/invalid/path/to/resource.py", "foo")
             fail("expect IOException")
         } catch (e: IOException) {
-            assertTrue(e.message!!.contains("Resource not found"))
+            assertTrue(e.message?.contains("Resource not found") ?: false)
         }
     }
 }
