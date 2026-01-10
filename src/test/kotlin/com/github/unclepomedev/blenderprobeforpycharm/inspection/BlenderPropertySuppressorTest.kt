@@ -1,13 +1,13 @@
 package com.github.unclepomedev.blenderprobeforpycharm.inspection
 
+import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.jetbrains.python.PythonFileType
 import com.jetbrains.python.psi.PyAnnotation
 import com.jetbrains.python.psi.PyClass
 import com.jetbrains.python.psi.PyFile
 
-class BlenderPropertySuppressorTest : BasePlatformTestCase() {
+class BlenderPropertySuppressorTest : BaseBlenderTest() {
 
     private val suppressor = BlenderPropertySuppressor()
 

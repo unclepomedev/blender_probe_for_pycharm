@@ -1,11 +1,11 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
+import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.configurations.RuntimeConfigurationException
-import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import org.jdom.Element
 
-class BlenderTestRunConfigurationTest : BasePlatformTestCase() {
+class BlenderTestRunConfigurationTest : BaseBlenderTest() {
 
     fun testConfigurationTypeAndFactory() {
         val configType = BlenderTestConfigurationType()
