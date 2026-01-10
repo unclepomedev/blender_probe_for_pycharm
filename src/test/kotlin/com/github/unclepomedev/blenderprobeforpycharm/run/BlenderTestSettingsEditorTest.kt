@@ -1,9 +1,9 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
+import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.intellij.openapi.util.Disposer
-import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
-class BlenderTestSettingsEditorTest : BasePlatformTestCase() {
+class BlenderTestSettingsEditorTest : BaseBlenderTest() {
 
     fun testEditorApplyAndReset() {
         val configType = BlenderTestConfigurationType()
