@@ -230,15 +230,14 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
     parts = module_name.split(".")
     mod_dir = os.path.join(base_output_dir, *parts)
 
-    module_doc = make_doc_block(module_name, indent="")
     content = COMMON_HEADERS + [
-        module_doc,
         "",
         "import sys",
         "import typing",
         "from typing import Any, List, Tuple, Dict, Set, Union, Callable",
         "",
     ]
+    module_doc = make_doc_block(module_name, indent="")
     if module_doc:
         content.insert(0, module_doc)
         content.insert(1, "")
@@ -422,7 +421,7 @@ def generate_bpy_types():
         file_content = COMMON_HEADERS + [
             "import sys",
             "import typing",
-            "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence",
+            "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence, Callable",
             "from .bpy_prop_collection import bpy_prop_collection",
             "",
         ]
