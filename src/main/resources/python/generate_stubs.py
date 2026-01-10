@@ -25,6 +25,8 @@ BPY_DIR = os.path.join(output_dir, "bpy")
 BPY_TYPES_DIR = os.path.join(BPY_DIR, "types")
 
 EXTRA_MODULES = [
+    "addon_utils",
+    "bl_ui",
     "blf",
     "gpu",
     "gpu_extras",
@@ -72,7 +74,21 @@ COMMON_HEADERS = [
 
 MANUAL_INJECTIONS = {
     "Context": [
+        "    # Common context properties",
+        "    selected_objects: List['Object']",
+        "    active_object: 'Object'",
+        "    view_layer: 'ViewLayer'",
+        "    scene: 'Scene'",
+        "    screen: 'Screen'",
+        "    area: 'Area'",
+        "    region: 'Region'",
+        "    window: 'Window'",
+        "    window_manager: 'WindowManager'",
+        "    preferences: 'Preferences'",
+        "",
+        "    # Dynamic fallback for mode-specific context",
         "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+        "    def __getattr__(self, name) -> Any: ...",
     ],
     "bpy_struct": [
         "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
@@ -83,23 +99,39 @@ MANUAL_INJECTIONS = {
         "    def items(self) -> List[Tuple[str, Any]]: ...",
         "    def keys(self) -> List[str]: ...",
         "    def values(self) -> List[Any]: ...",
+        "    def path_from_id(self, property: str = '') -> str: ...",
+        "    id_data: 'ID'",
     ],
     "Object": [
+        "    def select_set(self, state: bool) -> None: ...",
+        "    def select_get(self) -> bool: ...",
+        "    def hide_set(self, state: bool) -> None: ...",
+        "    def hide_get(self) -> bool: ...",
+        "    def hide_viewport_set(self, state: bool) -> None: ...",
+        "    def hide_render_set(self, state: bool) -> None: ...",
         "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
     ],
     "Collection": [
         "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
     ],
     "ID": [
-        "    name: str",  # Explicitly define name to ensure obj.name resolution
+        "    name: str",
     ],
     "KeyConfigurations": [
-        "    addon: Any  # 'KeyConfig'",
-        "    user: Any   # 'KeyConfig'",
-        "    active: Any # 'KeyConfig'",
+        "    addon: Any",
+        "    user: Any",
+        "    active: Any",
+    ],
+    "AddonPreferences": [
+        "    # Fallback for unloaded addons (like Cycles in factory startup)",
+        "    def __getattr__(self, name) -> Any: ...",
     ],
     "BlendDataLibraries": [
-        "    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any: ...",
+        "    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any:",
+        "        \"\"\"",
+        "        Load data from an external blend file (Context Manager).",
+        "        \"\"\"",
+        "        ...",
     ]
 }
 
@@ -119,8 +151,14 @@ def format_docstring(doc_str: str, indent: str = "    ") -> str:
     return f'{indent}"""{doc_str}"""'
 
 
-def get_api_docs_link(module_name: str) -> str:
+def get_api_docs_link(module_name: str) -> str | None:
     """Generate official Blender Python API documentation link."""
+    # Modules known to have no official documentation page
+    NO_DOCS_MODULES = {"bl_ui", "addon_utils"}
+
+    if module_name in NO_DOCS_MODULES:
+        return None
+
     base_url = "https://docs.blender.org/api/current/"
 
     # Special case: idprop root page doesn't exist, redirect to types
@@ -134,6 +172,9 @@ def get_api_docs_link(module_name: str) -> str:
 def make_doc_block(module_name: str, indent: str = "    ") -> str:
     """Create a standardized docstring block with the URL."""
     url = get_api_docs_link(module_name)
+    if not url:
+        return ""
+
     return (
         f'{indent}"""\n'
         f'{indent}Online Documentation:\n'
@@ -180,7 +221,6 @@ def get_member_signature(obj):
         pass
     except Exception:
         pass
-
     return "(*args, **kwargs)"
 
 
@@ -192,12 +232,10 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         return False
 
     print(f"Generating stub for: {module_name}")
-
     parts = module_name.split(".")
     mod_dir = os.path.join(base_output_dir, *parts)
 
     module_doc = make_doc_block(module_name, indent="")
-
     content = COMMON_HEADERS + [
         module_doc,
         "",
@@ -207,6 +245,10 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         "",
     ]
 
+    if module_doc:
+        content.insert(0, module_doc)
+        content.insert(1, "")
+
     is_package = hasattr(mod, "__path__")
 
     for name, obj in inspect.getmembers(mod):
@@ -215,13 +257,15 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
 
         if inspect.isclass(obj):
             content.append(f"class {name}:")
-
             doc_lines = []
             orig_doc = getattr(obj, "__doc__", None)
             if isinstance(orig_doc, str) and orig_doc.strip():
                 doc_lines.append(format_docstring(orig_doc))
 
-            doc_lines.append(make_doc_block(module_name))
+            link_doc = make_doc_block(module_name)
+            if link_doc:
+                doc_lines.append(link_doc)
+
             content.extend(doc_lines)
 
             has_member = False
@@ -242,7 +286,9 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         elif inspect.isroutine(obj):
             sig = get_member_signature(obj)
             content.append(f"def {name}{sig} -> Any:")
-            content.append(make_doc_block(module_name))
+            link_doc = make_doc_block(module_name)
+            if link_doc:
+                content.append(link_doc)
             content.append("    ...")
             content.append("")
 
@@ -255,7 +301,6 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
             content.append(f"{name}: Any")
 
     submodules = set()
-
     if is_package:
         for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
             submodules.add(sub_name)
@@ -287,10 +332,11 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
 
     for sub_name in sorted(submodules):
         full_sub_name = f"{module_name}.{sub_name}"
-
         if generate_module_recursive(full_sub_name, base_output_dir):
             content.append(f"from . import {sub_name} as {sub_name}")
-            content.append(f"# Documentation: {get_api_docs_link(full_sub_name)}")
+            link = get_api_docs_link(full_sub_name)
+            if link:
+                content.append(f"# Documentation: {link}")
 
     write_file(mod_dir, "__init__.pyi", content)
     return True
@@ -454,9 +500,7 @@ def generate_bpy_types():
 
 def generate_submodules():
     print("Generating bpy submodules...")
-
     target_modules = ["bpy.app", "bpy.props", "bpy.utils", "bpy.path", "bpy.msgbus"]
-
     for mod_name in target_modules:
         generate_module_recursive(mod_name, output_dir)
 
@@ -485,10 +529,8 @@ def main():
         generate_bpy_types()
         generate_submodules()
         generate_bpy_root()
-
         for mod in EXTRA_MODULES:
             generate_module_recursive(mod, output_dir)
-
         print("All stubs generated successfully.")
     except Exception:
         import traceback
