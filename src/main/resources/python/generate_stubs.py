@@ -336,17 +336,16 @@ def generate_bpy_types():
 
     prop_col_content = COMMON_HEADERS + [
         "import typing",
-        "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic, Optional",
-        "from .bpy_struct import bpy_struct",
+        "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic, Optional, Callable, Iterator",
         "",
         "T = TypeVar('T')",
         "",
-        "class bpy_prop_collection(bpy_struct, Sequence[T], Generic[T]):",
+        "class bpy_prop_collection(Sequence[T], Generic[T]):",
         "    def values(self) -> List[T]: ...",
         "    def items(self) -> List[Tuple[str, T]]: ...",
         "    def get(self, key: Union[str, Any], default: T = None) -> Optional[T]: ...",
         "    def __getitem__(self, key: Union[str, int]) -> T: ...",
-        "    def __iter__(self) -> typing.Iterator[T]: ...",
+        "    def __iter__(self) -> Iterator[T]: ...",
         "    def __len__(self) -> int: ...",
         "    def __contains__(self, key: Union[str, Any]) -> bool: ...",
         "",
@@ -421,7 +420,7 @@ def generate_bpy_types():
         file_content = COMMON_HEADERS + [
             "import sys",
             "import typing",
-            "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence, Callable",
+            "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence, Callable, Iterator",
             "from .bpy_prop_collection import bpy_prop_collection",
             "",
         ]
