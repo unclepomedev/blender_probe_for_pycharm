@@ -1,11 +1,10 @@
+import bpy
 import importlib
 import inspect
 import keyword
 import os
 import pkgutil
 import sys
-
-import bpy
 
 output_dir = None
 args = sys.argv
@@ -70,6 +69,39 @@ COMMON_HEADERS = [
     "# pylint: disable=invalid-name",
     "",
 ]
+
+MANUAL_INJECTIONS = {
+    "Context": [
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+    ],
+    "bpy_struct": [
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+        "    def as_pointer(self) -> int: ...",
+        "    def driver_add(self, path: str, index: int = -1) -> Any: ...",
+        "    def driver_remove(self, path: str, index: int = -1) -> bool: ...",
+        "    def get(self, key: str, default: Any = None) -> Any: ...",
+        "    def items(self) -> List[Tuple[str, Any]]: ...",
+        "    def keys(self) -> List[str]: ...",
+        "    def values(self) -> List[Any]: ...",
+    ],
+    "Object": [
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+    ],
+    "Collection": [
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+    ],
+    "ID": [
+        "    name: str",  # Explicitly define name to ensure obj.name resolution
+    ],
+    "KeyConfigurations": [
+        "    addon: Any  # 'KeyConfig'",
+        "    user: Any   # 'KeyConfig'",
+        "    active: Any # 'KeyConfig'",
+    ],
+    "BlendDataLibraries": [
+        "    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any: ...",
+    ]
+}
 
 
 def write_file(directory: str, filename: str, content: list[str]):
@@ -282,6 +314,7 @@ def generate_bpy_types():
         "    def __len__(self) -> int: ...",
         "    def __contains__(self, key: Union[str, Any]) -> bool: ...",
         "",
+        "    # Generic fallbacks (Injected)",
         "    def new(self, name: str = '', *args, **kwargs) -> T:",
         "        \"\"\"",
         "        Create a new item in this collection.",
@@ -318,6 +351,25 @@ def generate_bpy_types():
         "        ",
         "        **Note**:",
         "        This method is typically available on `bpy.data.libraries`, `bpy.data.images`, etc.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    # For collection.objects.link/unlink",
+        "    def link(self, item: T) -> None:",
+        "        \"\"\"",
+        "        Add a data-block to this collection (e.g., Objects, Collections).",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        Valid mainly for `bpy.data.objects` or `collection.children`.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def unlink(self, item: T) -> None:",
+        "        \"\"\"",
+        "        Remove a data-block from this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        Valid mainly for `bpy.data.objects` or `collection.children`.",
         "        \"\"\"",
         "        ...",
     ]
@@ -384,6 +436,11 @@ def generate_bpy_types():
                 if keyword.iskeyword(func.identifier): continue
                 file_content.append(f"    def {func.identifier}(self, *args, **kwargs) -> Any: ...")
                 props_written = True
+
+        if name in MANUAL_INJECTIONS:
+            file_content.append("    # --- Injected Methods ---")
+            file_content.extend(MANUAL_INJECTIONS[name])
+            props_written = True
 
         if not props_written:
             file_content.append("    pass")
