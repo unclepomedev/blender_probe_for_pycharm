@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm
 
+import com.intellij.openapi.util.io.FileUtil
 import java.io.IOException
 
 class ScriptResourceUtilsTest : BaseBlenderTest() {
@@ -11,13 +12,17 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
     fun testExtractScriptToTemp_Success() {
         val extractedFile = ScriptResourceUtils.extractScriptToTemp(VALID_SCRIPT_NAME)
 
-        assertNotNull("returned file should not be null", extractedFile)
-        assertTrue("extracted file should be physically present", extractedFile.exists())
-        assertEquals("filename should match", VALID_SCRIPT_NAME, extractedFile.name)
-        assertTrue("file size should be greater than 0", extractedFile.length() > 0)
+        try {
+            assertNotNull("returned file should not be null", extractedFile)
+            assertTrue("extracted file should be physically present", extractedFile.exists())
+            assertEquals("filename should match", VALID_SCRIPT_NAME, extractedFile.name)
+            assertTrue("file size should be greater than 0", extractedFile.length() > 0)
 
-        val content = extractedFile.readText()
-        assertTrue("should include import bpy", content.contains("import bpy"))
+            val content = extractedFile.readText()
+            assertTrue("should include import bpy", content.contains("import bpy"))
+        } finally {
+            FileUtil.delete(extractedFile.parentFile)
+        }
     }
 
     fun testExtractScriptToTemp_NotFound() {
@@ -31,13 +36,16 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
 
     fun testExtractResourceScript_Success() {
         val resourcePath = "/python/$VALID_SCRIPT_NAME"
-
         val extractedFile = ScriptResourceUtils.extractResourceScript(resourcePath, "temp_prefix_")
 
-        assertNotNull(extractedFile)
-        assertTrue(extractedFile.exists())
-        assertTrue("should have the prefix", extractedFile.name.startsWith("temp_prefix_"))
-        assertTrue("the extension should be .py", extractedFile.name.endsWith(".py"))
+        try {
+            assertNotNull(extractedFile)
+            assertTrue(extractedFile.exists())
+            assertTrue("should have the prefix", extractedFile.name.startsWith("temp_prefix_"))
+            assertTrue("the extension should be .py", extractedFile.name.endsWith(".py"))
+        } finally {
+            FileUtil.delete(extractedFile)
+        }
     }
 
     fun testExtractResourceScript_NotFound() {
