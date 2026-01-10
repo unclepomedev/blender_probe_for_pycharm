@@ -197,7 +197,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
                 if mem_name.startswith("_") and mem_name != "__init__": continue
                 if inspect.isroutine(mem_obj):
                     sig = get_member_signature(mem_obj)
-                    content.append(f"    def {mem_name}{sig}: ...")
+                    content.append(f"    def {mem_name}{sig} -> Any: ...")
                     has_member = True
                 elif inspect.isdatadescriptor(mem_obj):
                     content.append(f"    {mem_name}: Any")
@@ -276,10 +276,50 @@ def generate_bpy_types():
         "class bpy_prop_collection(Sequence[T], Generic[T]):",
         "    def values(self) -> List[T]: ...",
         "    def items(self) -> List[Tuple[str, T]]: ...",
-        "    def get(self, key: str, default: T = None) -> Optional[T]: ...",
+        "    def get(self, key: Union[str, Any], default: T = None) -> Optional[T]: ...",
         "    def __getitem__(self, key: Union[str, int]) -> T: ...",
         "    def __iter__(self) -> typing.Iterator[T]: ...",
         "    def __len__(self) -> int: ...",
+        "    def __contains__(self, key: Union[str, Any]) -> bool: ...",
+        "",
+        "    def new(self, name: str = '', *args, **kwargs) -> T:",
+        "        \"\"\"",
+        "        Create a new item in this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        This is a generic fallback method provided by the IDE plugin.",
+        "        Not all collections support creating new items (e.g., read-only collections).",
+        "        Please verify if this specific collection supports `new()` in the Blender API docs.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def remove(self, value: T, do_unlink: bool = True, do_id_user: bool = True, do_ui_user: bool = True) -> None:",
+        "        \"\"\"",
+        "        Remove an item from this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        This is a generic fallback method provided by the IDE plugin.",
+        "        Read-only collections do not support removal.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def clear(self) -> None:",
+        "        \"\"\"",
+        "        Clear all items from this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        This is a generic fallback method. Most Blender collections do not support `clear()`.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any:",
+        "        \"\"\"",
+        "        Load data from an external blend file (Context Manager).",
+        "        ",
+        "        **Note**:",
+        "        This method is typically available on `bpy.data.libraries`, `bpy.data.images`, etc.",
+        "        \"\"\"",
+        "        ...",
     ]
     write_file(BPY_TYPES_DIR, "bpy_prop_collection.pyi", prop_col_content)
 
@@ -330,6 +370,7 @@ def generate_bpy_types():
 
         props_written = False
         if hasattr(cls, "bl_rna"):
+            # Properties
             for prop in cls.bl_rna.properties:
                 if prop.identifier == "rna_type": continue
                 if keyword.iskeyword(prop.identifier): continue
@@ -338,9 +379,10 @@ def generate_bpy_types():
                 file_content.append(f"    {prop.identifier}: {py_type}")
                 props_written = True
 
+            # Functions
             for func in cls.bl_rna.functions:
                 if keyword.iskeyword(func.identifier): continue
-                file_content.append(f"    def {func.identifier}(self, *args, **kwargs): ...")
+                file_content.append(f"    def {func.identifier}(self, *args, **kwargs) -> Any: ...")
                 props_written = True
 
         if not props_written:
