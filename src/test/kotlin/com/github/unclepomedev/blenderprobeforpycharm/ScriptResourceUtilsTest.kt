@@ -25,7 +25,7 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
             ScriptResourceUtils.extractScriptToTemp(INVALID_SCRIPT_NAME)
             fail("should throw IllegalStateException")
         } catch (e: IllegalStateException) {
-            assertTrue(e.message!!.contains("Script not found"))
+            assertTrue(e.message?.contains("Script not found") ?: false)
         }
     }
 
