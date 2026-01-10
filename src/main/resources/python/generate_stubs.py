@@ -72,25 +72,12 @@ COMMON_HEADERS = [
     "",
 ]
 
+# --- Manual Injections ---
+# NOTE: We use 'Any' for complex types in Context/Struct injections
+# to avoid missing import errors in the generated .pyi files.
 MANUAL_INJECTIONS = {
-    "Context": [
-        "    # Common context properties",
-        "    selected_objects: List['Object']",
-        "    active_object: 'Object'",
-        "    view_layer: 'ViewLayer'",
-        "    scene: 'Scene'",
-        "    screen: 'Screen'",
-        "    area: 'Area'",
-        "    region: 'Region'",
-        "    window: 'Window'",
-        "    window_manager: 'WindowManager'",
-        "    preferences: 'Preferences'",
-        "",
-        "    # Dynamic fallback for mode-specific context",
-        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
-        "    def __getattr__(self, name) -> Any: ...",
-    ],
     "bpy_struct": [
+        "    def __getattr__(self, name) -> Any: ...",
         "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
         "    def as_pointer(self) -> int: ...",
         "    def driver_add(self, path: str, index: int = -1) -> Any: ...",
@@ -100,8 +87,23 @@ MANUAL_INJECTIONS = {
         "    def keys(self) -> List[str]: ...",
         "    def values(self) -> List[Any]: ...",
         "    def path_from_id(self, property: str = '') -> str: ...",
-        "    id_data: 'ID'",
+        "    id_data: Any",
     ],
+    "Context": [
+        "    selected_objects: List[Any]",
+        "    active_object: Any",
+        "    view_layer: Any",
+        "    scene: Any",
+        "    screen: Any",
+        "    area: Any",
+        "    region: Any",
+        "    window: Any",
+        "    window_manager: Any",
+        "    preferences: Any",
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+        "    def __getattr__(self, name) -> Any: ...",
+    ],
+    # Object methods usually handled by C
     "Object": [
         "    def select_set(self, state: bool) -> None: ...",
         "    def select_get(self) -> bool: ...",
@@ -117,22 +119,18 @@ MANUAL_INJECTIONS = {
     "ID": [
         "    name: str",
     ],
+    # SpaceView3D static handlers
+    "SpaceView3D": [
+        "    @classmethod",
+        "    def draw_handler_add(cls, callback: Callable, args: Tuple, region_type: str, draw_type: str) -> object: ...",
+        "    @classmethod",
+        "    def draw_handler_remove(cls, handler: object, region_type: str) -> None: ...",
+    ],
     "KeyConfigurations": [
         "    addon: Any",
         "    user: Any",
         "    active: Any",
     ],
-    "AddonPreferences": [
-        "    # Fallback for unloaded addons (like Cycles in factory startup)",
-        "    def __getattr__(self, name) -> Any: ...",
-    ],
-    "BlendDataLibraries": [
-        "    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any:",
-        "        \"\"\"",
-        "        Load data from an external blend file (Context Manager).",
-        "        \"\"\"",
-        "        ...",
-    ]
 }
 
 
@@ -155,17 +153,14 @@ def get_api_docs_link(module_name: str) -> str | None:
     """Generate official Blender Python API documentation link."""
     # Modules known to have no official documentation page
     NO_DOCS_MODULES = {"bl_ui", "addon_utils"}
-
     if module_name in NO_DOCS_MODULES:
         return None
-
     base_url = "https://docs.blender.org/api/current/"
 
     # Special case: idprop root page doesn't exist, redirect to types
     # see also: https://projects.blender.org/blender/blender/issues/152607
     if module_name == "idprop":
         return f"{base_url}idprop.types.html"
-
     return f"{base_url}{module_name}.html"
 
 
@@ -244,7 +239,6 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         "from typing import Any, List, Tuple, Dict, Set, Union, Callable",
         "",
     ]
-
     if module_doc:
         content.insert(0, module_doc)
         content.insert(1, "")
@@ -261,11 +255,9 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
             orig_doc = getattr(obj, "__doc__", None)
             if isinstance(orig_doc, str) and orig_doc.strip():
                 doc_lines.append(format_docstring(orig_doc))
-
             link_doc = make_doc_block(module_name)
             if link_doc:
                 doc_lines.append(link_doc)
-
             content.extend(doc_lines)
 
             has_member = False
@@ -304,7 +296,6 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
     if is_package:
         for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
             submodules.add(sub_name)
-
     for _name, obj in inspect.getmembers(mod):
         if inspect.ismodule(obj):
             if obj.__name__.startswith(module_name + "."):
@@ -319,7 +310,6 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         # currently not open
         if "compute" in submodules:
             submodules.remove("compute")
-
     if module_name == "bpy.app":
         submodules.update(APP_SUBMODULES)
 
@@ -348,10 +338,11 @@ def generate_bpy_types():
     prop_col_content = COMMON_HEADERS + [
         "import typing",
         "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic, Optional",
+        "from .bpy_struct import bpy_struct",
         "",
         "T = TypeVar('T')",
         "",
-        "class bpy_prop_collection(Sequence[T], Generic[T]):",
+        "class bpy_prop_collection(bpy_struct, Sequence[T], Generic[T]):",
         "    def values(self) -> List[T]: ...",
         "    def items(self) -> List[Tuple[str, T]]: ...",
         "    def get(self, key: Union[str, Any], default: T = None) -> Optional[T]: ...",
@@ -439,45 +430,36 @@ def generate_bpy_types():
         bases = [b.__name__ for b in cls.__bases__ if b is not object]
         # Preserve order while deduping
         bases = list(dict.fromkeys(bases))
-
         dependencies = set()
         if hasattr(cls, "bl_rna"):
             for prop in cls.bl_rna.properties:
                 if prop.identifier == "rna_type":
                     continue
-
                 if prop.type in ('POINTER', 'COLLECTION'):
                     if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
                         dep = prop.fixed_type.identifier
                         if dep != name and hasattr(bpy.types, dep):
                             dependencies.add(dep)
-
         for base in bases:
             file_content.append(f"from .{base} import {base}")
-
         unique_dependencies = dependencies - set(bases)
         for dep in sorted(unique_dependencies):
             file_content.append(f"from .{dep} import {dep}")
 
         bases_str = f"({', '.join(bases)})" if bases else ""
         file_content.append(f"class {name}{bases_str}:")
-
         doc = getattr(cls, "__doc__", None)
         if isinstance(doc, str):
             file_content.append(format_docstring(doc))
 
         props_written = False
         if hasattr(cls, "bl_rna"):
-            # Properties
             for prop in cls.bl_rna.properties:
                 if prop.identifier == "rna_type": continue
                 if keyword.iskeyword(prop.identifier): continue
-
                 py_type = map_rna_type(prop)
                 file_content.append(f"    {prop.identifier}: {py_type}")
                 props_written = True
-
-            # Functions
             for func in cls.bl_rna.functions:
                 if keyword.iskeyword(func.identifier): continue
                 file_content.append(f"    def {func.identifier}(self, *args, **kwargs) -> Any: ...")
@@ -490,7 +472,6 @@ def generate_bpy_types():
 
         if not props_written:
             file_content.append("    pass")
-
         write_file(BPY_TYPES_DIR, f"{name}.pyi", file_content)
         classes_to_export.append(name)
 
