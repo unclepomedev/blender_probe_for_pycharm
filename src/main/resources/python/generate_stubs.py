@@ -1,11 +1,10 @@
+import bpy
 import importlib
 import inspect
 import keyword
 import os
 import pkgutil
 import sys
-
-import bpy
 
 output_dir = None
 args = sys.argv
@@ -26,6 +25,8 @@ BPY_DIR = os.path.join(output_dir, "bpy")
 BPY_TYPES_DIR = os.path.join(BPY_DIR, "types")
 
 EXTRA_MODULES = [
+    "addon_utils",
+    "bl_ui",
     "blf",
     "gpu",
     "gpu_extras",
@@ -71,6 +72,67 @@ COMMON_HEADERS = [
     "",
 ]
 
+# --- Manual Injections ---
+# NOTE: We use 'Any' for complex types in Context/Struct injections
+# to avoid missing import errors in the generated .pyi files.
+MANUAL_INJECTIONS = {
+    "bpy_struct": [
+        "    def __getattr__(self, name) -> Any: ...",
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+        "    def as_pointer(self) -> int: ...",
+        "    def driver_add(self, path: str, index: int = -1) -> Any: ...",
+        "    def driver_remove(self, path: str, index: int = -1) -> bool: ...",
+        "    def get(self, key: str, default: Any = None) -> Any: ...",
+        "    def items(self) -> List[Tuple[str, Any]]: ...",
+        "    def keys(self) -> List[str]: ...",
+        "    def values(self) -> List[Any]: ...",
+        "    def path_from_id(self, property: str = '') -> str: ...",
+        "    id_data: Any",
+    ],
+    "Context": [
+        "    selected_objects: List[Any]",
+        "    active_object: Any",
+        "    view_layer: Any",
+        "    scene: Any",
+        "    screen: Any",
+        "    area: Any",
+        "    region: Any",
+        "    window: Any",
+        "    window_manager: Any",
+        "    preferences: Any",
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+        "    def __getattr__(self, name) -> Any: ...",
+    ],
+    # Object methods usually handled by C
+    "Object": [
+        "    def select_set(self, state: bool) -> None: ...",
+        "    def select_get(self) -> bool: ...",
+        "    def hide_set(self, state: bool) -> None: ...",
+        "    def hide_get(self) -> bool: ...",
+        "    def hide_viewport_set(self, state: bool) -> None: ...",
+        "    def hide_render_set(self, state: bool) -> None: ...",
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+    ],
+    "Collection": [
+        "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
+    ],
+    "ID": [
+        "    name: str",
+    ],
+    # SpaceView3D static handlers
+    "SpaceView3D": [
+        "    @classmethod",
+        "    def draw_handler_add(cls, callback: Callable, args: Tuple, region_type: str, draw_type: str) -> object: ...",
+        "    @classmethod",
+        "    def draw_handler_remove(cls, handler: object, region_type: str) -> None: ...",
+    ],
+    "KeyConfigurations": [
+        "    addon: Any",
+        "    user: Any",
+        "    active: Any",
+    ],
+}
+
 
 def write_file(directory: str, filename: str, content: list[str]):
     if not os.path.exists(directory):
@@ -87,21 +149,27 @@ def format_docstring(doc_str: str, indent: str = "    ") -> str:
     return f'{indent}"""{doc_str}"""'
 
 
-def get_api_docs_link(module_name: str) -> str:
+def get_api_docs_link(module_name: str) -> str | None:
     """Generate official Blender Python API documentation link."""
+    # Modules known to have no official documentation page
+    NO_DOCS_MODULES = {"bl_ui", "addon_utils"}
+    if module_name in NO_DOCS_MODULES:
+        return None
     base_url = "https://docs.blender.org/api/current/"
 
     # Special case: idprop root page doesn't exist, redirect to types
     # see also: https://projects.blender.org/blender/blender/issues/152607
     if module_name == "idprop":
         return f"{base_url}idprop.types.html"
-
     return f"{base_url}{module_name}.html"
 
 
 def make_doc_block(module_name: str, indent: str = "    ") -> str:
     """Create a standardized docstring block with the URL."""
     url = get_api_docs_link(module_name)
+    if not url:
+        return ""
+
     return (
         f'{indent}"""\n'
         f'{indent}Online Documentation:\n'
@@ -148,7 +216,6 @@ def get_member_signature(obj):
         pass
     except Exception:
         pass
-
     return "(*args, **kwargs)"
 
 
@@ -160,20 +227,20 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         return False
 
     print(f"Generating stub for: {module_name}")
-
     parts = module_name.split(".")
     mod_dir = os.path.join(base_output_dir, *parts)
 
-    module_doc = make_doc_block(module_name, indent="")
-
     content = COMMON_HEADERS + [
-        module_doc,
         "",
         "import sys",
         "import typing",
         "from typing import Any, List, Tuple, Dict, Set, Union, Callable",
         "",
     ]
+    module_doc = make_doc_block(module_name, indent="")
+    if module_doc:
+        content.insert(0, module_doc)
+        content.insert(1, "")
 
     is_package = hasattr(mod, "__path__")
 
@@ -183,13 +250,13 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
 
         if inspect.isclass(obj):
             content.append(f"class {name}:")
-
             doc_lines = []
             orig_doc = getattr(obj, "__doc__", None)
             if isinstance(orig_doc, str) and orig_doc.strip():
                 doc_lines.append(format_docstring(orig_doc))
-
-            doc_lines.append(make_doc_block(module_name))
+            link_doc = make_doc_block(module_name)
+            if link_doc:
+                doc_lines.append(link_doc)
             content.extend(doc_lines)
 
             has_member = False
@@ -197,7 +264,7 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
                 if mem_name.startswith("_") and mem_name != "__init__": continue
                 if inspect.isroutine(mem_obj):
                     sig = get_member_signature(mem_obj)
-                    content.append(f"    def {mem_name}{sig}: ...")
+                    content.append(f"    def {mem_name}{sig} -> Any: ...")
                     has_member = True
                 elif inspect.isdatadescriptor(mem_obj):
                     content.append(f"    {mem_name}: Any")
@@ -210,7 +277,9 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         elif inspect.isroutine(obj):
             sig = get_member_signature(obj)
             content.append(f"def {name}{sig} -> Any:")
-            content.append(make_doc_block(module_name))
+            link_doc = make_doc_block(module_name)
+            if link_doc:
+                content.append(link_doc)
             content.append("    ...")
             content.append("")
 
@@ -223,11 +292,9 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
             content.append(f"{name}: Any")
 
     submodules = set()
-
     if is_package:
         for _importer, sub_name, _is_pkg in pkgutil.iter_modules(mod.__path__):
             submodules.add(sub_name)
-
     for _name, obj in inspect.getmembers(mod):
         if inspect.ismodule(obj):
             if obj.__name__.startswith(module_name + "."):
@@ -242,7 +309,6 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
         # currently not open
         if "compute" in submodules:
             submodules.remove("compute")
-
     if module_name == "bpy.app":
         submodules.update(APP_SUBMODULES)
 
@@ -255,10 +321,11 @@ def generate_module_recursive(module_name: str, base_output_dir: str) -> bool:
 
     for sub_name in sorted(submodules):
         full_sub_name = f"{module_name}.{sub_name}"
-
         if generate_module_recursive(full_sub_name, base_output_dir):
             content.append(f"from . import {sub_name} as {sub_name}")
-            content.append(f"# Documentation: {get_api_docs_link(full_sub_name)}")
+            link = get_api_docs_link(full_sub_name)
+            if link:
+                content.append(f"# Documentation: {link}")
 
     write_file(mod_dir, "__init__.pyi", content)
     return True
@@ -269,17 +336,77 @@ def generate_bpy_types():
 
     prop_col_content = COMMON_HEADERS + [
         "import typing",
-        "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic, Optional",
+        "from typing import Any, List, Tuple, Union, Sequence, TypeVar, Generic, Optional, Callable, Iterator",
         "",
         "T = TypeVar('T')",
         "",
         "class bpy_prop_collection(Sequence[T], Generic[T]):",
         "    def values(self) -> List[T]: ...",
         "    def items(self) -> List[Tuple[str, T]]: ...",
-        "    def get(self, key: str, default: T = None) -> Optional[T]: ...",
+        "    def get(self, key: Union[str, Any], default: T = None) -> Optional[T]: ...",
         "    def __getitem__(self, key: Union[str, int]) -> T: ...",
-        "    def __iter__(self) -> typing.Iterator[T]: ...",
+        "    def __iter__(self) -> Iterator[T]: ...",
         "    def __len__(self) -> int: ...",
+        "    def __contains__(self, key: Union[str, Any]) -> bool: ...",
+        "",
+        "    # Generic fallbacks (Injected)",
+        "    def new(self, name: str = '', *args, **kwargs) -> T:",
+        "        \"\"\"",
+        "        Create a new item in this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        This is a generic fallback method provided by the IDE plugin.",
+        "        Not all collections support creating new items (e.g., read-only collections).",
+        "        Please verify if this specific collection supports `new()` in the Blender API docs.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def remove(self, value: T, do_unlink: bool = True, do_id_user: bool = True, do_ui_user: bool = True) -> None:",
+        "        \"\"\"",
+        "        Remove an item from this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        This is a generic fallback method provided by the IDE plugin.",
+        "        Read-only collections do not support removal.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def clear(self) -> None:",
+        "        \"\"\"",
+        "        Clear all items from this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        This is a generic fallback method. Most Blender collections do not support `clear()`.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any:",
+        "        \"\"\"",
+        "        Load data from an external blend file (Context Manager).",
+        "        ",
+        "        **Note**:",
+        "        This method is typically available on `bpy.data.libraries`, `bpy.data.images`, etc.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    # For collection.objects.link/unlink",
+        "    def link(self, item: T) -> None:",
+        "        \"\"\"",
+        "        Add a data-block to this collection (e.g., Objects, Collections).",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        Valid mainly for `bpy.data.objects` or `collection.children`.",
+        "        \"\"\"",
+        "        ...",
+        "",
+        "    def unlink(self, item: T) -> None:",
+        "        \"\"\"",
+        "        Remove a data-block from this collection.",
+        "        ",
+        "        **⚠️ Warning (Stub)**:",
+        "        Valid mainly for `bpy.data.objects` or `collection.children`.",
+        "        \"\"\"",
+        "        ...",
     ]
     write_file(BPY_TYPES_DIR, "bpy_prop_collection.pyi", prop_col_content)
 
@@ -293,7 +420,7 @@ def generate_bpy_types():
         file_content = COMMON_HEADERS + [
             "import sys",
             "import typing",
-            "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence",
+            "from typing import Any, List, Set, Dict, Tuple, Optional, Union, Sequence, Callable, Iterator",
             "from .bpy_prop_collection import bpy_prop_collection",
             "",
         ]
@@ -301,29 +428,24 @@ def generate_bpy_types():
         bases = [b.__name__ for b in cls.__bases__ if b is not object]
         # Preserve order while deduping
         bases = list(dict.fromkeys(bases))
-
         dependencies = set()
         if hasattr(cls, "bl_rna"):
             for prop in cls.bl_rna.properties:
                 if prop.identifier == "rna_type":
                     continue
-
                 if prop.type in ('POINTER', 'COLLECTION'):
                     if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
                         dep = prop.fixed_type.identifier
                         if dep != name and hasattr(bpy.types, dep):
                             dependencies.add(dep)
-
         for base in bases:
             file_content.append(f"from .{base} import {base}")
-
         unique_dependencies = dependencies - set(bases)
         for dep in sorted(unique_dependencies):
             file_content.append(f"from .{dep} import {dep}")
 
         bases_str = f"({', '.join(bases)})" if bases else ""
         file_content.append(f"class {name}{bases_str}:")
-
         doc = getattr(cls, "__doc__", None)
         if isinstance(doc, str):
             file_content.append(format_docstring(doc))
@@ -333,19 +455,21 @@ def generate_bpy_types():
             for prop in cls.bl_rna.properties:
                 if prop.identifier == "rna_type": continue
                 if keyword.iskeyword(prop.identifier): continue
-
                 py_type = map_rna_type(prop)
                 file_content.append(f"    {prop.identifier}: {py_type}")
                 props_written = True
-
             for func in cls.bl_rna.functions:
                 if keyword.iskeyword(func.identifier): continue
-                file_content.append(f"    def {func.identifier}(self, *args, **kwargs): ...")
+                file_content.append(f"    def {func.identifier}(self, *args, **kwargs) -> Any: ...")
                 props_written = True
+
+        if name in MANUAL_INJECTIONS:
+            file_content.append("    # --- Injected Methods ---")
+            file_content.extend(MANUAL_INJECTIONS[name])
+            props_written = True
 
         if not props_written:
             file_content.append("    pass")
-
         write_file(BPY_TYPES_DIR, f"{name}.pyi", file_content)
         classes_to_export.append(name)
 
@@ -355,9 +479,7 @@ def generate_bpy_types():
 
 def generate_submodules():
     print("Generating bpy submodules...")
-
     target_modules = ["bpy.app", "bpy.props", "bpy.utils", "bpy.path", "bpy.msgbus"]
-
     for mod_name in target_modules:
         generate_module_recursive(mod_name, output_dir)
 
@@ -386,10 +508,8 @@ def main():
         generate_bpy_types()
         generate_submodules()
         generate_bpy_root()
-
         for mod in EXTRA_MODULES:
             generate_module_recursive(mod, output_dir)
-
         print("All stubs generated successfully.")
     except Exception:
         import traceback
