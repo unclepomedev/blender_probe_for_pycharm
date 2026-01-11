@@ -42,7 +42,7 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
 
         createFileFromTemplate("BlenderAddon_Manifest.toml", srcDir, "blender_manifest.toml", props)
         createFileFromTemplate("BlenderAddon_Init.py", srcDir, "__init__.py", props)
-        createFileFromTemplate("BlenderAddon_Ops.py", srcDir, "operator.py", props)
+        createFileFromTemplate("BlenderAddon_Ops.py", srcDir, "operators.py", props)
         createFileFromTemplate("BlenderAddon_Panel.py", srcDir, "panel.py", props)
         createFileFromTemplate("BlenderAddon_Test.py", testsDir, "test_sample.py", props)
         createFileFromTemplate("BlenderAddon_License.txt", rootIoFile, "LICENSE", props)

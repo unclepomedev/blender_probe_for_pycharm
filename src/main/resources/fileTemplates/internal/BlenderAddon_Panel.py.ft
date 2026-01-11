@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import bpy
-from .operator import OBJECT_OT_sample_operator
+from .operators import OBJECT_OT_sample_operator
 
 class VIEW3D_PT_sample_panel(bpy.types.Panel):
     """Creates a Panel in the 3D View Sidebar"""

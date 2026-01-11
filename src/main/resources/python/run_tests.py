@@ -112,7 +112,7 @@ def run_tests(test_dir):
         runner = TeamCityTestRunner(stream=sys.stdout, verbosity=2)
         result = runner.run(suite)
 
-    except Exception as e:
+    except Exception:
         err_msg = traceback.format_exc()
         tc_print('message', text=f"Exception during test discovery:\n{err_msg}", status='ERROR')
         sys.exit(1)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
             if args_after_dash:
                 target_dir = args_after_dash[0]
             else:
-                print("Error: No test directory specified after '--'")
+                tc_print('message', text="Error: No test directory specified after '--'", status='ERROR')
                 sys.exit(1)
 
         run_tests(target_dir)
