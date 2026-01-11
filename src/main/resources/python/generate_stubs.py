@@ -116,6 +116,11 @@ class StubGenerator:
     def __init__(self, config: GeneratorConfig):
         self.config = config
 
+    def sanitize_arg_name(self, name: str) -> str:
+        if keyword.iskeyword(name):
+            return f"{name}_"
+        return name
+
     def write_file(self, directory: str, filename: str, content: list[str]):
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -369,8 +374,68 @@ class StubGenerator:
         print("Generating bpy submodules...")
         for mod in ["bpy.app", "bpy.props", "bpy.utils", "bpy.path", "bpy.msgbus"]:
             self.generate_module_recursive(mod, self.config.output_dir)
-        self.write_file(os.path.join(self.config.bpy_dir, "ops"), "__init__.pyi",
-                        ["from typing import Any", "def __getattr__(name) -> Any: ..."])
+        self.generate_bpy_ops()
+
+    def generate_bpy_ops(self):
+        print(f"Generating full bpy.ops stubs to: {os.path.join(self.config.bpy_dir, 'ops')}")
+        ops_dir = os.path.join(self.config.bpy_dir, "ops")
+        if not os.path.exists(ops_dir):
+            os.makedirs(ops_dir)
+
+        categories = []
+        for cat_name in dir(bpy.ops):
+            if cat_name.startswith("__"):
+                continue
+
+            cat_obj = getattr(bpy.ops, cat_name)
+            if not hasattr(cat_obj, "__name__"):
+                continue
+
+            categories.append(cat_name)
+            content = list(self.config.common_headers)
+            content.extend([
+                "import typing",
+                "import bpy",
+                "from typing import Any, Optional, Union, Set, Dict",
+                ""
+            ])
+
+            ops_in_cat = []
+            for op_name in dir(cat_obj):
+                if op_name.startswith("__"): continue
+
+                op_func = getattr(cat_obj, op_name)
+                rna = getattr(op_func, "get_rna_type", lambda: None)()
+
+                if rna:
+                    args_sig = ["override_context: Optional[Union[Dict, 'bpy.types.Context']] = None",
+                                "execution_context: Optional[str] = None",
+                                "undo: Optional[bool] = None"]
+
+                    for prop in rna.properties:
+                        if prop.identifier == "rna_type": continue
+                        arg_name = self.sanitize_arg_name(prop.identifier)
+                        arg_type = self.map_rna_type(prop)
+                        args_sig.append(f"*, {arg_name}: {arg_type} = ...")
+
+                    sig_str = ", ".join(args_sig)
+                    doc = self.format_docstring(rna.description) if rna.description else ""
+                    content.append(f"def {op_name}({sig_str}) -> Set[str]:")
+                    if doc:
+                        content.append(doc)
+                    content.append("    ...")
+                    content.append("")
+                    ops_in_cat.append(op_name)
+
+            if ops_in_cat:
+                self.write_file(ops_dir, f"{cat_name}.pyi", content)
+            else:
+                self.write_file(ops_dir, f"{cat_name}.pyi", content + ["pass"])
+
+        init_content = list(self.config.common_headers)
+        for cat in sorted(categories):
+            init_content.append(f"from . import {cat} as {cat}")
+        self.write_file(ops_dir, "__init__.pyi", init_content)
 
     def generate_bpy_root(self):
         print("Generating bpy/__init__.pyi")
