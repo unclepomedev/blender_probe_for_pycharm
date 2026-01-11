@@ -37,6 +37,7 @@ class GeneratorConfig:
     })
     common_headers: list[str] = field(default_factory=lambda: [
         "# noinspection PyPep8Naming",
+        "# noinspection PyUnresolvedReferences",
         "# noqa: N801",
         "# pylint: disable=invalid-name",
         "",
@@ -166,11 +167,30 @@ class StubGenerator:
 
     def get_member_signature(self, obj) -> str:
         try:
-            return str(inspect.signature(obj))
+            sig = inspect.signature(obj)
+            new_sig = sig.replace(return_annotation=inspect.Signature.empty)
+            return str(new_sig)
         except Exception:
             return "(*args, **kwargs)"
 
     def generate_module_recursive(self, module_name: str, base_output_dir: str) -> bool:
+        # exceptional handling for bpy.msgbus
+        if module_name == "bpy.msgbus":
+            # msgbus tends to fail with importlib, so force it to succeed by writing out a manual definition
+            print(f"Generating static stub for: {module_name} (Fallback)")
+            parts = module_name.split(".")
+            mod_dir = os.path.join(base_output_dir, *parts)
+            content = list(self.config.common_headers)
+            content.extend([
+                "import typing",
+                "from typing import Any, Callable",
+                "",
+                "def subscribe_rna(key: Any, owner: Any, args: Any, notify: Callable[[tuple], None], options: set[str] = None) -> None: ...",
+                "def publish_rna(key: Any) -> None: ...",
+                "def clear_by_owner(owner: Any) -> None: ...",
+            ])
+            self.write_file(mod_dir, "__init__.pyi", content)
+            return True
         try:
             mod = importlib.import_module(module_name)
         except ImportError:
@@ -316,7 +336,8 @@ class StubGenerator:
             for base in bases: file_content.append(f"from .{base} import {base}")
             for dep in sorted(dependencies - set(bases)): file_content.append(f"from .{dep} import {dep}")
 
-            file_content.append(f"class {name}{f'({', '.join(bases)})' if bases else ''}:")
+            base_str = f"({', '.join(bases)})" if bases else ""
+            file_content.append(f"class {name}{base_str}:")
             doc = getattr(cls, "__doc__", None)
             if isinstance(doc, str): file_content.append(self.format_docstring(doc))
 

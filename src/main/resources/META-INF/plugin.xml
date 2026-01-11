@@ -16,6 +16,8 @@
         </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
+        <projectService
+                serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings"/>
         <projectConfigurable
                 parentId="tools"
                 instance="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"

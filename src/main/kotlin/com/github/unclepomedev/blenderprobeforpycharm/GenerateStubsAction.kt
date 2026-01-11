@@ -10,6 +10,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
@@ -27,9 +28,10 @@ import java.util.concurrent.Callable
 
 class GenerateStubsAction : AnAction() {
 
+    private val LOG = Logger.getInstance(GenerateStubsAction::class.java)
+
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-
         val settings = BlenderSettings.getInstance(project)
         val blenderPath = settings.state.blenderPath
         if (blenderPath.isBlank()) {
@@ -52,21 +54,30 @@ class GenerateStubsAction : AnAction() {
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Generating blender stubs...", true) {
             private var virtualOutputDir: VirtualFile? = null
+            private var executionLog: String = ""
 
             override fun run(indicator: ProgressIndicator) {
                 try {
-                    generateStubs(blenderPath, outputDir, indicator)
+                    executionLog = generateStubs(blenderPath, outputDir, indicator)
+
+                    println("=== Blender Probe Execution Log ===")
+                    println(executionLog)
+                    println("==================================")
 
                     indicator.text = "Refreshing file system..."
                     virtualOutputDir = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outputDir)
                     virtualOutputDir?.refresh(false, true)
 
                 } catch (ex: Exception) {
+                    println("=== Blender Probe FAILED ===")
+                    println(executionLog)
+                    LOG.warn("Blender Probe Failed. Logs:\n$executionLog")
                     throw ex
                 }
             }
 
             override fun onSuccess() {
+                LOG.info("Blender Probe Finished Successfully.\n$executionLog")
                 Messages.showInfoMessage(project, "Stubs generated in ${outputDir.absolutePath}", "Success")
                 virtualOutputDir?.let { dir ->
                     markDirectoryAsSourceRoot(project, dir)
@@ -74,6 +85,7 @@ class GenerateStubsAction : AnAction() {
             }
         })
     }
+
 
     private fun markDirectoryAsSourceRoot(project: Project, dir: VirtualFile) {
         val basePath = project.basePath ?: return
@@ -108,7 +120,7 @@ class GenerateStubsAction : AnAction() {
         }
     }
 
-    private fun generateStubs(blenderPath: String, outputDir: File, indicator: ProgressIndicator) {
+    private fun generateStubs(blenderPath: String, outputDir: File, indicator: ProgressIndicator): String {
         indicator.text = "Extracting script..."
         val scriptFile = ScriptResourceUtils.extractScriptToTemp("generate_stubs.py")
 
@@ -124,9 +136,18 @@ class GenerateStubsAction : AnAction() {
         )
 
         val handler = OSProcessHandler(commandLine)
+        val outputBuilder = StringBuilder()
 
         handler.addProcessListener(object : ProcessListener {
-            override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {}
+            override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                val text = event.text
+                outputBuilder.append(text)
+                val cleanText = text.trim()
+                if (cleanText.isNotEmpty()) {
+                    indicator.text2 = cleanText
+                }
+            }
+
             override fun startNotified(event: ProcessEvent) {}
             override fun processTerminated(event: ProcessEvent) {}
         })
@@ -135,7 +156,8 @@ class GenerateStubsAction : AnAction() {
         handler.waitFor()
 
         if (handler.exitCode != 0) {
-            throw RuntimeException("Blender exited with code ${handler.exitCode}")
+            throw RuntimeException("Blender exited with code ${handler.exitCode}.\nOutput:\n$outputBuilder")
         }
+        return outputBuilder.toString()
     }
 }
