@@ -403,20 +403,26 @@ class StubGenerator:
             ops_in_cat = []
             for op_name in dir(cat_obj):
                 if op_name.startswith("__"): continue
-
                 op_func = getattr(cat_obj, op_name)
                 rna = getattr(op_func, "get_rna_type", lambda: None)()
 
                 if rna:
-                    args_sig = ["override_context: Optional[Union[Dict, 'bpy.types.Context']] = None",
-                                "execution_context: Optional[str] = None",
-                                "undo: Optional[bool] = None"]
+                    args_sig = [
+                        "override_context: Optional[Union[Dict, 'bpy.types.Context']] = None",
+                        "execution_context: Optional[str] = None",
+                        "undo: Optional[bool] = None"
+                    ]
 
+                    kw_args = []
                     for prop in rna.properties:
                         if prop.identifier == "rna_type": continue
                         arg_name = self.sanitize_arg_name(prop.identifier)
                         arg_type = self.map_rna_type(prop)
-                        args_sig.append(f"*, {arg_name}: {arg_type} = ...")
+                        kw_args.append(f"{arg_name}: {arg_type} = ...")
+
+                    if kw_args:
+                        args_sig.append("*")
+                        args_sig.extend(kw_args)
 
                     sig_str = ", ".join(args_sig)
                     doc = self.format_docstring(rna.description) if rna.description else ""
