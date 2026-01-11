@@ -14,6 +14,12 @@
 
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
+        <action id="com.github.unclepomedev.blenderprobeforpycharm.actions.PingBlenderAction"
+                class="com.github.unclepomedev.blenderprobeforpycharm.actions.PingBlenderAction"
+                text="Ping Blender Probe"
+                description="Check connection to Blender Probe server">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
         <projectService
@@ -29,5 +35,7 @@
                                    implementationClass="com.github.unclepomedev.blenderprobeforpycharm.inspection.BlenderPropertySuppressor"/>
         <directoryProjectGenerator
                 implementation="com.github.unclepomedev.blenderprobeforpycharm.wizard.BlenderProjectGenerator"/>
+        <configurationType
+                implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderRunConfigurationType"/>
     </extensions>
 </idea-plugin>
