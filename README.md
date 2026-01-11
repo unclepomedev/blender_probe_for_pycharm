@@ -93,7 +93,7 @@ Since the runner uses `--factory-startup` for a clean state, the default scene (
 ```python
 import unittest
 import bpy
-# from my_addon import logic  <-- Works automatically!
+# from my_addon_package import operators  <-- Works automatically!
 
 class TestSampleOperator(unittest.TestCase):
   """
