@@ -2,7 +2,6 @@ import sys
 import os
 import unittest
 import importlib
-import importlib.util
 import traceback
 
 
