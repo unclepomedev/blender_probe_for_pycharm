@@ -129,9 +129,11 @@ class StubGenerator:
             f.write("\n".join(content))
 
     def format_docstring(self, doc_str: str, indent: str = "    ") -> str:
-        if not doc_str: return ""
+        if not doc_str:
+            return ""
         doc_str = doc_str.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
-        if doc_str.endswith('"'): doc_str += " "
+        if doc_str.endswith('"'):
+            doc_str += " "
         return f'{indent}"""{doc_str}"""'
 
     def get_api_docs_link(self, module_name: str) -> str | None:
@@ -147,17 +149,23 @@ class StubGenerator:
 
     def make_doc_block(self, module_name: str, indent: str = "    ") -> str:
         url = self.get_api_docs_link(module_name)
-        if not url: return ""
+        if not url:
+            return ""
         return f'{indent}"""\n{indent}Online Documentation:\n{indent}{url}\n{indent}"""'
 
     def map_rna_type(self, prop) -> str:
         try:
             t = prop.type
-            if t == 'STRING': return "str"
-            if t == 'BOOLEAN': return "bool"
-            if t == 'INT': return "int"
-            if t == 'FLOAT': return "float"
-            if t == 'ENUM': return "str"
+            if t == 'STRING':
+                return "str"
+            if t == 'BOOLEAN':
+                return "bool"
+            if t == 'INT':
+                return "int"
+            if t == 'FLOAT':
+                return "float"
+            if t == 'ENUM':
+                return "str"
             if t == 'POINTER':
                 if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
                     return f"'{prop.fixed_type.identifier}'"
@@ -216,18 +224,21 @@ class StubGenerator:
             content.insert(1, "")
 
         for name, obj in inspect.getmembers(mod):
-            if name.startswith("_") or inspect.ismodule(obj): continue
+            if name.startswith("_") or inspect.ismodule(obj):
+                continue
             if inspect.isclass(obj):
                 content.append(f"class {name}:")
                 orig_doc = getattr(obj, "__doc__", None)
                 if isinstance(orig_doc, str) and orig_doc.strip():
                     content.append(self.format_docstring(orig_doc))
                 link_doc = self.make_doc_block(module_name)
-                if link_doc: content.append(link_doc)
+                if link_doc:
+                    content.append(link_doc)
 
                 has_member = False
                 for mem_name, mem_obj in inspect.getmembers(obj):
-                    if mem_name.startswith("_") and mem_name != "__init__": continue
+                    if mem_name.startswith("_") and mem_name != "__init__":
+                        continue
                     if inspect.isroutine(mem_obj):
                         sig = self.get_member_signature(mem_obj)
                         content.append(f"    def {mem_name}{sig} -> Any: ...")
@@ -235,13 +246,15 @@ class StubGenerator:
                     elif inspect.isdatadescriptor(mem_obj):
                         content.append(f"    {mem_name}: Any")
                         has_member = True
-                if not has_member: content.append("    pass")
+                if not has_member:
+                    content.append("    pass")
                 content.append("")
             elif inspect.isroutine(obj):
                 sig = self.get_member_signature(obj)
                 content.append(f"def {name}{sig} -> Any:")
                 link_doc = self.make_doc_block(module_name)
-                if link_doc: content.append(link_doc)
+                if link_doc:
+                    content.append(link_doc)
                 content.extend(["    ...", ""])
             elif isinstance(obj, (int, float, str, bool)):
                 val = f"'{obj}'" if isinstance(obj, str) else str(obj)
@@ -263,7 +276,8 @@ class StubGenerator:
         if module_name == "gpu":
             submodules.update(self.config.gpu_submodules)
             # currently not open
-            if "compute" in submodules: submodules.remove("compute")
+            if "compute" in submodules:
+                submodules.remove("compute")
         elif module_name == "bpy.app":
             submodules.update(self.config.app_submodules)
 
@@ -277,7 +291,8 @@ class StubGenerator:
             if self.generate_module_recursive(full_sub, base_output_dir):
                 content.append(f"from . import {sub_name} as {sub_name}")
                 link = self.get_api_docs_link(full_sub)
-                if link: content.append(f"# Documentation: {link}")
+                if link:
+                    content.append(f"# Documentation: {link}")
 
         self.write_file(mod_dir, "__init__.pyi", content)
         return True
@@ -318,9 +333,11 @@ class StubGenerator:
 
         classes_to_export = ["bpy_prop_collection"]
         for name in dir(bpy.types):
-            if name == "bpy_prop_collection": continue
+            if name == "bpy_prop_collection":
+                continue
             cls = getattr(bpy.types, name)
-            if not inspect.isclass(cls): continue
+            if not inspect.isclass(cls):
+                continue
 
             file_content = list(self.config.common_headers)
             file_content.extend([
@@ -336,15 +353,19 @@ class StubGenerator:
                     if prop.identifier != "rna_type" and prop.type in ('POINTER', 'COLLECTION'):
                         if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
                             dep = prop.fixed_type.identifier
-                            if dep != name and hasattr(bpy.types, dep): dependencies.add(dep)
+                            if dep != name and hasattr(bpy.types, dep):
+                                dependencies.add(dep)
 
-            for base in bases: file_content.append(f"from .{base} import {base}")
-            for dep in sorted(dependencies - set(bases)): file_content.append(f"from .{dep} import {dep}")
+            for base in bases:
+                file_content.append(f"from .{base} import {base}")
+            for dep in sorted(dependencies - set(bases)):
+                file_content.append(f"from .{dep} import {dep}")
 
             base_str = f"({', '.join(bases)})" if bases else ""
             file_content.append(f"class {name}{base_str}:")
             doc = getattr(cls, "__doc__", None)
-            if isinstance(doc, str): file_content.append(self.format_docstring(doc))
+            if isinstance(doc, str):
+                file_content.append(self.format_docstring(doc))
 
             props_written = False
             if hasattr(cls, "bl_rna"):
@@ -362,7 +383,8 @@ class StubGenerator:
                 file_content.extend(self.config.manual_injections[name])
                 props_written = True
 
-            if not props_written: file_content.append("    pass")
+            if not props_written:
+                file_content.append("    pass")
             self.write_file(self.config.bpy_types_dir, f"{name}.pyi", file_content)
             classes_to_export.append(name)
 
@@ -402,7 +424,8 @@ class StubGenerator:
 
             ops_in_cat = []
             for op_name in dir(cat_obj):
-                if op_name.startswith("__"): continue
+                if op_name.startswith("__"):
+                    continue
                 op_func = getattr(cat_obj, op_name)
                 rna = getattr(op_func, "get_rna_type", lambda: None)()
 
@@ -415,7 +438,8 @@ class StubGenerator:
 
                     kw_args = []
                     for prop in rna.properties:
-                        if prop.identifier == "rna_type": continue
+                        if prop.identifier == "rna_type":
+                            continue
                         arg_name = self.sanitize_arg_name(prop.identifier)
                         arg_type = self.map_rna_type(prop)
                         kw_args.append(f"{arg_name}: {arg_type} = ...")

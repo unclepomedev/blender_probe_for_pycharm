@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import unittest
+import bpy
+
+class TestSampleOperator(unittest.TestCase):
+    """
+    Integration tests for OBJECT_OT_sample_operator.
+    Runs inside Blender via Blender Probe.
+    """
+
+    def setUp(self):
+        # 1. Reset Blender to a clean state
+        bpy.ops.wm.read_homefile(use_empty=True)
+
+        # 2. Setup a test scene (Create a Cube)
+        bpy.ops.mesh.primitive_cube_add()
+        self.test_obj = bpy.context.object
+        self.test_obj.name = "TestCube"
+
+    def test_operator_logic(self):
+        """Verify that the operator renames the object and adds a property"""
+
+        # [Arrange]
+        # Ensure initial state
+        self.assertEqual(self.test_obj.name, "TestCube")
+        self.assertNotIn("is_processed", self.test_obj)
+
+        # [Act]
+        # Execute the operator (bl_idname defined in BlenderAddon_Ops.py)
+        # Note: In tests, context is automatically handled by Blender,
+        # but you can override it if necessary.
+        result = bpy.ops.object.sample_operator()
+
+        # [Assert]
+        # 1. Check return value
+        self.assertIn('FINISHED', result)
+
+        # 2. Check side effects (Logic verification)
+        # The name should have the suffix appended
+        self.assertEqual(self.test_obj.name, "TestCube_processed")
+
+        # The custom property should be set to True
+        self.assertTrue(self.test_obj.get("is_processed"))
+
+if __name__ == "__main__":
+    unittest.main()
