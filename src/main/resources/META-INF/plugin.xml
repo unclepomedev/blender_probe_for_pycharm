@@ -27,5 +27,7 @@
                 implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType"/>
         <lang.inspectionSuppressor language="Python"
                                    implementationClass="com.github.unclepomedev.blenderprobeforpycharm.inspection.BlenderPropertySuppressor"/>
+        <directoryProjectGenerator
+                implementation="com.github.unclepomedev.blenderprobeforpycharm.wizard.BlenderProjectGenerator"/>
     </extensions>
 </idea-plugin>

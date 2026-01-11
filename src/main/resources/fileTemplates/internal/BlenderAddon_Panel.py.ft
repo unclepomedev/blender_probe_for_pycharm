@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+import bpy
+from .operator import OBJECT_OT_sample_operator
+
+class VIEW3D_PT_sample_panel(bpy.types.Panel):
+    """Creates a Panel in the 3D View Sidebar"""
+    bl_label = "${ADDON_NAME}"
+    bl_idname = "VIEW3D_PT_sample_panel"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = "Blender Probe" # Tab name in Sidebar
+
+    def draw(self, context: bpy.types.Context):
+        layout = self.layout
+        obj = context.object
+
+        if obj:
+            row = layout.row()
+            row.label(text=f"Active: {obj.name}")
+
+            # Button to trigger the operator
+            row = layout.row()
+            row.operator(OBJECT_OT_sample_operator.bl_idname, text="Run Sample Operator")
+        else:
+            layout.label(text="Select an object")
+
+def register():
+    bpy.utils.register_class(VIEW3D_PT_sample_panel)
+
+def unregister():
+    bpy.utils.unregister_class(VIEW3D_PT_sample_panel)
