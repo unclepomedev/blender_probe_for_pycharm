@@ -18,6 +18,9 @@
   * **Visual Feedback**: View results in PyCharm's native test runner UI with green/red bars and tree navigation.
   * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
   * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`, allowing you to import your addon modules directly in tests without manual configuration.
+* **Project Wizard (Test-Ready)**: Instantly scaffolds a clean, minimal project structure compliant with Blender 4.2+ Extensions.
+  * **Modern Structure**: Generates a standard directory layout with `blender_manifest.toml`, a separated Python package, and a GPLv3 license.
+  * **Test-Driven Ready**: Comes with a pre-configured `tests/` folder and a sample test. You can run your first test immediately after project creation—no complex environment setup required.
 
 ## Prerequisites
 <!-- Plugin description end -->
@@ -38,7 +41,22 @@ Before using the plugin, you must configure the path to your Blender executable.
 
 ## Usage
 
-### 1. Generating Code Stubs (Autocompletion)
+### 1. Creating a New Addon Project
+
+Start your development with a production-ready structure.
+
+1. Go to **File** > **New Project**
+2. Select **Blender Addon** from the generator list on the left.
+3. Configure your project location and click **Create**.
+
+This generates a clean project structure compliant with Blender 4.2+ Extensions:
+
+* `my_addon_package/`: Your actual Python package (source code).
+  * Contains `blender_manifest.toml`, `__init__.py`, `operators.py`, and `panel.py`.
+* `tests/`: A ready-to-run test suite.
+* `LICENSE`: A GPLv3 license file (standard for Blender addons).
+
+### 2. Generating Code Stubs (Autocompletion)
 
 To enable code completion for `bpy` modules:
 
@@ -49,7 +67,7 @@ To enable code completion for `bpy` modules:
 
 > **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is highly recommended to add `.blender_stubs/` to your project's `.gitignore` file.
 
-### 2. Running Tests
+### 3. Running Tests
 
 You can run `unittest` scripts inside Blender without leaving PyCharm.
 

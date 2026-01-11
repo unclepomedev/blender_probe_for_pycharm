@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Added
+- **Project Wizard**: Introduced a "New Project" generator for creating Blender Addons compliant with Blender 4.2+ Extension standards.
+  - **Test-Ready Scaffolding**: Automatically creates a production-ready directory structure with `blender_manifest.toml`, a separated Python package, and a GPLv3 license.
+  - **Instant Testing**: Includes a pre-configured `tests/` directory and a sample test file, allowing developers to run tests immediately after project creation without complex setup.
+- **Operator Autocompletion**: Expanded stub generation to include the `bpy.ops` module.
+  - Users can now enjoy full code completion and documentation for all dynamic operators (e.g., `bpy.ops.mesh.primitive_cube_add`, `bpy.ops.object.select_all`).
+
+## [0.0.3] - 2026-01-09
+
+### Added
 - **Code Inspection Suppression**: Implemented a custom suppressor to silence false positive warnings in PyCharm.
     - **Class Naming**: Suppresses PEP 8 naming warnings (N801) for valid Blender class names (e.g., `OBJECT_OT_my_operator`, `MYADDON_PT_panel`).
     - **Property Definitions**: Suppresses warnings for `bpy.props` types (e.g., `StringProperty`, `IntProperty`) and falls back gracefully when resolution fails.
