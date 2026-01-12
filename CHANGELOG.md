@@ -3,6 +3,21 @@
 ## [Unreleased]
 
 ### Added
+- **Zero-Config Debugging**: Introduced native debugging support. You can now launch Blender in Debug mode directly from PyCharm, automatically attaching the debugger to your addon code.
+  - **No Setup Required**: The plugin automatically detects and injects PyCharm's bundled `pydevd` debugger. No `pip install` or remote server configuration is needed.
+  - **Full Capability**: Supports breakpoints, variable inspection, and stepping through code within Blender.
+- **Hot Reloading**: Added a "Reload Addon in Blender" action (`Ctrl+Alt+Shift+R`) to apply code changes instantly without restarting Blender.
+  - **Deep Reload**: Implemented a smart module purging mechanism that ensures submodules are correctly re-imported and re-registered.
+- **Connection Diagnostics**: Added a "Ping Blender Probe" action to the Tools menu to verify connectivity between PyCharm and the Blender instance.
+
+### Improved
+- **Communication Protocol**: Enhanced the internal socket protocol to fully support multi-byte characters (UTF-8), ensuring stability when reloading addons with non-ASCII names.
+- **Resource Management**: Improved socket lifecycle management to prevent port leaks and ensure Blender processes are cleanly terminated if a debug session fails to start.
+- **Path Resolution**: Enhanced the detection logic for `pydevd` to support a wider range of PyCharm distributions (Community, Professional, Ultimate) on macOS, Windows, and Linux.
+
+## [0.0.4] - 2026-01-11
+
+### Added
 - **Project Wizard**: Introduced a "New Project" generator for creating Blender Addons compliant with Blender 4.2+ Extension standards.
   - **Test-Ready Scaffolding**: Automatically creates a production-ready directory structure with `blender_manifest.toml`, a separated Python package, and a GPLv3 license.
   - **Instant Testing**: Includes a pre-configured `tests/` directory and a sample test file, allowing developers to run tests immediately after project creation without complex setup.

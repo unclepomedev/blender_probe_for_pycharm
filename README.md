@@ -1,6 +1,6 @@
 # Blender Probe
 <!-- Plugin description -->
-**Blender Probe** is a PyCharm plugin designed to streamline Blender Python API (`bpy`) development. It bridges the gap between PyCharm and Blender, providing robust code completion and a fully integrated test runner.
+**Blender Probe** is a PyCharm plugin designed to streamline Blender Python API (`bpy`) development. It bridges the gap between PyCharm and Blender, providing robust code completion, a fully integrated test runner, and seamless debugging capabilities.
 
 > **⚠️ Compatibility Note:**
 > While **Blender Probe** is designed to work across Windows, macOS, and Linux, primary development and extensive testing have been conducted on **macOS**.
@@ -10,16 +10,20 @@
 
 * **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection and automatically registers them as a Source Root.
   * Unlike static packages, this guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
-  * **Documentation Integration**: Generated stubs include direct links to the official Blender Python API reference within the IDE's Quick Documentation, allowing for instant lookups.
+  * **Documentation Integration**: Generated stubs include direct links to the official Blender Python API reference within the IDE's Quick Documentation.
+* **Zero-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
+  * **No Setup Required**: Automatically injects PyCharm's bundled debugger (`pydevd`) into Blender. No need to `pip install pydevd-pycharm` or configure remote debug servers manually.
+  * **Full Features**: Supports breakpoints, variable inspection, and stepping through code.
+* **Hot Reloading**: Instantly reload your addon code in a running Blender instance without restarting.
+  * **Deep Reload**: Performs a smart purge of `sys.modules` to ensure code changes (including submodules) are correctly re-imported and re-registered.
 * **Code Insight**: Automatically suppresses common false-positive warnings in PyCharm to match Blender's conventions.
   * **PEP 8 Compliance**: Ignores N801 naming warnings for valid Blender classes (e.g., `OBJECT_OT_my_operator`, `MY_PT_panel`).
   * **Property Handling**: Correctly handles `bpy.props` definitions without triggering type-checking errors.
 * **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
-  * **Visual Feedback**: View results in PyCharm's native test runner UI with green/red bars and tree navigation.
-  * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment free from user preferences or third-party addons.
-  * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`, allowing you to import your addon modules directly in tests without manual configuration.
+  * **Visual Feedback**: View results in PyCharm's native test runner UI.
+  * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment.
+  * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`.
 * **Project Wizard (Test-Ready)**: Instantly scaffolds a clean, minimal project structure compliant with Blender 4.2+ Extensions.
-  * **Modern Structure**: Generates a standard directory layout with `blender_manifest.toml`, a separated Python package, and a GPLv3 license.
   * **Test-Driven Ready**: Comes with a pre-configured `tests/` folder and a sample test. You can run your first test immediately after project creation—no complex environment setup required.
 
 ## Prerequisites
@@ -52,9 +56,8 @@ Start your development with a production-ready structure.
 This generates a clean project structure compliant with Blender 4.2+ Extensions:
 
 * `my_addon_package/`: Your actual Python package (source code).
-  * Contains `blender_manifest.toml`, `__init__.py`, `operators.py`, and `panel.py`.
 * `tests/`: A ready-to-run test suite.
-* `LICENSE`: A GPLv3 license file (standard for Blender addons).
+* `LICENSE`: A GPLv3 license file.
 
 ### 2. Generating Code Stubs (Autocompletion)
 
@@ -62,25 +65,52 @@ To enable code completion for `bpy` modules:
 
 1.  Open your project in PyCharm.
 2.  Go to **Tools** > **Regenerate Blender Stubs**.
-  * *Alternatively, use "Find Action" (Cmd/Ctrl+Shift+A) and search for "Regenerate Blender Stubs".*
 3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root and automatically marked as a Source Root.
 
 > **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is highly recommended to add `.blender_stubs/` to your project's `.gitignore` file.
 
-### 3. Running Tests
+### 3. Running & Debugging Your Addon
+
+You can launch Blender with your addon loaded and attach the debugger directly.
+
+1.  Open **Run/Debug Configurations** (Top right dropdown > Edit Configurations).
+2.  Click the **+** button and select **Blender**.
+3.  **Name**: Give it a name (e.g., "Run Blender").
+4.  **Script Path**: Select your addon's entry point (e.g., `my_addon_package/__init__.py`) or leave empty to just open Blender with the project path injected.
+5.  Click **Apply**.
+
+**To Run:** Click the green **Run** (Play) button. Blender will open with your addon code available.
+
+**To Debug:**
+1.  Set a breakpoint in your Python code (click the gutter next to a line number).
+2.  Click the **Debug** (Bug icon) button.
+3.  Blender will launch, and PyCharm will automatically attach. Execution will pause at your breakpoints.
+
+### 4. Hot Reloading
+
+When developing UI panels or iterating on operators, restarting Blender is slow. Use Hot Reload to apply changes instantly.
+
+1.  Ensure Blender is running (launched via the **Run** or **Debug** configuration from PyCharm).
+2.  Make changes to your Python code.
+3.  Go to **Tools** > **Reload Addon in Blender**.
+  * **Shortcut**: `Ctrl + Alt + Shift + R` (default).
+4.  Check the Blender console or PyCharm notification for confirmation. Your addon is now running the updated code.
+
+> **Note**: This performs a "Deep Reload" by unregistering the addon, purging relevant modules from `sys.modules`, and re-registering. This handles most code changes, but complex state changes may still require a restart.
+
+### 5. Running Tests
 
 You can run `unittest` scripts inside Blender without leaving PyCharm.
 
-1.  Create a standard Python test file (e.g., `tests/test_sample.py`) or open the one generated by the Wizard.
-2.  Open **Run/Debug Configurations** (Top right dropdown > Edit Configurations).
-3.  Click the **+** button and select **Blender Test**.
-4.  **Name**: Give it a name (e.g., "All Tests").
-5.  **Test Directory**: Select the folder containing your test scripts.
-6.  Click **Run** (Green Play Button).
+1.  Open **Run/Debug Configurations**.
+2.  Click the **+** button and select **Blender Test**.
+3.  **Name**: Give it a name (e.g., "All Tests").
+4.  **Test Directory**: Select the folder containing your test scripts.
+5.  Click **Run**.
 
 #### Writing Tests for Blender Probe
 
-> **🚀 Fast Track:** If you used the **Project Wizard**, a fully configured test file (`tests/test_sample.py`) is already included. You can skip the setup and run it immediately.
+> **🚀 Fast Track:** If you used the **Project Wizard**, a fully configured test file (`tests/test_sample.py`) is already included.
 
 For existing projects or manual setup, follow the structure below.
 
