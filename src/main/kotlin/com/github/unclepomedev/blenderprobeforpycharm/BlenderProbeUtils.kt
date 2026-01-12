@@ -2,6 +2,7 @@ package com.github.unclepomedev.blenderprobeforpycharm
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
+import java.util.Locale
 
 object BlenderProbeUtils {
     fun findAddonPackageName(project: Project): String? {
@@ -18,5 +19,11 @@ object BlenderProbeUtils {
             }
         }
         return null
+    }
+
+    fun normalizeModuleName(name: String): String {
+        return name.lowercase(Locale.ROOT)
+            .replace(" ", "_")
+            .replace("-", "_")
     }
 }

@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
-import com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction
+import com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction
+import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
 import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType
 import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestRunConfiguration
 import com.intellij.execution.RunManager
@@ -20,7 +21,7 @@ import javax.swing.Icon
 class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
 
     override fun getName(): String = "Blender addon"
-    override fun getLogo(): Icon? = null
+    override fun getLogo(): Icon = BlenderProbeIcons.Logo16
 
     @Suppress("UnstableApiUsage")
     override fun generateProject(

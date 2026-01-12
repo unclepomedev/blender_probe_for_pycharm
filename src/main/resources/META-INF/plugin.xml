@@ -3,12 +3,17 @@
     <name>Blender Probe</name>
     <vendor>unclepomedev</vendor>
 
+    <description><![CDATA[
+      Connects PyCharm with a running Blender instance.<br>
+      Allows hot-reloading of addons, generating stub files, and executing tests directly from PyCharm.
+    ]]></description>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.python</depends>
 
     <actions>
-        <action id="com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction"
-                class="com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction"
+        <action id="com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction"
+                class="com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction"
                 text="Regenerate Blender Stubs"
                 description="Generates .pyi stubs from a live Blender instance">
 
@@ -29,6 +34,8 @@
         </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Blender Probe Notification Group"
+                           displayType="BALLOON"/>
         <projectService
                 serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings"/>
         <projectConfigurable
