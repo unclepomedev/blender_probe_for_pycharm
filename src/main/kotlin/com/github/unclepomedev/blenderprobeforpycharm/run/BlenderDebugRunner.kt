@@ -29,30 +29,39 @@ class BlenderDebugRunner : GenericProgramRunner<RunnerSettings>() {
         if (state !is BlenderRunningState) return null
 
         val serverSocket = ServerSocket(0)
-        val debugPort = serverSocket.localPort
 
-        val pydevdPath = findPydevdPath()
-        if (pydevdPath != null) {
-            state.debugPort = debugPort
-            state.pydevdPath = pydevdPath
-        } else {
-            throw com.intellij.execution.ExecutionException("Could not find 'pydevd' in PyCharm plugins. Debugging is not possible.")
+        try {
+            val debugPort = serverSocket.localPort
+
+            val pydevdPath = findPydevdPath()
+            if (pydevdPath != null) {
+                state.debugPort = debugPort
+                state.pydevdPath = pydevdPath
+            } else {
+                throw com.intellij.execution.ExecutionException("Could not find 'pydevd' in PyCharm plugins. Debugging is not possible.")
+            }
+
+            val executionResult = state.execute(environment.executor, this)
+
+            return XDebuggerManager.getInstance(environment.project)
+                .startSession(environment, object : XDebugProcessStarter() {
+                    override fun start(session: XDebugSession): XDebugProcess {
+                        return PyDebugProcess(
+                            session,
+                            serverSocket, // 成功時は PyDebugProcess に管理を委譲する
+                            executionResult.executionConsole,
+                            executionResult.processHandler,
+                            false
+                        )
+                    }
+                }).runContentDescriptor
+
+        } catch (e: Exception) {
+            try {
+                serverSocket.close()
+            } catch (_: Exception) {}
+            throw e
         }
-
-        val executionResult = state.execute(environment.executor, this)
-
-        return XDebuggerManager.getInstance(environment.project)
-            .startSession(environment, object : XDebugProcessStarter() {
-                override fun start(session: XDebugSession): XDebugProcess {
-                    return PyDebugProcess(
-                        session,
-                        serverSocket,
-                        executionResult.executionConsole,
-                        executionResult.processHandler,
-                        false
-                    )
-                }
-            }).runContentDescriptor
     }
 
     private fun findPydevdPath(): String? {

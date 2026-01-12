@@ -64,7 +64,16 @@ def handle_client(conn, addr):
         msg_length_raw = conn.recv(HEADER_SIZE).decode('utf-8')
         if not msg_length_raw:
             return
-        msg_length = int(msg_length_raw.strip())
+
+        try:
+            msg_length = int(msg_length_raw.strip())
+        except ValueError:
+            log("Invalid message length header received.")
+            return
+
+        if msg_length > 10 * 1024 * 1024:
+            log(f"Message too large: {msg_length} bytes. Dropping connection.")
+            return
 
         data = b""
         while len(data) < msg_length:
