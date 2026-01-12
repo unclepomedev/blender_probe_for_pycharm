@@ -15,6 +15,7 @@ import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil
 import com.intellij.execution.ui.ConsoleView
+import com.intellij.util.io.BaseOutputReader
 import java.nio.charset.StandardCharsets
 
 class BlenderTestRunningState(
@@ -52,7 +53,11 @@ class BlenderTestRunningState(
             .withWorkDirectory(project.basePath)
             .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", projectPath)
 
-        val processHandler = OSProcessHandler(cmd)
+        val processHandler = object : OSProcessHandler(cmd) {
+            override fun readerOptions(): BaseOutputReader.Options {
+                return BaseOutputReader.Options.forMostlySilentProcess()
+            }
+        }
         ProcessTerminatedListener.attach(processHandler)
         return processHandler
     }
