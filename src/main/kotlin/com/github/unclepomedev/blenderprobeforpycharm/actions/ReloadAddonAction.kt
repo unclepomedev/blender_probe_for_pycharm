@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.actions
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
+import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.ui.Messages
@@ -18,7 +19,8 @@ class ReloadAddonAction : AnAction() {
             return
         }
 
-        val addonName = project.name.lowercase().replace(" ", "_").replace("-", "_")
+        val detectedName = BlenderProbeUtils.findAddonPackageName(project)
+        val addonName = detectedName ?: project.name.lowercase().replace(" ", "_").replace("-", "_")
 
         try {
             Socket("127.0.0.1", port).use { socket ->
