@@ -1,6 +1,6 @@
 # Blender Probe
 <!-- Plugin description -->
-**Blender Probe** is a PyCharm plugin designed to streamline Blender Python API (`bpy`) development. It bridges the gap between PyCharm and Blender, providing robust code completion, a fully integrated test runner, and seamless debugging capabilities.
+**Blender Probe** bridges PyCharm and Blender with **Code Completion**, **Testing**, **Debugging**, and **Hot Reloading**.
 
 > **⚠️ Compatibility Note:**
 > While **Blender Probe** is designed to work across Windows, macOS, and Linux, primary development and extensive testing have been conducted on **macOS**.
@@ -38,9 +38,9 @@ Before using the plugin, you must configure the path to your Blender executable.
 
 1.  Go to **Settings/Preferences** > **Tools** > **Blender Probe**.
 2.  Set the **Blender Executable Path**:
-  * **Windows**: `C:\Program Files\Blender Foundation\Blender 5.0\blender.exe`
-  * **macOS**: `/Applications/Blender.app/Contents/MacOS/Blender`
-  * **Linux**: `/usr/bin/blender`
+    * **Windows**: `C:\Program Files\Blender Foundation\Blender 5.0\blender.exe`
+    * **macOS**: `/Applications/Blender.app/Contents/MacOS/Blender`
+    * **Linux**: `/usr/bin/blender`
 3.  Click **OK**.
 
 ## Usage
@@ -69,6 +69,13 @@ To enable code completion for `bpy` modules:
 
 > **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is highly recommended to add `.blender_stubs/` to your project's `.gitignore` file.
 
+> **💡 Tip:** Since Blender's API is highly dynamic, PyCharm sometimes cannot infer types automatically (especially for `bpy.context`). To get full autocompletion, use **Type Hinting**:
+> ```python
+> def my_func(context: bpy.types.Context):
+>     obj: bpy.types.Object = context.active_object
+>     print(obj.location) # Autocompletion works
+> ```
+
 ### 3. Running & Debugging Your Addon
 
 You can launch Blender with your addon loaded and attach the debugger directly.
@@ -93,7 +100,7 @@ When developing UI panels or iterating on operators, restarting Blender is slow.
 1.  Ensure Blender is running (launched via the **Run** or **Debug** configuration from PyCharm).
 2.  Make changes to your Python code.
 3.  Go to **Tools** > **Reload Addon in Blender**.
-  * **Shortcut**: `Ctrl + Alt + Shift + R` (default).
+    * **Shortcut**: `Ctrl + Alt + Shift + R` (default).
 4.  Check the Blender console or PyCharm notification for confirmation. Your addon is now running the updated code.
 
 > **Note**: This performs a "Deep Reload" by unregistering the addon, purging relevant modules from `sys.modules`, and re-registering. This handles most code changes, but complex state changes may still require a restart.
