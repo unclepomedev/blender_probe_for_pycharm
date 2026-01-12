@@ -30,6 +30,7 @@ class BlenderDebugRunner : GenericProgramRunner<RunnerSettings>() {
         if (state !is BlenderRunningState) return null
 
         val serverSocket = ServerSocket(0)
+        var processHandler: com.intellij.execution.process.ProcessHandler? = null
 
         try {
             val debugPort = serverSocket.localPort
@@ -40,6 +41,7 @@ class BlenderDebugRunner : GenericProgramRunner<RunnerSettings>() {
             state.pydevdPath = pydevdPath
 
             val executionResult = state.execute(environment.executor, this)
+            processHandler = executionResult.processHandler
 
             return XDebuggerManager.getInstance(environment.project)
                 .startSession(environment, object : XDebugProcessStarter() {
@@ -54,6 +56,7 @@ class BlenderDebugRunner : GenericProgramRunner<RunnerSettings>() {
                     }
                 }).runContentDescriptor
         } catch (e: Exception) {
+            processHandler?.destroyProcess()
             serverSocket.close()
             throw e
         }
