@@ -130,14 +130,6 @@ def deep_reload_addon(module_name):
         if hasattr(new_mod, "register"):
             new_mod.register()
             log(f"Re-registered {module_name} successfully!")
-
-            def show_toast():
-                bpy.ops.wm.report({'INFO'}, f"Reloaded: {module_name}")
-
-            try:
-                show_toast()
-            except:
-                print(f"[BlenderProbe] Reloaded {module_name} (Toast failed)")
         else:
             log(f"Warning: {module_name} has no register() function.")
 
@@ -151,10 +143,6 @@ def process_command(cmd):
 
     if action == "ping":
         log("Pong! (Received Ping)")
-        try:
-            bpy.ops.wm.report({'INFO'}, "Blender Probe: Connected!")
-        except Exception:
-            pass
 
     elif action == "reload":
         module_name = cmd.get("module_name")

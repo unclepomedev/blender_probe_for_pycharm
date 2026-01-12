@@ -29,7 +29,8 @@ class ReloadAddonAction : AnAction() {
             Socket("127.0.0.1", port).use { socket ->
                 val writer = OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)
 
-                val json = """{"action": "reload", "module_name": "$addonName"}"""
+                val safeName = addonName.replace("\\", "\\\\").replace("\"", "\\\"")
+                val json = """{"action": "reload", "module_name": "$safeName"}"""
                 val jsonBytes = json.toByteArray(StandardCharsets.UTF_8)
                 val header = String.format("%-64s", jsonBytes.size.toString())
 

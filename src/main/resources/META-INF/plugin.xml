@@ -25,7 +25,7 @@
                 text="Reload Addon in Blender"
                 description="Deep reloads the current addon in the running Blender instance">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt R"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift R"/>
         </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">

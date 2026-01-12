@@ -36,7 +36,7 @@ class BlenderDebugRunner : GenericProgramRunner<RunnerSettings>() {
             state.debugPort = debugPort
             state.pydevdPath = pydevdPath
         } else {
-            println("WARNING: Could not find pydevd path. Debugging will not work.")
+            throw com.intellij.execution.ExecutionException("Could not find 'pydevd' in PyCharm plugins. Debugging is not possible.")
         }
 
         val executionResult = state.execute(environment.executor, this)
