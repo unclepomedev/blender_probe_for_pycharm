@@ -129,6 +129,16 @@ class StubGenerator:
             f.write("\n".join(content))
 
     def format_docstring(self, doc_str: str, indent: str = "    ") -> str:
+        """
+        Format a raw string as an indented triple-quoted Python docstring literal suitable for writing into generated stub files.
+        
+        Parameters:
+            doc_str (str): The raw docstring text to format. If falsy, an empty string is returned.
+            indent (str): String used to prefix the resulting docstring block (default: four spaces).
+        
+        Returns:
+            str: An indented triple-quoted docstring block with backslashes and triple quotes escaped and a trailing space added if the content ends with a double quote; returns an empty string when `doc_str` is falsy.
+        """
         if not doc_str:
             return ""
         doc_str = doc_str.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
@@ -137,6 +147,15 @@ class StubGenerator:
         return f'{indent}"""{doc_str}"""'
 
     def get_api_docs_link(self, module_name: str) -> str | None:
+        """
+        Determine the Blender API documentation URL for a given module name, or None if docs should be omitted.
+        
+        Parameters:
+            module_name (str): Fully qualified module name to resolve (e.g., "bpy.types" or "gpu.shader").
+        
+        Returns:
+            str | None: The absolute URL to the module's API docs (e.g. "https://docs.blender.org/api/current/bpy.types.html"), a special-cased "idprop.types.html" for "idprop", or `None` when the module or its submodules are configured to omit documentation.
+        """
         for no_doc_mod in self.config.no_docs_modules:
             if module_name == no_doc_mod or module_name.startswith(no_doc_mod + "."):
                 return None

@@ -39,6 +39,14 @@ class GenerateStubsAction : AnAction() {
     companion object {
         private val LOG = Logger.getInstance(GenerateStubsAction::class.java)
 
+        /**
+         * Generates Blender Python stubs for the given project and registers them as a source root.
+         *
+         * If the configured Blender executable path is missing, prompts the user to open Settings to configure it and aborts if still unset.
+         * On success, writes generated stubs to a ".blender_stubs" directory at the project base path, refreshes the IDE filesystem, shows a success notification, and attempts to mark that directory as a project source root.
+         *
+         * Side effects: may display modal dialogs, run a background task that invokes Blender, write files under the project directory, refresh the VFS, log execution output, and modify module roots.
+         */
         fun regenerateStubs(project: Project) {
             val settings = BlenderSettings.getInstance(project)
             var blenderPath = settings.state.blenderPath
