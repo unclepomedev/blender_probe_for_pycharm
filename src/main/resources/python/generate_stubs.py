@@ -137,8 +137,9 @@ class StubGenerator:
         return f'{indent}"""{doc_str}"""'
 
     def get_api_docs_link(self, module_name: str) -> str | None:
-        if module_name in self.config.no_docs_modules:
-            return None
+        for no_doc_mod in self.config.no_docs_modules:
+            if module_name == no_doc_mod or module_name.startswith(no_doc_mod + "."):
+                return None
         base_url = "https://docs.blender.org/api/current/"
 
         # Special case: idprop root page doesn't exist, redirect to types

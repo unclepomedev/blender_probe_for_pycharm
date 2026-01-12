@@ -40,7 +40,7 @@ class GenerateStubsAction : AnAction() {
         private val LOG = Logger.getInstance(GenerateStubsAction::class.java)
 
         fun regenerateStubs(project: Project) {
-            val settings = BlenderSettings.Companion.getInstance(project)
+            val settings = BlenderSettings.getInstance(project)
             var blenderPath = settings.state.blenderPath
 
             if (blenderPath.isBlank()) {
