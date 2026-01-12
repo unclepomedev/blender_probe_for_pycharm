@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
+import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.RunProfile
 import com.intellij.execution.configurations.RunProfileState
 import com.intellij.execution.configurations.RunnerSettings
@@ -34,12 +35,9 @@ class BlenderDebugRunner : GenericProgramRunner<RunnerSettings>() {
             val debugPort = serverSocket.localPort
 
             val pydevdPath = findPydevdPath()
-            if (pydevdPath != null) {
-                state.debugPort = debugPort
-                state.pydevdPath = pydevdPath
-            } else {
-                throw com.intellij.execution.ExecutionException("Could not find 'pydevd' in PyCharm plugins. Debugging is not possible.")
-            }
+                ?: throw ExecutionException("Could not find 'pydevd' in PyCharm plugins. Debugging is not possible.")
+            state.debugPort = debugPort
+            state.pydevdPath = pydevdPath
 
             val executionResult = state.execute(environment.executor, this)
 
@@ -48,18 +46,15 @@ class BlenderDebugRunner : GenericProgramRunner<RunnerSettings>() {
                     override fun start(session: XDebugSession): XDebugProcess {
                         return PyDebugProcess(
                             session,
-                            serverSocket, // 成功時は PyDebugProcess に管理を委譲する
+                            serverSocket,
                             executionResult.executionConsole,
                             executionResult.processHandler,
                             false
                         )
                     }
                 }).runContentDescriptor
-
         } catch (e: Exception) {
-            try {
-                serverSocket.close()
-            } catch (_: Exception) {}
+            serverSocket.close()
             throw e
         }
     }
