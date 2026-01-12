@@ -14,8 +14,10 @@ class BlenderRunConfigurationType : ConfigurationType, DumbAware {
     override fun getConfigurationTypeDescription(): String = "Run blender with Probe Server for development"
     override fun getId(): String = "BlenderProbeRunConfiguration"
 
+    private val factory: ConfigurationFactory = BlenderProbeRunConfigurationFactory(this)
+
     override fun getConfigurationFactories(): Array<ConfigurationFactory> {
-        return arrayOf(BlenderProbeRunConfigurationFactory(this))
+        return arrayOf(factory)
     }
 }
 

@@ -19,8 +19,8 @@ class ReloadAddonAction : AnAction() {
             return
         }
 
-        val detectedName = BlenderProbeUtils.findAddonPackageName(project)
-        val addonName = detectedName ?: project.name.lowercase().replace(" ", "_").replace("-", "_")
+        val detectedName = BlenderProbeUtils.findAddonPackageName(project)?.takeIf { it.isNotBlank() }
+        val addonName = detectedName ?: BlenderProbeUtils.normalizeModuleName(project.name)
 
         try {
             Socket("127.0.0.1", port).use { socket ->

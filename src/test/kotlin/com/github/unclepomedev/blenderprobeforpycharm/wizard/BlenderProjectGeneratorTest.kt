@@ -1,10 +1,10 @@
 package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
+import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
-import java.util.Locale
 
 class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
@@ -28,7 +28,7 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
             assertNotNull("License should be created", baseDir.findChild("LICENSE"))
             assertNotNull("GitIgnore should be created", baseDir.findChild(".gitignore"))
 
-            val expectedSlug = project.name.lowercase(Locale.US).replace(" ", "_").replace("-", "_")
+            val expectedSlug = BlenderProbeUtils.normalizeModuleName(project.name)
             val packageDir = baseDir.findChild(expectedSlug)
 
             assertNotNull("Package directory '$expectedSlug' should exist", packageDir)
