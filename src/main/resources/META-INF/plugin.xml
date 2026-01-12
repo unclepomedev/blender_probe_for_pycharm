@@ -7,8 +7,8 @@
     <depends>com.intellij.modules.python</depends>
 
     <actions>
-        <action id="com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction"
-                class="com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction"
+        <action id="com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction"
+                class="com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction"
                 text="Regenerate Blender Stubs"
                 description="Generates .pyi stubs from a live Blender instance">
 

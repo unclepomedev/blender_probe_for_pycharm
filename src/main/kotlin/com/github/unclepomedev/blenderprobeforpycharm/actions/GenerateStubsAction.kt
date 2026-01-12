@@ -1,5 +1,6 @@
-package com.github.unclepomedev.blenderprobeforpycharm
+package com.github.unclepomedev.blenderprobeforpycharm.actions
 
+import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.OSProcessHandler
@@ -11,6 +12,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
@@ -38,7 +40,7 @@ class GenerateStubsAction : AnAction() {
         private val LOG = Logger.getInstance(GenerateStubsAction::class.java)
 
         fun regenerateStubs(project: Project) {
-            val settings = BlenderSettings.getInstance(project)
+            val settings = BlenderSettings.Companion.getInstance(project)
             var blenderPath = settings.state.blenderPath
 
             if (blenderPath.isBlank()) {
@@ -151,7 +153,7 @@ class GenerateStubsAction : AnAction() {
             val basePath = project.basePath ?: return
             val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath) ?: return
 
-            ReadAction.nonBlocking(Callable<com.intellij.openapi.module.Module?> {
+            ReadAction.nonBlocking(Callable<Module?> {
                 if (project.isDisposed) return@Callable null
                 ProjectRootManager.getInstance(project).fileIndex.getModuleForFile(baseDir)
             })
@@ -164,7 +166,7 @@ class GenerateStubsAction : AnAction() {
                 .submit(AppExecutorUtil.getAppExecutorService())
         }
 
-        private fun runWriteActionSafe(module: com.intellij.openapi.module.Module, dir: VirtualFile) {
+        private fun runWriteActionSafe(module: Module, dir: VirtualFile) {
             ApplicationManager.getApplication().runWriteAction {
                 ModuleRootModificationUtil.updateModel(module) { model ->
                     val contentEntry = model.contentEntries.find { entry ->

@@ -1,6 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
-import com.github.unclepomedev.blenderprobeforpycharm.GenerateStubsAction
+import com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction
 import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType
 import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestRunConfiguration
 import com.intellij.execution.RunManager
