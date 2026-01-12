@@ -44,5 +44,10 @@
                 implementation="com.github.unclepomedev.blenderprobeforpycharm.wizard.BlenderProjectGenerator"/>
         <configurationType
                 implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderRunConfigurationType"/>
+        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderDebugRunner"/>
     </extensions>
+    <projectListeners>
+        <listener class="com.github.unclepomedev.blenderprobeforpycharm.BlenderSaveListener"
+                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </projectListeners>
 </idea-plugin>

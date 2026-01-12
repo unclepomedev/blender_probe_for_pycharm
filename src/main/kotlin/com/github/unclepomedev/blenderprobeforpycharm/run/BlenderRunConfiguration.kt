@@ -17,6 +17,6 @@ class BlenderRunConfiguration(
     }
 
     override fun getState(executor: Executor, environment: ExecutionEnvironment): RunProfileState {
-        return BlenderRunningState(environment, this)
+        return BlenderRunningState(environment)
     }
 }

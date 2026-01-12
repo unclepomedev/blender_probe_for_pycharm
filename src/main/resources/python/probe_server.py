@@ -164,9 +164,53 @@ def process_command(cmd):
             log("Reload command received but no module_name specified.")
 
 
+def enable_dev_addon():
+    """
+    Attempts to enable the addon specified in environment variables.
+    """
+    addon_name = os.environ.get("BLENDER_PROBE_ADDON_NAME")
+    if not addon_name:
+        return
+
+    log(f"Auto-enabling dev addon: {addon_name}")
+    try:
+        if addon_name not in bpy.context.preferences.addons:
+            bpy.ops.preferences.addon_enable(module=addon_name)
+            log(f"Successfully enabled addon: {addon_name}")
+        else:
+            log(f"Addon {addon_name} is already enabled.")
+    except Exception as e:
+        log(f"Failed to enable addon {addon_name}: {e}")
+        traceback.print_exc()
+
+
+def attach_to_debugger():
+    debug_port = os.environ.get("BLENDER_PROBE_DEBUG_PORT")
+    pydevd_path = os.environ.get("BLENDER_PROBE_PYDEVD_PATH")
+
+    if debug_port and pydevd_path:
+        log(f"Attempting to attach debugger at port {debug_port}...")
+
+        if pydevd_path not in sys.path:
+            sys.path.append(pydevd_path)
+
+        try:
+            import pydevd
+            pydevd.settrace(
+                '127.0.0.1',
+                port=int(debug_port),
+                suspend=False,
+            )
+            log("Debugger attached successfully!")
+        except Exception as e:
+            log(f"Failed to attach debugger: {e}")
+            traceback.print_exc()
+
+
 def register():
     log("Register function called.")
 
+    attach_to_debugger()
     project_root = os.environ.get("BLENDER_PROBE_PROJECT_ROOT")
     if project_root and project_root not in sys.path:
         sys.path.append(project_root)
@@ -183,6 +227,9 @@ def register():
     if not bpy.app.timers.is_registered(main_thread_loop):
         bpy.app.timers.register(main_thread_loop)
         log("Main thread timer registered.")
+
+    if os.environ.get("BLENDER_PROBE_ADDON_NAME"):
+        bpy.app.timers.register(enable_dev_addon, first_interval=0.5)
 
 
 if __name__ == "__main__":

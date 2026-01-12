@@ -9,7 +9,7 @@ class VIEW3D_PT_sample_panel(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_sample_panel"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Blender Probe" # Tab name in Sidebar
+    bl_category = "HEY IM HERE" # Tab name in Sidebar
 
     def draw(self, context: bpy.types.Context):
         layout = self.layout

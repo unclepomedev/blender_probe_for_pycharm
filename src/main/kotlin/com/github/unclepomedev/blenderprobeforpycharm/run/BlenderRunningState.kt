@@ -13,12 +13,15 @@ import com.intellij.execution.process.*
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.util.Key
+import com.intellij.util.io.BaseOutputReader
 import java.nio.charset.StandardCharsets
 
 class BlenderRunningState(
     environment: ExecutionEnvironment,
-    private val configuration: BlenderRunConfiguration
 ) : CommandLineState(environment) {
+
+    var debugPort: Int? = null
+    var pydevdPath: String? = null
 
     override fun execute(executor: Executor, runner: ProgramRunner<*>): ExecutionResult {
         val processHandler = startProcess()
@@ -38,6 +41,7 @@ class BlenderRunningState(
 
         val scriptFile = ScriptResourceUtils.extractResourceScript("python/probe_server.py", "blender_probe_server")
         val projectPath = project.basePath ?: ""
+        val addonName = project.name.lowercase().replace(" ", "_").replace("-", "_")
 
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
@@ -45,9 +49,22 @@ class BlenderRunningState(
             .withCharset(StandardCharsets.UTF_8)
             .withWorkDirectory(project.basePath)
             .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", projectPath)
+            .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
             .withEnvironment("PYTHONUNBUFFERED", "1")
 
-        val processHandler = OSProcessHandler(cmd)
+        val port = debugPort
+        val pyPath = pydevdPath
+
+        if (port != null && pyPath != null) {
+            cmd.withEnvironment("BLENDER_PROBE_DEBUG_PORT", port.toString())
+            cmd.withEnvironment("BLENDER_PROBE_PYDEVD_PATH", pyPath)
+        }
+
+        val processHandler = object : OSProcessHandler(cmd) {
+            override fun readerOptions(): BaseOutputReader.Options {
+                return BaseOutputReader.Options.forMostlySilentProcess()
+            }
+        }
 
         processHandler.addProcessListener(object : ProcessListener {
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
@@ -59,9 +76,8 @@ class BlenderRunningState(
                         try {
                             val port = portStr.toInt()
                             BlenderProbeManager.updatePort(port)
-                            println("DEBUG: PyCharm caught port $port")
                         } catch (e: NumberFormatException) {
-                            // ignore
+                            e.printStackTrace()
                         }
                     }
                 }
