@@ -7,6 +7,7 @@ import sys
 import os
 import traceback
 import time
+import importlib
 
 HOST = '127.0.0.1'
 HEADER_SIZE = 64
@@ -96,21 +97,71 @@ def main_thread_loop():
     return 0.1
 
 
+def deep_reload_addon(module_name):
+    """
+    Performs a deep reload of the addon.
+    """
+    log(f"Deep Reload for: {module_name}")
+
+    # Try to Unregister existing
+    if module_name in sys.modules:
+        try:
+            mod = sys.modules[module_name]
+            if hasattr(mod, "unregister"):
+                try:
+                    mod.unregister()
+                    log("Unregistered successfully.")
+                except Exception as e:
+                    log(f"Warning during unregister: {e}")
+        except Exception as e:
+            log(f"Error accessing module for unregister: {e}")
+
+    # Purge from sys.modules (The Magic Step)
+    keys_to_purge = [k for k in sys.modules.keys() if k == module_name or k.startswith(module_name + ".")]
+
+    for key in keys_to_purge:
+        del sys.modules[key]
+
+    log(f"Purged {len(keys_to_purge)} modules from memory.")
+
+    # Re-import and Register
+    try:
+        new_mod = importlib.import_module(module_name)
+        if hasattr(new_mod, "register"):
+            new_mod.register()
+            log(f"Re-registered {module_name} successfully!")
+
+            def show_toast():
+                bpy.ops.wm.report({'INFO'}, f"Reloaded: {module_name}")
+
+            try:
+                show_toast()
+            except:
+                print(f"[BlenderProbe] Reloaded {module_name} (Toast failed)")
+        else:
+            log(f"Warning: {module_name} has no register() function.")
+
+    except Exception as e:
+        log(f"CRITICAL FAIL during re-import: {e}")
+        traceback.print_exc()
+
+
 def process_command(cmd):
     action = cmd.get("action")
+
     if action == "ping":
         log("Pong! (Received Ping)")
-
-        def show_pong():
-            bpy.ops.wm.report({'INFO'}, "Blender Probe: Connected!")
-
         try:
-            bpy.ops.wm.report({'INFO'}, "Blender Probe Connected")
-        except:
+            bpy.ops.wm.report({'INFO'}, "Blender Probe: Connected!")
+        except Exception:
             pass
 
     elif action == "reload":
-        log(f"Reload request: {cmd.get('module_name')}")
+        module_name = cmd.get("module_name")
+        if module_name:
+            deep_reload_addon(module_name)
+        else:
+            log("Reload command received but no module_name specified.")
 
 
 def register():

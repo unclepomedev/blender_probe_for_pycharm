@@ -20,6 +20,13 @@
                 description="Check connection to Blender Probe server">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
+        <action id="com.github.unclepomedev.blenderprobeforpycharm.actions.ReloadAddonAction"
+                class="com.github.unclepomedev.blenderprobeforpycharm.actions.ReloadAddonAction"
+                text="Reload Addon in Blender"
+                description="Deep reloads the current addon in the running Blender instance">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt R"/>
+        </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
         <projectService
