@@ -3,13 +3,15 @@
 import bpy
 from .operators import OBJECT_OT_sample_operator
 
+
 class VIEW3D_PT_sample_panel(bpy.types.Panel):
     """Creates a Panel in the 3D View Sidebar"""
+
     bl_label = "${ADDON_NAME}"
     bl_idname = "VIEW3D_PT_sample_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "${ADDON_NAME}" # Tab name in Sidebar
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "${ADDON_NAME}"  # Tab name in Sidebar
 
     def draw(self, context: bpy.types.Context):
         layout = self.layout
@@ -25,8 +27,10 @@ class VIEW3D_PT_sample_panel(bpy.types.Panel):
         else:
             layout.label(text="Select an object")
 
+
 def register():
     bpy.utils.register_class(VIEW3D_PT_sample_panel)
+
 
 def unregister():
     bpy.utils.unregister_class(VIEW3D_PT_sample_panel)

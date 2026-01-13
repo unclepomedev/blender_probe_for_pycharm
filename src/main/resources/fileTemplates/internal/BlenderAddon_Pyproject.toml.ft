@@ -8,6 +8,11 @@ authors = [
 requires-python = ">=3.11"
 dependencies = ["pip"]
 
+[dependency-groups]
+dev = [
+    "ruff>=0.14.11",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

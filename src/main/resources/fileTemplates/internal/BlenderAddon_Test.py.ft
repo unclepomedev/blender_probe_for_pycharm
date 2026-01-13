@@ -3,6 +3,7 @@
 import unittest
 import bpy
 
+
 class TestSampleOperator(unittest.TestCase):
     """
     Integration tests for OBJECT_OT_sample_operator.
@@ -34,7 +35,7 @@ class TestSampleOperator(unittest.TestCase):
 
         # [Assert]
         # 1. Check return value
-        self.assertIn('FINISHED', result)
+        self.assertIn("FINISHED", result)
 
         # 2. Check side effects (Logic verification)
         # The name should have the suffix appended
@@ -42,6 +43,7 @@ class TestSampleOperator(unittest.TestCase):
 
         # The custom property should be set to True
         self.assertTrue(self.test_obj.get("is_processed"))
+
 
 if __name__ == "__main__":
     unittest.main()
