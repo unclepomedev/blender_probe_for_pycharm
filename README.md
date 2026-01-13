@@ -25,9 +25,9 @@
     * **Clean State**: Runs with `--factory-startup` for a reproducible environment.
 * **Project Wizard**: Scaffolds a Blender 4.2+ Extensions compliant project.
     * **Ready to Go**: Includes a pre-configured `tests/` folder and CI/CD workflows.
+<!-- Plugin description end -->
 
 ## Prerequisites
-<!-- Plugin description end -->
 * **PyCharm** (Community or Professional) 2025.2+
 * **Blender** 4.2+ or 5.x
     * *Note: Blender versions 4.1 and older are not supported.*
