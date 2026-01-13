@@ -16,6 +16,7 @@ import com.intellij.execution.runners.ProgramRunner
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil
 import com.intellij.execution.ui.ConsoleView
 import com.intellij.util.io.BaseOutputReader
+import java.io.File
 import java.nio.charset.StandardCharsets
 
 class BlenderTestRunningState(
@@ -43,7 +44,13 @@ class BlenderTestRunningState(
             throw ExecutionException("Test directory is not specified in Run Configuration.")
         }
 
-        val scriptFile = ScriptResourceUtils.extractResourceScript("python/run_tests.py", "blender_test_runner")
+        val basePath = project.basePath ?: throw ExecutionException("Project base path is invalid.")
+        val projectScript = File(basePath, "tests/run_tests.py")
+        val scriptFile = if (projectScript.exists()) {
+            projectScript
+        } else {
+            ScriptResourceUtils.extractResourceScript("python/run_tests.py", "blender_test_runner")
+        }
         val projectPath = project.basePath ?: ""
 
         val cmd = GeneralCommandLine()

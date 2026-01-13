@@ -26,7 +26,25 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
             baseDir.refresh(false, true)
 
             assertNotNull("License should be created", baseDir.findChild("LICENSE"))
-            assertNotNull("GitIgnore should be created", baseDir.findChild(".gitignore"))
+
+            val gitignore = baseDir.findChild(".gitignore")
+            assertNotNull("GitIgnore should be created", gitignore)
+            gitignore?.let {
+                val content = VfsUtil.loadText(it)
+                assertTrue("Should ignore .blender_stubs", content.contains(".blender_stubs/"))
+                assertTrue("Should ignore .vscode", content.contains(".vscode/"))
+                assertTrue("Should ignore .venv", content.contains(".venv/"))
+            }
+
+            val pyproject = baseDir.findChild("pyproject.toml")
+            assertNotNull("pyproject.toml should be created", pyproject)
+            pyproject?.let {
+                val content = VfsUtil.loadText(it)
+                val expectedSlug = BlenderProbeUtils.normalizeModuleName(project.name)
+                assertTrue("Should contain project name", content.contains("name = \"$expectedSlug\""))
+                assertTrue("Should contain pip dependency", content.contains("dependencies = [\"pip\"]"))
+                assertTrue("Should use hatchling", content.contains("build-backend = \"hatchling.build\""))
+            }
 
             val expectedSlug = BlenderProbeUtils.normalizeModuleName(project.name)
             val packageDir = baseDir.findChild(expectedSlug)
@@ -50,7 +68,29 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
             val testsDir = baseDir.findChild("tests")
             assertNotNull("tests directory should exist", testsDir)
-            assertNotNull("test_sample.py missing", testsDir?.findChild("test_sample.py"))
+            testsDir?.let { dir ->
+                assertNotNull("test_sample.py missing", dir.findChild("test_sample.py"))
+                assertNotNull("run_tests.py missing (Required for CI)", dir.findChild("run_tests.py"))
+            }
+
+            val githubDir = baseDir.findChild(".github")
+            assertNotNull(".github directory should exist", githubDir)
+
+            val workflowsDir = githubDir?.findChild("workflows")
+            assertNotNull("workflows directory should exist", workflowsDir)
+
+            workflowsDir?.let { dir ->
+                val ciFile = dir.findChild("ci.yml")
+                assertNotNull("CI workflow file missing", ciFile)
+                ciFile?.let {
+                    val content = VfsUtil.loadText(it)
+                    assertTrue("Should run on ubuntu-latest", content.contains("runs-on: ubuntu-latest"))
+                    assertTrue("Should contain matrix strategy", content.contains("matrix:"))
+                }
+            }
+
+            val dependabot = githubDir?.findChild("dependabot.yml")
+            assertNotNull("dependabot.yml missing", dependabot)
 
         } finally {
             settings.state.blenderPath = prevBlenderPath

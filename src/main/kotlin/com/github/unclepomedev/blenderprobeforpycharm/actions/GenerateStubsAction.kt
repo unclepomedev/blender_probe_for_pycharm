@@ -2,6 +2,7 @@ package com.github.unclepomedev.blenderprobeforpycharm.actions
 
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
+import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.OSProcessHandler
 import com.intellij.execution.process.ProcessEvent
@@ -27,6 +28,7 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.concurrency.AppExecutorUtil
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 
 class GenerateStubsAction : AnAction() {
@@ -44,6 +46,11 @@ class GenerateStubsAction : AnAction() {
             var blenderPath = settings.state.blenderPath
 
             if (blenderPath.isBlank()) {
+                if (ApplicationManager.getApplication().isHeadlessEnvironment) {
+                    LOG.warn("Blender path is missing, skipping stub generation in headless mode.")
+                    return
+                }
+
                 val result = Messages.showOkCancelDialog(
                     project,
                     "Blender path is not configured. Please set the path in Settings.",
@@ -59,7 +66,6 @@ class GenerateStubsAction : AnAction() {
                     } catch (e: Exception) {
                         LOG.warn("Settings dialog closed with exception (ignoring): ${e.message}")
                     }
-
                     blenderPath = settings.state.blenderPath
                 } else {
                     return
@@ -93,22 +99,36 @@ class GenerateStubsAction : AnAction() {
                         } catch (ex: Exception) {
                             println("=== Blender Probe FAILED ===")
                             println(executionLog)
-                            LOG.warn("Blender Probe Failed. Logs:\n$executionLog")
-                            LOG.error(ex)
+                            LOG.warn("Blender Probe Failed to generate stubs. Error: ${ex.message}")
                         }
                     }
 
                     override fun onSuccess() {
-                        LOG.info("Blender Probe Finished Successfully.\n$executionLog")
-                        Messages.showInfoMessage(project, "Stubs generated in ${outputDir.absolutePath}", "Success")
-                        virtualOutputDir?.let { dir ->
-                            markDirectoryAsSourceRoot(project, dir)
+                        if (virtualOutputDir != null) {
+                            LOG.info("Blender Probe Finished Successfully.")
+
+                            if (!ApplicationManager.getApplication().isHeadlessEnvironment) {
+                                Messages.showInfoMessage(
+                                    project,
+                                    "Stubs generated in ${outputDir.absolutePath}",
+                                    "Success"
+                                )
+                            }
+
+                            virtualOutputDir?.let { dir ->
+                                markDirectoryAsSourceRoot(project, dir)
+                            }
                         }
                     }
                 })
         }
 
         private fun generateStubsProcess(blenderPath: String, outputDir: File, indicator: ProgressIndicator): String {
+            val blenderExe = File(blenderPath)
+            if (!blenderExe.exists() || !blenderExe.isFile) {
+                throw ExecutionException("Blender executable not found at: $blenderPath")
+            }
+
             indicator.text = "Extracting script..."
             val scriptFile = ScriptResourceUtils.extractScriptToTemp("generate_stubs.py")
 
@@ -122,6 +142,7 @@ class GenerateStubsAction : AnAction() {
                 "--",
                 "--output", outputDir.absolutePath
             )
+            commandLine.charset = StandardCharsets.UTF_8
 
             val handler = OSProcessHandler(commandLine)
             val outputBuilder = StringBuilder()
