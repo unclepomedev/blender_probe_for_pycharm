@@ -44,7 +44,8 @@ class BlenderTestRunningState(
             throw ExecutionException("Test directory is not specified in Run Configuration.")
         }
 
-        val projectScript = File(project.basePath, "tests/run_tests.py")
+        val basePath = project.basePath ?: throw ExecutionException("Project base path is invalid.")
+        val projectScript = File(basePath, "tests/run_tests.py")
         val scriptFile = if (projectScript.exists()) {
             projectScript
         } else {
