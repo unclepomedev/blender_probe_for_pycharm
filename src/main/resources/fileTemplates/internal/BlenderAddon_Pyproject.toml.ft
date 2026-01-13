@@ -1,0 +1,23 @@
+[project]
+name = "${ADDON_NAME_SLUG}"
+version = "0.0.1"
+description = "Blender Addon: ${ADDON_NAME}"
+authors = [
+    {name = "${AUTHOR}"}
+]
+requires-python = ">=3.11"
+dependencies = ["pip"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.uv]
+package = true

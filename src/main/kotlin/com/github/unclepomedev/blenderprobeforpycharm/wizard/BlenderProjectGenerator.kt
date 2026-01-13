@@ -54,8 +54,8 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         createFileFromTemplate("BlenderAddon_Panel.py", srcDir, "panel.py", props)
         createFileFromTemplate("BlenderAddon_Test.py", testsDir, "test_sample.py", props)
         createFileFromTemplate("BlenderAddon_License.txt", rootIoFile, "LICENSE", props)
-
-        File(rootIoFile, ".gitignore").writeText(".idea/\n__pycache__/\n.blender_stubs/\n*.blend1\nbuild/")
+        createFileFromTemplate("BlenderAddon_Pyproject.toml", rootIoFile, "pyproject.toml", props)
+        createFileFromTemplate("BlenderAddon_Gitignore.gitignore", rootIoFile, ".gitignore", props)
 
         VfsUtil.markDirtyAndRefresh(true, true, true, baseDir)
         StartupManager.getInstance(project).runAfterOpened {

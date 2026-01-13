@@ -1,0 +1,25 @@
+# Python / Build
+__pycache__/
+*.pyc
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+
+# Blender Probe (Plugin generated)
+.blender_stubs/
+typings/
+
+# Blender
+*.blend1
+*.blend@
+quit.blend
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
