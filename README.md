@@ -9,28 +9,28 @@
 ## Features
 
 * **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection and automatically registers them as a Source Root.
-  * Unlike static packages, this guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
-  * **Documentation Integration**: Generated stubs include direct links to the official Blender Python API reference within the IDE's Quick Documentation.
+    * Unlike static packages, this guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
+    * **Documentation Integration**: Generated stubs include direct links to the official Blender Python API reference within the IDE's Quick Documentation.
 * **Zero-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
-  * **No Setup Required**: Automatically injects PyCharm's bundled debugger (`pydevd`) into Blender. No need to `pip install pydevd-pycharm` or configure remote debug servers manually.
-  * **Full Features**: Supports breakpoints, variable inspection, and stepping through code.
+    * **No Setup Required**: Automatically injects PyCharm's bundled debugger (`pydevd`) into Blender. No need to `pip install pydevd-pycharm` or configure remote debug servers manually.
+    * **Full Features**: Supports breakpoints, variable inspection, and stepping through code.
 * **Hot Reloading**: Instantly reload your addon code in a running Blender instance without restarting.
-  * **Deep Reload**: Performs a smart purge of `sys.modules` to ensure code changes (including submodules) are correctly re-imported and re-registered.
+    * **Deep Reload**: Performs a smart purge of `sys.modules` to ensure code changes (including submodules) are correctly re-imported and re-registered.
 * **Code Insight**: Automatically suppresses common false-positive warnings in PyCharm to match Blender's conventions.
-  * **PEP 8 Compliance**: Ignores N801 naming warnings for valid Blender classes (e.g., `OBJECT_OT_my_operator`, `MY_PT_panel`).
-  * **Property Handling**: Correctly handles `bpy.props` definitions without triggering type-checking errors.
+    * **PEP 8 Compliance**: Ignores N801 naming warnings for valid Blender classes (e.g., `OBJECT_OT_my_operator`, `MY_PT_panel`).
+    * **Property Handling**: Correctly handles `bpy.props` definitions without triggering type-checking errors.
 * **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
-  * **Visual Feedback**: View results in PyCharm's native test runner UI.
-  * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment.
-  * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`.
+    * **Visual Feedback**: View results in PyCharm's native test runner UI.
+    * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment.
+    * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`.
 * **Project Wizard (Test-Ready)**: Instantly scaffolds a clean, minimal project structure compliant with Blender 4.2+ Extensions.
-  * **Test-Driven Ready**: Comes with a pre-configured `tests/` folder and a sample test. You can run your first test immediately after project creation—no complex environment setup required.
+    * **Test-Driven Ready**: Comes with a pre-configured `tests/` folder, sample tests, and CI/CD workflows. You can run your first test immediately after project creation.
 
 ## Prerequisites
 <!-- Plugin description end -->
 * **PyCharm** (Community or Professional) 2025.2+
 * **Blender** 4.2+ or 5.x
-  * *Note: Blender versions 4.1 and older are not supported.*
+    * *Note: Blender versions 4.1 and older are not supported.*
 
 ## Configuration
 
@@ -57,7 +57,9 @@ This generates a clean project structure compliant with Blender 4.2+ Extensions:
 
 * `my_addon_package/`: Your actual Python package (source code).
 * `tests/`: A ready-to-run test suite.
+* `.github/`: CI/CD workflows for GitHub Actions.
 * `LICENSE`: A GPLv3 license file.
+* `pyproject.toml`: Python tooling configuration.
 
 ### 2. Generating Code Stubs (Autocompletion)
 
@@ -68,6 +70,7 @@ To enable code completion for `bpy` modules:
 3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root and automatically marked as a Source Root.
 
 > **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is highly recommended to add `.blender_stubs/` to your project's `.gitignore` file.
+> *(Note: If you created your project using the **Blender Addon** wizard, this is already configured for you.)*
 
 > **💡 Tip:** Since Blender's API is highly dynamic, PyCharm sometimes cannot infer types automatically (especially for `bpy.context`). To get full autocompletion, use **Type Hinting**:
 > ```python
@@ -166,6 +169,15 @@ class TestSampleOperator(unittest.TestCase):
     self.assertEqual(self.test_obj.name, "TestCube_processed")
     self.assertTrue(self.test_obj.get("is_processed"))
 ```
+
+### 6. Continuous Integration (CI)
+
+Projects created with the **Blender Addon** wizard come with a pre-configured GitHub Actions workflow (`.github/workflows/ci.yml`).
+
+* **Zero Config:** Just push your code to GitHub.
+* **Automatic Testing:** The workflow automatically installs a headless version of Blender (Linux) and runs your tests using the same runner logic as the IDE.
+* **Linting:** `uv` based linting (Ruff) checks your code style.
+* **Dependabot:** Keeps your actions and dependencies up to date.
 
 ## License
 
