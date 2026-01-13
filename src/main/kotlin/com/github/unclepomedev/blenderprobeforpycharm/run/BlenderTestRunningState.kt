@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
+import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.DefaultExecutionResult
@@ -56,8 +57,9 @@ class BlenderTestRunningState(
             .withExePath(blenderPath)
             .withParameters("-b", "--factory-startup", "-P", scriptFile.absolutePath, "--", testDir)
             .withCharset(StandardCharsets.UTF_8)
-            .withWorkDirectory(project.basePath)
-            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", basePath)
+            .withWorkDirectory(basePath)
+            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath)
+            .withEnvironment("BLENDER_PROBE_ADDON_NAME", BlenderProbeUtils.detectAddonModuleName(project))
 
         val processHandler = object : OSProcessHandler(cmd) {
             override fun readerOptions(): BaseOutputReader.Options {

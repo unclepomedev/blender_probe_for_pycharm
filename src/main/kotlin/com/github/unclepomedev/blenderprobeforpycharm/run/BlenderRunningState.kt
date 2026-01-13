@@ -42,14 +42,15 @@ class BlenderRunningState(
 
         val scriptFile = ScriptResourceUtils.extractResourceScript("python/probe_server.py", "blender_probe_server")
         val projectPath = project.basePath ?: ""
-        val addonName = BlenderProbeUtils.normalizeModuleName(project.name)
+        val addonName = BlenderProbeUtils.detectAddonModuleName(project)
+        val sourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
 
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
             .withParameters("--factory-startup", "--python-exit-code", "1", "-P", scriptFile.absolutePath)
             .withCharset(StandardCharsets.UTF_8)
-            .withWorkDirectory(project.basePath)
-            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", projectPath)
+            .withWorkDirectory(projectPath)
+            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
             .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
             .withEnvironment("PYTHONUNBUFFERED", "1")
 
