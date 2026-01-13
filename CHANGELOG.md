@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### 🚀 Initial Release (Public Beta)
+
+**Blender Probe** is now available in Public Beta!
+This plugin bridges the gap between PyCharm and Blender, offering a seamless development experience for addon creators.
+
+#### ✨ Key Features
+* **Dynamic API Stubs:** Generates `.pyi` stubs directly from your running Blender binary. Supports standard modules (`bpy`, `mathutils`) and runtime-generated properties (`bpy.context`, `bpy.types`).
+* **Zero-Config Debugging:** Attach PyCharm’s debugger to Blender with a single click. No need for `pip install pydevd-pycharm` or remote server configuration.
+* **Hot Reloading:** Updates your addon instantly when files are saved.
+    * **Seamless Workflow:** Simply **switch focus back to Blender**, and your changes are applied automatically. (Requires PyCharm's "Save on frame deactivation" enabled).
+    * **Keyboard Shortcut:** Also available via `Ctrl + Alt + Shift + R`.
+* **Integrated Test Runner:** Run standard `unittest` suites inside Blender directly from PyCharm's UI.
+* **Smart Code Insight:** Automatically suppresses false-positive warnings (PEP 8 naming for Operators/Panels, Property definitions).
+
+#### ⚠️ Compatibility Note
+* **Stable:** macOS
+* **Experimental:** Windows & Linux support is currently experimental.
+* Supported Blender Versions: 4.2+ and 5.x.
+
+---
+*Happy Blending! If you encounter any issues, please report them on GitHub.*
+
+## [0.0.6] - 2026-01-13
+
 ### Added
 - **CI/CD Integration**: The Project Wizard now generates a fully configured GitHub Actions workflow (`.github/workflows/ci.yml`).
     - **Zero Config**: Automatically sets up headless Blender (Linux) testing and code linting (Ruff) for new projects.

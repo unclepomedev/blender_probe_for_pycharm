@@ -2,29 +2,29 @@
 <!-- Plugin description -->
 **Blender Probe** bridges PyCharm and Blender with **Code Completion**, **Testing**, **Debugging**, and **Hot Reloading**.
 
-> **⚠️ Compatibility Note:**
+> **⚠️ Compatibility Note: (Public Beta)**
 > While **Blender Probe** is designed to work across Windows, macOS, and Linux, primary development and extensive testing have been conducted on **macOS**.
 > Windows and Linux support is currently **experimental**. If you encounter any pathing issues or unexpected behavior on these platforms, please [open an issue](https://github.com/unclepomedev/blender_probe_for_pycharm/issues).
 
 ## Features
 
-* **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection and automatically registers them as a Source Root.
-    * Unlike static packages, this guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
-    * **Documentation Integration**: Generated stubs include direct links to the official Blender Python API reference within the IDE's Quick Documentation.
+* **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection.
+    * **Always Accurate**: Guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
+    * **Documentation Integration**: Direct links to the official Blender Python API reference within the IDE.
 * **Zero-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
-    * **No Setup Required**: Automatically injects PyCharm's bundled debugger (`pydevd`) into Blender. No need to `pip install pydevd-pycharm` or configure remote debug servers manually.
-    * **Full Features**: Supports breakpoints, variable inspection, and stepping through code.
-* **Hot Reloading**: Instantly reload your addon code in a running Blender instance without restarting.
-    * **Deep Reload**: Performs a smart purge of `sys.modules` to ensure code changes (including submodules) are correctly re-imported and re-registered.
-* **Code Insight**: Automatically suppresses common false-positive warnings in PyCharm to match Blender's conventions.
-    * **PEP 8 Compliance**: Ignores N801 naming warnings for valid Blender classes (e.g., `OBJECT_OT_my_operator`, `MY_PT_panel`).
-    * **Property Handling**: Correctly handles `bpy.props` definitions without triggering type-checking errors.
-* **Integrated Test Runner**: Run standard Python `unittest` suites inside Blender directly from PyCharm.
-    * **Visual Feedback**: View results in PyCharm's native test runner UI.
-    * **Clean Environment**: Tests run with `--factory-startup` to ensure a reproducible environment.
-    * **Automatic Path Injection**: Your project root is automatically injected into `sys.path`.
-* **Project Wizard (Test-Ready)**: Instantly scaffolds a clean, minimal project structure compliant with Blender 4.2+ Extensions.
-    * **Test-Driven Ready**: Comes with a pre-configured `tests/` folder, sample tests, and CI/CD workflows. You can run your first test immediately after project creation.
+    * **No Setup**: Automatically injects `pydevd`. No `pip install` or remote server config needed.
+    * **Full Control**: Breakpoints, variable inspection, and stepping work out of the box.
+* **Hot Reloading**: Instantly reload your addon code **on file save** without restarting.
+    * **Seamless Workflow**: Simply **switch focus back to Blender**, and your changes are applied automatically via PyCharm's autosave.
+    * **Deep Reload**: Smartly purges `sys.modules` to ensure submodules are correctly re-registered.
+* **Code Insight**: Intelligent suppression of false-positive warnings.
+    * **PEP 8 Compliance**: Ignores N801 for Blender classes (e.g., `OBJECT_OT_op`).
+    * **Property Handling**: Correctly handles `bpy.props` without type-checking errors.
+* **Integrated Test Runner**: Run standard `unittest` suites inside Blender from PyCharm's UI.
+    * **Visual Feedback**: Results appear in the native test runner tool window.
+    * **Clean State**: Runs with `--factory-startup` for a reproducible environment.
+* **Project Wizard**: Scaffolds a Blender 4.2+ Extensions compliant project.
+    * **Ready to Go**: Includes a pre-configured `tests/` folder and CI/CD workflows.
 
 ## Prerequisites
 <!-- Plugin description end -->
@@ -103,7 +103,8 @@ When developing UI panels or iterating on operators, restarting Blender is slow.
 1.  Ensure Blender is running (launched via the **Run** or **Debug** configuration from PyCharm).
 2.  Make changes to your Python code.
 3.  Go to **Tools** > **Reload Addon in Blender**.
-    * **Shortcut**: `Ctrl + Alt + Shift + R` (default).
+    * **Automatically**: Simply **switch focus** from PyCharm back to Blender. (Requires **Save files when switching to a different application** enabled in **System Settings > Autosave**).
+    * **Manually**: `Ctrl + Alt + Shift + R` (default) or goto **Tools > Reload Addon in Blender**.
 4.  Check the Blender console or PyCharm notification for confirmation. Your addon is now running the updated code.
 
 > **Note**: This performs a "Deep Reload" by unregistering the addon, purging relevant modules from `sys.modules`, and re-registering. This handles most code changes, but complex state changes may still require a restart.
