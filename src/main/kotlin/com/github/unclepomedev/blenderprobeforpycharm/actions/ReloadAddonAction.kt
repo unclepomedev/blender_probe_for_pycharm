@@ -25,8 +25,7 @@ class ReloadAddonAction : AnAction() {
             return
         }
 
-        val detectedName = BlenderProbeUtils.findAddonPackageName(project)?.takeIf { it.isNotBlank() }
-        val addonName = detectedName ?: BlenderProbeUtils.normalizeModuleName(project.name)
+        val addonName = BlenderProbeUtils.detectAddonModuleName(project)
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Reloading blender addon", false) {
             override fun run(indicator: ProgressIndicator) {
