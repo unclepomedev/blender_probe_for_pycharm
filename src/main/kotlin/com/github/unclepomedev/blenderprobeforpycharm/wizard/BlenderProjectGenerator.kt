@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
+import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction
 import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
 import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType
@@ -8,15 +9,21 @@ import com.intellij.execution.RunManager
 import com.intellij.execution.configurations.ConfigurationTypeUtil
 import com.intellij.facet.ui.ValidationResult
 import com.intellij.ide.fileTemplates.FileTemplateManager
+import com.intellij.ide.util.projectWizard.SettingsStep
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupManager
+import com.intellij.openapi.ui.TextFieldWithBrowseButton
+import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.DirectoryProjectGenerator
+import com.intellij.platform.ProjectGeneratorPeer
 import java.io.File
 import javax.swing.Icon
+import javax.swing.JComponent
+import javax.swing.JPanel
 
 class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
 
@@ -32,7 +39,7 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
     ) {
         val rootIoFile = VfsUtil.virtualToIoFile(baseDir)
 
-        val slug = project.name.lowercase().replace(" ", "_").replace("-", "_")
+        val slug = BlenderProbeUtils.normalizeModuleName(project.name)
         val srcDir = File(rootIoFile, slug).apply { mkdirs() }
         val testsDir = File(rootIoFile, "tests").apply { mkdirs() }
         val props = mapOf(
@@ -82,6 +89,23 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
     }
 
     override fun validate(baseDirPath: String): ValidationResult = ValidationResult.OK
+
+    override fun createPeer(): ProjectGeneratorPeer<Any> {
+        return object : ProjectGeneratorPeer<Any> {
+            override fun getSettings(): Any = Any()
+
+            override fun getComponent(myLocationField: TextFieldWithBrowseButton, checkValid: Runnable): JComponent {
+                return JPanel()
+            }
+
+            override fun buildUI(settingsStep: SettingsStep) {
+            }
+
+            override fun validate(): ValidationInfo? = null
+
+            override fun isBackgroundJobRunning(): Boolean = false
+        }
+    }
 
     private fun createFileFromTemplate(templateName: String, dir: File, fileName: String, props: Map<String, Any>) {
         val manager = FileTemplateManager.getDefaultInstance()
