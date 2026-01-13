@@ -15,7 +15,7 @@
     * **No Setup Required**: Automatically injects PyCharm's bundled debugger (`pydevd`) into Blender. No need to `pip install pydevd-pycharm` or configure remote debug servers manually.
     * **Full Features**: Supports breakpoints, variable inspection, and stepping through code.
 * **Hot Reloading**: Instantly reload your addon code on file save without restarting.
-    * **Seamless Workflow**: Simply **switch focus back to Blender**, and your changes are applied automatically. (Requires PyCharm's "Save on frame deactivation").
+    * **Seamless Workflow**: Simply **switch focus back to Blender**, and your changes are applied automatically. (Requires PyCharm's "Save files when switching to a different application").
     * **Deep Reload**: Performs a smart purge of `sys.modules` to ensure code changes (including submodules) are correctly re-imported and re-registered.
 * **Code Insight**: Automatically suppresses common false-positive warnings in PyCharm to match Blender's conventions.
     * **PEP 8 Compliance**: Ignores N801 naming warnings for valid Blender classes (e.g., `OBJECT_OT_my_operator`, `MY_PT_panel`).
