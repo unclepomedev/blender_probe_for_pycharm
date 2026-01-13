@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
+import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.DefaultExecutionResult
@@ -41,7 +42,7 @@ class BlenderRunningState(
 
         val scriptFile = ScriptResourceUtils.extractResourceScript("python/probe_server.py", "blender_probe_server")
         val projectPath = project.basePath ?: ""
-        val addonName = project.name.lowercase().replace(" ", "_").replace("-", "_")
+        val addonName = BlenderProbeUtils.normalizeModuleName(project.name)
 
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
