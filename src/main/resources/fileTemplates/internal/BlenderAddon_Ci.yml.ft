@@ -1,0 +1,89 @@
+# GitHub Actions reference: https://help.github.com/en/actions
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run Ruff (Lint)
+        run: uv run ruff check .
+
+      - name: Run Ruff (Format)
+        run: uv run ruff format --check .
+
+  test:
+    name: Test on Blender ${{ matrix.blender-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Check https://download.blender.org/release/ for available versions
+        blender-version: [ "4.2.0", "5.0.0" ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Cache Blender
+        id: cache-blender
+        uses: actions/cache@v4
+        with:
+          path: blender-bin
+          key: blender-linux-${{ matrix.blender-version }}
+
+      - name: Download Blender
+        if: steps.cache-blender.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+            #[[
+              set -e
+              VER="${{ matrix.blender-version }}"
+              MAJOR_MINOR=${VER%.*}
+              mkdir -p blender-bin
+
+              URL="https://download.blender.org/release/Blender${MAJOR_MINOR}/blender-${VER}-linux-x64.tar.xz"
+              echo "Downloading Blender ${VER}..."
+              curl -SL --fail "$URL" -o blender.tar.xz || { echo "Failed to download Blender from $URL"; exit 1; }
+
+              echo "Extracting..."
+              tar -xf blender.tar.xz -C blender-bin --strip-components=1
+              rm blender.tar.xz
+            ]]#
+
+      - name: Setup Blender Path
+        shell: bash
+        run: |
+            #[[
+              echo "$PWD/blender-bin" >> $GITHUB_PATH
+              export PATH="$PWD/blender-bin:$PATH"
+
+              if ! command -v blender &> /dev/null; then
+                echo "::error::blender executable not found in PATH"
+                exit 1
+              fi
+              echo "Blender setup complete. Version:"
+              blender --version
+            ]]#
+
+      - name: Run Tests
+        run: |
+            #[[
+              export BLENDER_PROBE_PROJECT_ROOT="$PWD"
+              blender --background --factory-startup --python-exit-code 1 --python tests/run_tests.py -- tests
+            ]]#

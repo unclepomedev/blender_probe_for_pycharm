@@ -52,10 +52,17 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         createFileFromTemplate("BlenderAddon_Init.py", srcDir, "__init__.py", props)
         createFileFromTemplate("BlenderAddon_Ops.py", srcDir, "operators.py", props)
         createFileFromTemplate("BlenderAddon_Panel.py", srcDir, "panel.py", props)
+        createFileFromTemplate("BlenderAddon_RunTests.py", testsDir, "run_tests.py", props)
         createFileFromTemplate("BlenderAddon_Test.py", testsDir, "test_sample.py", props)
         createFileFromTemplate("BlenderAddon_License.txt", rootIoFile, "LICENSE", props)
         createFileFromTemplate("BlenderAddon_Pyproject.toml", rootIoFile, "pyproject.toml", props)
         createFileFromTemplate("BlenderAddon_Gitignore.gitignore", rootIoFile, ".gitignore", props)
+
+        val githubDir = File(rootIoFile, ".github").apply { mkdirs() }
+        val workflowsDir = File(githubDir, "workflows").apply { mkdirs() }
+
+        createFileFromTemplate("BlenderAddon_Ci.yml", workflowsDir, "ci.yml", props)
+        createFileFromTemplate("BlenderAddon_Dependabot.yml", githubDir, "dependabot.yml", props)
 
         VfsUtil.markDirtyAndRefresh(true, true, true, baseDir)
         StartupManager.getInstance(project).runAfterOpened {
