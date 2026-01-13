@@ -104,7 +104,7 @@ When developing UI panels or iterating on operators, restarting Blender is slow.
 1.  Ensure Blender is running (launched via the **Run** or **Debug** configuration from PyCharm).
 2.  Make changes to your Python code.
 3.  Go to **Tools** > **Reload Addon in Blender**.
-    * **Automatically**: Simply switch focus from PyCharm back to Blender. (Ensure *File > Settings > Save* files when switching to a different application is enabled).
+    * **Automatically**: Simply **switch focus** from PyCharm back to Blender. (Requires **Save files when switching to a different application** enabled in **System Settings > Autosave**).
     * **Manually**: `Ctrl + Alt + Shift + R` (default) or goto **Tools > Reload Addon in Blender**.
 4.  Check the Blender console or PyCharm notification for confirmation. Your addon is now running the updated code.
 
