@@ -95,7 +95,11 @@ class TeamCityTestRunner(unittest.TextTestRunner):
 
 
 def run_tests(test_dir):
-    auto_register_addon()
+    tc_print('blockOpened', name='Blender Probe Setup')
+    try:
+        auto_register_addon()
+    finally:
+        tc_print('blockClosed', name='Blender Probe Setup')
 
     tc_print('testSuiteStarted', name='Blender Tests')
 
@@ -108,7 +112,7 @@ def run_tests(test_dir):
             sys.exit(1)
 
         suite = loader.discover(test_dir)
-        runner = TeamCityTestRunner(stream=sys.stdout, verbosity=2)
+        runner = TeamCityTestRunner(stream=sys.stdout, verbosity=0)
         result = runner.run(suite)
 
     except Exception:

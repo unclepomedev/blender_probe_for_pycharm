@@ -2,11 +2,13 @@
 
 import bpy
 
+
 class OBJECT_OT_sample_operator(bpy.types.Operator):
     """Sample Operator: Renames the active object and adds a property"""
+
     bl_idname = "object.sample_operator"
     bl_label = "Sample Operator"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll(cls, context: bpy.types.Context) -> bool:
@@ -23,11 +25,13 @@ class OBJECT_OT_sample_operator(bpy.types.Operator):
         # 2. Add a custom property tag
         obj["is_processed"] = True
 
-        self.report({'INFO'}, f"Processed object: {original_name} -> {obj.name}")
-        return {'FINISHED'}
+        self.report({"INFO"}, f"Processed object: {original_name} -> {obj.name}")
+        return {"FINISHED"}
+
 
 def register():
     bpy.utils.register_class(OBJECT_OT_sample_operator)
+
 
 def unregister():
     bpy.utils.unregister_class(OBJECT_OT_sample_operator)
