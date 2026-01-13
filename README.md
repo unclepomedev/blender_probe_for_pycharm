@@ -2,7 +2,7 @@
 <!-- Plugin description -->
 **Blender Probe** bridges PyCharm and Blender with **Code Completion**, **Testing**, **Debugging**, and **Hot Reloading**.
 
-> **⚠️ Compatibility Note:**
+> **⚠️ Compatibility Note: (Public Beta)**
 > While **Blender Probe** is designed to work across Windows, macOS, and Linux, primary development and extensive testing have been conducted on **macOS**.
 > Windows and Linux support is currently **experimental**. If you encounter any pathing issues or unexpected behavior on these platforms, please [open an issue](https://github.com/unclepomedev/blender_probe_for_pycharm/issues).
 
@@ -14,7 +14,8 @@
 * **Zero-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
     * **No Setup Required**: Automatically injects PyCharm's bundled debugger (`pydevd`) into Blender. No need to `pip install pydevd-pycharm` or configure remote debug servers manually.
     * **Full Features**: Supports breakpoints, variable inspection, and stepping through code.
-* **Hot Reloading**: Instantly reload your addon code in a running Blender instance without restarting.
+* **Hot Reloading**: Instantly reload your addon code on file save without restarting.
+    * **Seamless Workflow**: Simply **switch focus back to Blender**, and your changes are applied automatically. (Requires PyCharm's "Save on frame deactivation").
     * **Deep Reload**: Performs a smart purge of `sys.modules` to ensure code changes (including submodules) are correctly re-imported and re-registered.
 * **Code Insight**: Automatically suppresses common false-positive warnings in PyCharm to match Blender's conventions.
     * **PEP 8 Compliance**: Ignores N801 naming warnings for valid Blender classes (e.g., `OBJECT_OT_my_operator`, `MY_PT_panel`).
@@ -103,7 +104,8 @@ When developing UI panels or iterating on operators, restarting Blender is slow.
 1.  Ensure Blender is running (launched via the **Run** or **Debug** configuration from PyCharm).
 2.  Make changes to your Python code.
 3.  Go to **Tools** > **Reload Addon in Blender**.
-    * **Shortcut**: `Ctrl + Alt + Shift + R` (default).
+    * **Automatically**: Simply switch focus from PyCharm back to Blender. (Ensure *File > Settings > Save* files when switching to a different application is enabled).
+    * **Manually**: `Ctrl + Alt + Shift + R` (default) or goto **Tools > Reload Addon in Blender**.
 4.  Check the Blender console or PyCharm notification for confirmation. Your addon is now running the updated code.
 
 > **Note**: This performs a "Deep Reload" by unregistering the addon, purging relevant modules from `sys.modules`, and re-registering. This handles most code changes, but complex state changes may still require a restart.
