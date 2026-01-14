@@ -10,10 +10,10 @@ import com.intellij.execution.configurations.ConfigurationTypeUtil
 import com.intellij.facet.ui.ValidationResult
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.ide.util.projectWizard.SettingsStep
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupManager
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.openapi.vfs.VfsUtil
@@ -30,7 +30,6 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
     override fun getName(): String = "Blender addon"
     override fun getLogo(): Icon = BlenderProbeIcons.Logo16
 
-    @Suppress("UnstableApiUsage")
     override fun generateProject(
         project: Project,
         baseDir: VirtualFile,
@@ -65,7 +64,8 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         createFileFromTemplate("BlenderAddon_Dependabot.yml", githubDir, "dependabot.yml", props)
 
         VfsUtil.markDirtyAndRefresh(true, true, true, baseDir)
-        StartupManager.getInstance(project).runAfterOpened {
+        ApplicationManager.getApplication().invokeLater {
+            if (project.isDisposed) return@invokeLater
             DumbService.getInstance(project).runWhenSmart {
                 createDefaultRunConfiguration(project)
                 try {
