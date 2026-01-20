@@ -41,7 +41,7 @@ class BlenderTestRunConfigurationTest : BaseBlenderTest() {
         assertEquals("Persistence logic should preserve testDir", expectedPath, newConfig.testDir)
     }
 
-    fun testCheckConfiguration_ValidateBlenderPath() {
+    fun testCheckConfiguration_AllowsEmptyBlenderPath_ForAutoDetect() {
         val config = createTemplateConfig()
 
         BlenderSettings.getInstance(project).state.blenderPath = ""
@@ -49,16 +49,15 @@ class BlenderTestRunConfigurationTest : BaseBlenderTest() {
 
         try {
             config.checkConfiguration()
-            fail("Should throw RuntimeConfigurationException when Blender path is missing")
         } catch (e: RuntimeConfigurationException) {
-            assertEquals("Blender executable path is not set.", e.localizedMessage)
+            fail("Should NOT throw RuntimeConfigurationException even if Blender path is missing (it implies auto-detect). Error: ${e.localizedMessage}")
         }
     }
 
     fun testCheckConfiguration_ValidateTestDir() {
         val config = createTemplateConfig()
 
-        BlenderSettings.getInstance(project).state.blenderPath = "/path/to/blender"
+        BlenderSettings.getInstance(project).state.blenderPath = ""
         config.testDir = ""
 
         try {

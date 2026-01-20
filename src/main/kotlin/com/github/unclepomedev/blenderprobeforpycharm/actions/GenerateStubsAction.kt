@@ -43,17 +43,17 @@ class GenerateStubsAction : AnAction() {
 
         fun regenerateStubs(project: Project) {
             val settings = BlenderSettings.getInstance(project)
-            var blenderPath = settings.state.blenderPath
+            var blenderPath = settings.resolveBlenderPath()
 
-            if (blenderPath.isBlank()) {
+            if (blenderPath == null) {
                 if (ApplicationManager.getApplication().isHeadlessEnvironment) {
-                    LOG.warn("Blender path is missing, skipping stub generation in headless mode.")
+                    LOG.warn("Blender path not found (Manual or Blup), skipping stub generation.")
                     return
                 }
 
                 val result = Messages.showOkCancelDialog(
                     project,
-                    "Blender path is not configured. Please set the path in Settings.",
+                    "Blender executable could not be found.\nPlease configure the path manually or ensure 'blup' is installed.",
                     "Configuration Required",
                     "Open Settings",
                     "Cancel",
@@ -61,19 +61,11 @@ class GenerateStubsAction : AnAction() {
                 )
 
                 if (result == Messages.OK) {
-                    try {
-                        ShowSettingsUtil.getInstance().showSettingsDialog(project, "Blender Probe")
-                    } catch (e: Exception) {
-                        LOG.warn("Settings dialog closed with exception (ignoring): ${e.message}")
-                    }
-                    blenderPath = settings.state.blenderPath
-                } else {
-                    return
+                    ShowSettingsUtil.getInstance().showSettingsDialog(project, "Blender Probe")
+                    blenderPath = settings.resolveBlenderPath()
                 }
-            }
 
-            if (blenderPath.isBlank()) {
-                return
+                if (blenderPath == null) return
             }
 
             val basePath = project.basePath ?: return
@@ -86,7 +78,7 @@ class GenerateStubsAction : AnAction() {
 
                     override fun run(indicator: ProgressIndicator) {
                         try {
-                            executionLog = generateStubsProcess(blenderPath, outputDir, indicator)
+                            executionLog = generateStubsProcess(basePath, outputDir, indicator)
 
                             println("=== Blender Probe Execution Log ===")
                             println(executionLog)
