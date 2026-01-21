@@ -5,7 +5,9 @@ import os
 import pkgutil
 import sys
 import traceback
+import textwrap
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import bpy
 
