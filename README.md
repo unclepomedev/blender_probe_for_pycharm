@@ -8,23 +8,14 @@
 
 ## Features
 
-* **Dynamic API Stubs**: Generates Python type stubs (`.pyi`) via runtime introspection.
-    * **Always Accurate**: Guarantees your stubs match your exact Blender binary—including daily builds and custom branches.
-    * **Documentation Integration**: Direct links to the official Blender Python API reference within the IDE.
-* **Zero-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
-    * **No Setup**: Automatically injects `pydevd`. No `pip install` or remote server config needed.
-    * **Full Control**: Breakpoints, variable inspection, and stepping work out of the box.
+* **Dynamic API Stubs**: Generates Python type `.pyi` stubs (including daily builds) via runtime introspection.
+* **No-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
 * **Hot Reloading**: Instantly reload your addon code **on file save** without restarting.
-    * **Seamless Workflow**: Simply **switch focus back to Blender**, and your changes are applied automatically via PyCharm's autosave.
-    * **Deep Reload**: Smartly purges `sys.modules` to ensure submodules are correctly re-registered.
 * **Code Insight**: Intelligent suppression of false-positive warnings.
-    * **PEP 8 Compliance**: Ignores N801 for Blender classes (e.g., `OBJECT_OT_op`).
-    * **Property Handling**: Correctly handles `bpy.props` without type-checking errors.
 * **Integrated Test Runner**: Run standard `unittest` suites inside Blender from PyCharm's UI.
-    * **Visual Feedback**: Results appear in the native test runner tool window.
-    * **Clean State**: Runs with `--factory-startup` for a reproducible environment.
 * **Project Wizard**: Scaffolds a Blender 4.2+ Extensions compliant project.
-    * **Ready to Go**: Includes a pre-configured `tests/` folder and CI/CD workflows.
+
+Detailed description: [GitHub Repository](https://github.com/unclepomedev/blender_probe_for_pycharm)
 <!-- Plugin description end -->
 
 ## Prerequisites
