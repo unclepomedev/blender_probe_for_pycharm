@@ -1,10 +1,11 @@
 package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
-import com.github.unclepomedev.blenderprobeforpycharm.actions.GenerateStubsAction
 import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
 import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType
 import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestRunConfiguration
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService
+import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.RunManager
 import com.intellij.execution.configurations.ConfigurationTypeUtil
 import com.intellij.facet.ui.ValidationResult
@@ -68,10 +69,13 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
             if (project.isDisposed) return@invokeLater
             DumbService.getInstance(project).runWhenSmart {
                 createDefaultRunConfiguration(project)
-                try {
-                    GenerateStubsAction.regenerateStubs(project)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
+                if (blenderPath != null) {
+                    try {
+                        BlenderStubService.getInstance(project).generateStubs(blenderPath)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
         }

@@ -38,6 +38,8 @@
                            displayType="BALLOON"/>
         <projectService
                 serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings"/>
+        <projectService
+                serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService"/>
         <projectConfigurable
                 parentId="tools"
                 instance="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"

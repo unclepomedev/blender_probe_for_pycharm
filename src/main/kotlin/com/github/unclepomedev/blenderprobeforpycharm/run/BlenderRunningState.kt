@@ -34,10 +34,10 @@ class BlenderRunningState(
     override fun startProcess(): ProcessHandler {
         val project = environment.project
         val settings = BlenderSettings.getInstance(project)
-        val blenderPath = settings.state.blenderPath
+        val blenderPath = settings.resolveBlenderPath()
 
-        if (blenderPath.isEmpty()) {
-            throw ExecutionException("Blender executable path is not set.")
+        if (blenderPath.isNullOrEmpty()) {
+            throw ExecutionException("Blender executable not found. Please configure it in Settings or install 'blup'.")
         }
 
         val scriptFile = ScriptResourceUtils.extractResourceScript("python/probe_server.py", "blender_probe_server")

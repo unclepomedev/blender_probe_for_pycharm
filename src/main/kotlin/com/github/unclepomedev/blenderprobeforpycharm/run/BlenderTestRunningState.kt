@@ -34,10 +34,10 @@ class BlenderTestRunningState(
     override fun startProcess(): ProcessHandler {
         val project = environment.project
         val settings = BlenderSettings.getInstance(project)
-        val blenderPath = settings.state.blenderPath
+        val blenderPath = settings.resolveBlenderPath()
 
-        if (blenderPath.isEmpty()) {
-            throw ExecutionException("Blender executable path is not set. Please check Settings > Tools > Blender Probe.")
+        if (blenderPath.isNullOrEmpty()) {
+            throw ExecutionException("Blender executable not found. Please configure it in Settings or ensure 'blup' is installed.")
         }
 
         val testDir = configuration.testDir
