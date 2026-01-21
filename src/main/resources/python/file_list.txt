@@ -1,0 +1,17 @@
+# Main Script
+generate_stubs.py
+
+# Templates - Modules
+templates/modules/bpy.msgbus.pyi
+
+# Templates - Types
+templates/types/bpy_prop_collection.pyi
+
+# Templates - Injections
+templates/injections/bpy_struct.pyi
+templates/injections/Context.pyi
+templates/injections/Object.pyi
+templates/injections/Collection.pyi
+templates/injections/ID.pyi
+templates/injections/SpaceView3D.pyi
+templates/injections/KeyConfigurations.pyi

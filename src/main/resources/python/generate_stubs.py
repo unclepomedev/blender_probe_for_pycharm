@@ -9,6 +9,26 @@ from dataclasses import dataclass, field
 
 import bpy
 
+class TemplateLoader:
+    def __init__(self):
+        self.base_path = Path(__file__).parent / "templates"
+
+    def read_lines(self, relative_path: str) -> list[str]:
+        target = self.base_path / relative_path
+        if not target.exists():
+            return []
+        return target.read_text(encoding="utf-8").splitlines()
+
+    def get_injection(self, class_name: str) -> list[str]:
+        target = self.base_path / "injections" / f"{class_name}.pyi"
+        if not target.exists():
+            return []
+        content = target.read_text(encoding="utf-8")
+        return textwrap.indent(content, "    ").splitlines()
+
+
+template_loader = TemplateLoader()
+
 
 @dataclass(frozen=True)
 class GeneratorConfig:
@@ -46,61 +66,15 @@ class GeneratorConfig:
     # NOTE: We use 'Any' for complex types in Context/Struct injections
     # to avoid missing import errors in the generated .pyi files.
     manual_injections: dict[str, list[str]] = field(default_factory=lambda: {
-        "bpy_struct": [
-            "    def __getattr__(self, name) -> Any: ...",
-            "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
-            "    def as_pointer(self) -> int: ...",
-            "    def driver_add(self, path: str, index: int = -1) -> Any: ...",
-            "    def driver_remove(self, path: str, index: int = -1) -> bool: ...",
-            "    def get(self, key: str, default: Any = None) -> Any: ...",
-            "    def items(self) -> list[tuple[str, Any]]: ...",
-            "    def keys(self) -> list[str]: ...",
-            "    def values(self) -> list[Any]: ...",
-            "    def path_from_id(self, property: str = '') -> str: ...",
-            "    id_data: Any",
-        ],
-        "Context": [
-            "    selected_objects: list[Any]",
-            "    active_object: Any",
-            "    view_layer: Any",
-            "    scene: Any",
-            "    screen: Any",
-            "    area: Any",
-            "    region: Any",
-            "    window: Any",
-            "    window_manager: Any",
-            "    preferences: Any",
-            "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
-            "    def __getattr__(self, name) -> Any: ...",
-        ],
+        "bpy_struct": template_loader.get_injection("bpy_struct"),
+        "Context": template_loader.get_injection("Context"),
         # Object methods usually handled by C
-        "Object": [
-            "    def select_set(self, state: bool) -> None: ...",
-            "    def select_get(self) -> bool: ...",
-            "    def hide_set(self, state: bool) -> None: ...",
-            "    def hide_get(self) -> bool: ...",
-            "    def hide_viewport_set(self, state: bool) -> None: ...",
-            "    def hide_render_set(self, state: bool) -> None: ...",
-            "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
-        ],
-        "Collection": [
-            "    def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...",
-        ],
-        "ID": [
-            "    name: str",
-        ],
+        "Object": template_loader.get_injection("Object"),
+        "Collection": template_loader.get_injection("Collection"),
+        "ID": template_loader.get_injection("ID"),
         # SpaceView3D static handlers
-        "SpaceView3D": [
-            "    @classmethod",
-            "    def draw_handler_add(cls, callback: Callable, args: tuple, region_type: str, draw_type: str) -> object: ...",
-            "    @classmethod",
-            "    def draw_handler_remove(cls, handler: object, region_type: str) -> None: ...",
-        ],
-        "KeyConfigurations": [
-            "    addon: Any",
-            "    user: Any",
-            "    active: Any",
-        ],
+        "SpaceView3D": template_loader.get_injection("SpaceView3D"),
+        "KeyConfigurations": template_loader.get_injection("KeyConfigurations"),
     })
 
     @property
@@ -195,14 +169,7 @@ class StubGenerator:
             parts = module_name.split(".")
             mod_dir = os.path.join(base_output_dir, *parts)
             content = list(self.config.common_headers)
-            content.extend([
-                "import typing",
-                "from typing import Any, Callable",
-                "",
-                "def subscribe_rna(key: Any, owner: Any, args: Any, notify: Callable[[tuple], None], options: set[str] = None) -> None: ...",
-                "def publish_rna(key: Any) -> None: ...",
-                "def clear_by_owner(owner: Any) -> None: ...",
-            ])
+            content.extend(template_loader.read_lines("modules/bpy.msgbus.pyi"))
             self.write_file(mod_dir, "__init__.pyi", content)
             return True
         try:
@@ -301,35 +268,7 @@ class StubGenerator:
     def generate_bpy_types(self):
         print(f"Generating types to: {self.config.bpy_types_dir}")
         prop_col_content = list(self.config.common_headers)
-        prop_col_content.extend([
-            "import typing",
-            "from typing import Any, Union, Sequence, TypeVar, Generic, Optional, Callable, Iterator",
-            "", "T = TypeVar('T')", "",
-            "class bpy_prop_collection(Sequence[T], Generic[T]):",
-            "    def values(self) -> list[T]: ...",
-            "    def items(self) -> list[tuple[str, T]]: ...",
-            "    def get(self, key: Union[str, Any], default: T = None) -> Optional[T]: ...",
-            "    def __getitem__(self, key: Union[str, int]) -> T: ...",
-            "    def __iter__(self) -> Iterator[T]: ...",
-            "    def __len__(self) -> int: ...",
-            "    def __contains__(self, key: Union[str, Any]) -> bool: ...",
-            "", "    # Generic fallbacks (Injected)",
-            "    def new(self, name: str = '', *args, **kwargs) -> T:",
-            "        \"\"\"\n        Create a new item in this collection.\n        \n        **⚠️ Warning (Stub)**:\n        This is a generic fallback method provided by the IDE plugin.\n        Not all collections support creating new items (e.g., read-only collections).\n        Please verify if this specific collection supports `new()` in the Blender API docs.\n        \"\"\"\n        ...",
-            "",
-            "    def remove(self, value: T, do_unlink: bool = True, do_id_user: bool = True, do_ui_user: bool = True) -> None:",
-            "        \"\"\"\n        Remove an item from this collection.\n        \n        **⚠️ Warning (Stub)**:\n        This is a generic fallback method provided by the IDE plugin.\n        Read-only collections do not support removal.\n        \"\"\"\n        ...",
-            "", "    def clear(self) -> None:",
-            "        \"\"\"\n        Clear all items from this collection.\n        \n        **⚠️ Warning (Stub)**:\n        This is a generic fallback method. Most Blender collections do not support `clear()`.\n        \"\"\"\n        ...",
-            "",
-            "    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any:",
-            "        \"\"\"\n        Load data from an external blend file (Context Manager).\n        \n        **Note**:\n        This method is typically available on `bpy.data.libraries`, `bpy.data.images`, etc.\n        \"\"\"\n        ...",
-            "", "    # For collection.objects.link/unlink",
-            "    def link(self, item: T) -> None:",
-            "        \"\"\"\n        Add a data-block to this collection (e.g., Objects, Collections).\n        \n        **⚠️ Warning (Stub)**:\n        Valid mainly for `bpy.data.objects` or `collection.children`.\n        \"\"\"\n        ...",
-            "", "    def unlink(self, item: T) -> None:",
-            "        \"\"\"\n        Remove a data-block from this collection.\n        \n        **⚠️ Warning (Stub)**:\n        Valid mainly for `bpy.data.objects` or `collection.children`.\n        \"\"\"\n        ...",
-        ])
+        prop_col_content.extend(template_loader.read_lines("types/bpy_prop_collection.pyi"))
         self.write_file(self.config.bpy_types_dir, "bpy_prop_collection.pyi", prop_col_content)
 
         classes_to_export = ["bpy_prop_collection"]

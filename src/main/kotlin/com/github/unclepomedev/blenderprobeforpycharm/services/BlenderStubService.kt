@@ -1,11 +1,11 @@
 package com.github.unclepomedev.blenderprobeforpycharm.services
 
-import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.OSProcessHandler
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
+import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
@@ -23,6 +23,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootModificationUtil
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -49,35 +50,34 @@ class BlenderStubService(private val project: Project) {
             private var executionLog: String = ""
 
             override fun run(indicator: ProgressIndicator) {
+                val tempDir = FileUtil.createTempDirectory("blender_probe_gen", null)
                 try {
-                    executionLog = runBlenderProcess(blenderPath, outputDir, indicator)
+                    val scriptPath = prepareGeneratorEnvironment(tempDir, indicator)
 
-                    LOG.info("Blender stub generation finished. Log:\n$executionLog")
+                    executionLog = runBlenderProcess(blenderPath, scriptPath, outputDir, indicator)
 
+                    LOG.info("Blender stub generation finished.")
                     indicator.text = "Refreshing file system..."
                     virtualOutputDir = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outputDir)
                     virtualOutputDir?.refresh(false, true)
 
                 } catch (_: ProcessCanceledException) {
-                    LOG.info("Stub generation cancelled by user.")
+                    LOG.info("Stub generation cancelled.")
                     notifyUser(
                         "Generation Cancelled",
                         "Blender stub generation was cancelled.",
                         NotificationType.INFORMATION
                     )
                 } catch (ex: Exception) {
-                    LOG.warn("Blender Probe Failed to generate stubs: ${ex.message}")
-                    notifyUser(
-                        "Generation Failed",
-                        "Failed to generate Blender stubs.\nCheck the log for details.",
-                        NotificationType.ERROR
-                    )
+                    LOG.warn("Blender Probe Failed: ${ex.message}")
+                    notifyUser("Generation Failed", "Failed to generate stubs: ${ex.message}", NotificationType.ERROR)
+                } finally {
+                    FileUtil.delete(tempDir)
                 }
             }
 
             override fun onSuccess() {
                 val dir = virtualOutputDir ?: return
-
                 if (!ApplicationManager.getApplication().isHeadlessEnvironment) {
                     notifyUser("Success", "Stubs generated in .blender_stubs", NotificationType.INFORMATION)
                 }
@@ -86,21 +86,67 @@ class BlenderStubService(private val project: Project) {
         })
     }
 
-    private fun runBlenderProcess(blenderPath: String, outputDir: File, indicator: ProgressIndicator): String {
+    private fun prepareGeneratorEnvironment(tempDir: File, indicator: ProgressIndicator): String {
+        indicator.text = "Preparing generator scripts..."
+
+        val manifestPath = "python/file_list.txt"
+        val manifestStream = this::class.java.classLoader.getResourceAsStream(manifestPath)
+            ?: throw ExecutionException("Manifest file not found in resources: $manifestPath")
+
+        val filesToCopy = manifestStream.bufferedReader(StandardCharsets.UTF_8).use { reader ->
+            reader.readLines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() && !it.startsWith("#") }
+        }
+
+        if (filesToCopy.isEmpty()) {
+            throw ExecutionException("Manifest file list is empty.")
+        }
+
+        for (relativePath in filesToCopy) {
+            val resourcePath = "python/$relativePath"
+            val destFile = File(tempDir, relativePath)
+
+            extractResource(resourcePath, destFile)
+        }
+
+        val mainScript = File(tempDir, "generate_stubs.py")
+        if (!mainScript.exists()) {
+            throw ExecutionException("Main script 'generate_stubs.py' was not found in the extracted files.")
+        }
+        return mainScript.absolutePath
+    }
+
+    private fun extractResource(resourcePath: String, destFile: File) {
+        val resourceStream = this::class.java.classLoader.getResourceAsStream(resourcePath)
+            ?: throw ExecutionException("Resource not found: $resourcePath")
+
+        destFile.parentFile?.mkdirs()
+
+        resourceStream.use { input ->
+            destFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+    }
+
+    private fun runBlenderProcess(
+        blenderPath: String,
+        scriptPath: String,
+        outputDir: File,
+        indicator: ProgressIndicator
+    ): String {
         val blenderExe = File(blenderPath)
         if (!blenderExe.exists()) {
             throw ExecutionException("Blender executable not found at: $blenderPath")
         }
-
-        indicator.text = "Extracting generator script..."
-        val scriptFile = ScriptResourceUtils.extractScriptToTemp("generate_stubs.py")
 
         indicator.text = "Running blender..."
         val commandLine = GeneralCommandLine(
             blenderPath,
             "--factory-startup",
             "-b",
-            "-P", scriptFile.absolutePath,
+            "-P", scriptPath,
             "--",
             "--output", outputDir.absolutePath
         ).apply {
@@ -114,11 +160,14 @@ class BlenderStubService(private val project: Project) {
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
                 val text = event.text
                 outputBuilder.append(text)
-                val cleanText = text.trim()
-                if (cleanText.isNotEmpty()) {
-                    indicator.text2 = cleanText
+                if (outputType != ProcessOutputTypes.STDERR) {
+                    val cleanText = text.trim()
+                    if (cleanText.isNotEmpty()) {
+                        indicator.text2 = cleanText
+                    }
                 }
             }
+
             override fun startNotified(event: ProcessEvent) {}
             override fun processTerminated(event: ProcessEvent) {}
         })
@@ -132,17 +181,21 @@ class BlenderStubService(private val project: Project) {
                 handler.destroyProcess()
                 throw ProcessCanceledException()
             }
-
             if (System.currentTimeMillis() - startTime > PROCESS_TIMEOUT_MS) {
                 handler.destroyProcess()
                 throw RuntimeException("Blender process timed out after ${PROCESS_TIMEOUT_MS / 1000} seconds")
             }
-
-            finished = handler.waitFor(500) // 0.5秒待機
+            finished = handler.waitFor(500)
         }
 
         if (handler.exitCode != 0) {
-            throw RuntimeException("Blender exited with code ${handler.exitCode}.\nOutput:\n$outputBuilder")
+            throw RuntimeException(
+                "Blender exited with code ${handler.exitCode}.\nOutput summary:\n${
+                    outputBuilder.takeLast(
+                        1000
+                    )
+                }"
+            )
         }
         return outputBuilder.toString()
     }
