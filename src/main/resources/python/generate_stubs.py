@@ -58,6 +58,7 @@ class GeneratorConfig:
         "bl_ui", "addon_utils"
     })
     common_headers: list[str] = field(default_factory=lambda: [
+        f"# Blender Probe Generated Stub for Blender {bpy.app.version_string}",
         "# noinspection PyPep8Naming",
         "# noinspection PyUnresolvedReferences",
         "# noqa: N801",
