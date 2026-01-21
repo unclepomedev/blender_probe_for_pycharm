@@ -21,7 +21,7 @@ class GenerateStubsAction : AnAction() {
 
         var blenderPath = settings.resolveBlenderPath()
 
-        if (blenderPath == null) {
+        if (blenderPath.isNullOrBlank()) {
             if (ApplicationManager.getApplication().isHeadlessEnvironment) {
                 LOG.warn("Blender path not found, skipping stub generation.")
                 return
@@ -41,7 +41,7 @@ class GenerateStubsAction : AnAction() {
                 blenderPath = settings.resolveBlenderPath()
             }
 
-            if (blenderPath == null) return
+            if (blenderPath.isNullOrBlank()) return
         }
 
         BlenderStubService.getInstance(project).generateStubs(blenderPath)
