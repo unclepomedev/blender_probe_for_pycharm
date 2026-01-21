@@ -23,7 +23,7 @@ object BlenderProbeUtils {
         val contentRoot = fileIndex.getContentRootForFile(targetFile)
 
         if (contentRoot != null && addonDir == contentRoot) {
-            return addonDir.path
+            return addonDir.parent?.path
         }
         return addonDir.parent?.path
     }
