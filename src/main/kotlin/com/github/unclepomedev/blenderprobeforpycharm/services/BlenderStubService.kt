@@ -172,7 +172,7 @@ class BlenderStubService(private val project: Project) {
             override fun processTerminated(event: ProcessEvent) {}
         })
 
-        val output = handler.runProcess(PROCESS_TIMEOUT_MS.toInt())
+        val output = handler.runProcessWithProgressIndicator(indicator, PROCESS_TIMEOUT_MS.toInt())
 
         if (indicator.isCanceled) {
             throw ProcessCanceledException()
