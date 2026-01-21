@@ -8,7 +8,7 @@
 
 ## Features
 
-* **Dynamic API Stubs**: Generates Python type `.pyi` stubs (including daily builds) via runtime introspection.
+* **Dynamic API Stubs (Experimental)**: Generates Python type `.pyi` stubs (including daily builds) via runtime introspection.
 * **No-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
 * **Hot Reloading**: Instantly reload your addon code **on file save** without restarting.
 * **Code Insight**: Intelligent suppression of false-positive warnings.
@@ -17,6 +17,19 @@
 
 Detailed description: [GitHub Repository](https://github.com/unclepomedev/blender_probe_for_pycharm)
 <!-- Plugin description end -->
+
+## Table of Contents
+
+* [Prerequisites](#prerequisites)
+* [Configuration](#configuration)
+* [Usage](#usage)
+    * [1. Creating a New Addon Project](#1-creating-a-new-addon-project)
+    * [2. Generating Code Stubs](#2-generating-code-stubs-autocompletion)
+    * [3. Running & Debugging](#3-running--debugging-your-addon)
+    * [4. Hot Reloading](#4-hot-reloading)
+    * [5. Running Tests](#5-running-tests)
+    * [6. Continuous Integration](#6-continuous-integration-ci)
+* [License](#license)
 
 ## Prerequisites
 * **PyCharm** (Community or Professional) 2025.2+
