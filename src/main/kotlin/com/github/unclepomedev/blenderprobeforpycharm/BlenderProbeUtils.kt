@@ -18,13 +18,6 @@ object BlenderProbeUtils {
     fun getAddonSourceRoot(project: Project): String? {
         val targetFile = findAddonEntryFile(project) ?: return null
         val addonDir = targetFile.parent ?: return null
-
-        val fileIndex = ProjectRootManager.getInstance(project).fileIndex
-        val contentRoot = fileIndex.getContentRootForFile(targetFile)
-
-        if (contentRoot != null && addonDir == contentRoot) {
-            return addonDir.parent?.path
-        }
         return addonDir.parent?.path
     }
 
