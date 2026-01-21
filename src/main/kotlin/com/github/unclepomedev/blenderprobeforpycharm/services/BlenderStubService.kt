@@ -49,8 +49,9 @@ class BlenderStubService(private val project: Project) {
             private var executionLog: String = ""
 
             override fun run(indicator: ProgressIndicator) {
-                val tempDir = FileUtil.createTempDirectory("blender_probe_gen", null)
+                var tempDir: File? = null
                 try {
+                    tempDir = FileUtil.createTempDirectory("blender_probe_gen", null)
                     val scriptPath = prepareGeneratorEnvironment(tempDir, indicator)
 
                     executionLog = runBlenderProcess(blenderPath, scriptPath, outputDir, indicator)
@@ -71,7 +72,7 @@ class BlenderStubService(private val project: Project) {
                     LOG.warn("Blender Probe Failed: ${ex.message}")
                     notifyUser("Generation Failed", "Failed to generate stubs: ${ex.message}", NotificationType.ERROR)
                 } finally {
-                    FileUtil.delete(tempDir)
+                    tempDir?.let { FileUtil.delete(it) }
                 }
             }
 
@@ -136,8 +137,8 @@ class BlenderStubService(private val project: Project) {
         indicator: ProgressIndicator
     ): String {
         val blenderExe = File(blenderPath)
-        if (!blenderExe.exists()) {
-            throw ExecutionException("Blender executable not found at: $blenderPath")
+        if (!blenderExe.exists() || !blenderExe.isFile || !blenderExe.canExecute()) {
+            throw ExecutionException("Blender executable not found or not executable at: $blenderPath")
         }
 
         indicator.text = "Running blender..."
