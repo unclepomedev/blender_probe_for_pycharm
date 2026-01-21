@@ -1,5 +1,6 @@
-package com.github.unclepomedev.blenderprobeforpycharm
+package com.github.unclepomedev.blenderprobeforpycharm.services
 
+import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.components.Service

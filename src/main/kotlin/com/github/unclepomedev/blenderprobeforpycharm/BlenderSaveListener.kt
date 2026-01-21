@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm
 
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAutoReloadService
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
