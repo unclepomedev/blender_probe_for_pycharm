@@ -8,13 +8,15 @@ region: Any
 window: Any
 window_manager: Any
 preferences: Any
-def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any: ...
+def temp_override(self, window=None, area=None, region=None, **kwargs) -> Any:
     """
     **⚠️ Warning (Stub)**:
     This method is provided by the IDE plugin.
     """
-def __getattr__(self, name) -> Any: ...
+    ...
+def __getattr__(self, name) -> Any:
     """
     **⚠️ Warning (Stub)**:
     This method is provided by the IDE plugin.
     """
+    ...
