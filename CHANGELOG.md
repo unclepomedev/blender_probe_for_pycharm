@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed
+
+* **Blender Path Detection**: Enhanced path auto-detection logic to support projects managing versions via [blup](https://github.com/unclepomedev/blup).
+
+### Fixed
+
+* **UI Freezes (EDT Violation)**: Rewrote the Run/Debug/Test runners to execute asynchronously, eliminating UI freezes.
+* **Internal API Usage**: Removed dependencies on JetBrains internal APIs (`StartupManager`).
+
+## [0.1.0] - 2026-01-14
+
 ### 🚀 Initial Release (Public Beta)
 
 **Blender Probe** is now available in Public Beta!
