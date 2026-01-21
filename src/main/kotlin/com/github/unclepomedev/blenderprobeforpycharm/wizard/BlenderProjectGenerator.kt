@@ -13,6 +13,9 @@ import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.ide.util.projectWizard.SettingsStep
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
@@ -65,20 +68,28 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         createFileFromTemplate("BlenderAddon_Dependabot.yml", githubDir, "dependabot.yml", props)
 
         VfsUtil.markDirtyAndRefresh(true, true, true, baseDir)
-        ApplicationManager.getApplication().invokeLater {
-            if (project.isDisposed) return@invokeLater
-            DumbService.getInstance(project).runWhenSmart {
-                createDefaultRunConfiguration(project)
-                val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
-                if (blenderPath != null) {
-                    try {
-                        BlenderStubService.getInstance(project).generateStubs(blenderPath)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+        ProgressManager.getInstance()
+            .run(object : Task.Backgroundable(project, "Configuring Blender environment", false) {
+                override fun run(indicator: ProgressIndicator) {
+                    DumbService.getInstance(project).waitForSmartMode()
+                    ApplicationManager.getApplication().invokeLater {
+                        createDefaultRunConfiguration(project)
+                    }
+
+                    indicator.text = "Detecting Blender executable..."
+                    val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
+
+                    if (blenderPath != null) {
+                        ApplicationManager.getApplication().invokeLater {
+                            try {
+                                BlenderStubService.getInstance(project).generateStubs(blenderPath)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
                     }
                 }
-            }
-        }
+            })
     }
 
     private fun createDefaultRunConfiguration(project: Project) {

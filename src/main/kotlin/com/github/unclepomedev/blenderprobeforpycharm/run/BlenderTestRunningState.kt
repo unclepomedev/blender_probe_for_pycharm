@@ -24,6 +24,9 @@ class BlenderTestRunningState(
     environment: ExecutionEnvironment,
     private val configuration: BlenderTestRunConfiguration
 ) : CommandLineState(environment) {
+    var cachedBlenderPath: String? = null
+    var cachedAddonName: String? = null
+    var cachedSourceRoot: String? = null
 
     override fun execute(executor: Executor, runner: ProgramRunner<*>): ExecutionResult {
         val processHandler = startProcess()
@@ -33,8 +36,7 @@ class BlenderTestRunningState(
 
     override fun startProcess(): ProcessHandler {
         val project = environment.project
-        val settings = BlenderSettings.getInstance(project)
-        val blenderPath = settings.resolveBlenderPath()
+        val blenderPath = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
 
         if (blenderPath.isNullOrEmpty()) {
             throw ExecutionException("Blender executable not found. Please configure it in Settings or ensure 'blup' is installed.")
@@ -53,13 +55,16 @@ class BlenderTestRunningState(
             ScriptResourceUtils.extractResourceScript("python/run_tests.py", "blender_test_runner")
         }
 
+        val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
+        val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
+
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
             .withParameters("-b", "--factory-startup", "-P", scriptFile.absolutePath, "--", testDir)
             .withCharset(StandardCharsets.UTF_8)
             .withWorkDirectory(basePath)
-            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath)
-            .withEnvironment("BLENDER_PROBE_ADDON_NAME", BlenderProbeUtils.detectAddonModuleName(project))
+            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
+            .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
 
         val processHandler = object : OSProcessHandler(cmd) {
             override fun readerOptions(): BaseOutputReader.Options {

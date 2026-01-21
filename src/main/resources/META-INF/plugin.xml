@@ -53,7 +53,8 @@
                 implementation="com.github.unclepomedev.blenderprobeforpycharm.wizard.BlenderProjectGenerator"/>
         <configurationType
                 implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderRunConfigurationType"/>
-        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderDebugRunner"/>
+        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderRunner"/>
+        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestRunner"/>
     </extensions>
     <projectListeners>
         <listener class="com.github.unclepomedev.blenderprobeforpycharm.BlenderSaveListener"

@@ -8,6 +8,7 @@ import os
 import traceback
 import time
 import importlib
+import glob
 
 HOST = '127.0.0.1'
 HEADER_SIZE = 64
@@ -53,6 +54,37 @@ def start_socket_server():
         except Exception as e:
             log(f"Socket accept error: {e}")
             break
+
+
+def setup_dependencies(project_root, addon_name):
+    if not project_root or not addon_name:
+        return
+
+    wheels_dir = os.path.join(project_root, addon_name, "wheels")
+
+    if os.path.exists(wheels_dir):
+        log(f"Found wheels directory: {wheels_dir}")
+        whl_files = glob.glob(os.path.join(wheels_dir, "*.whl"))
+
+        count = 0
+        for whl in whl_files:
+            if whl not in sys.path:
+                sys.path.append(whl)
+                log(f"Added dependency to path: {os.path.basename(whl)}")
+                count += 1
+
+        if count > 0:
+            log(f"Mounted {count} wheels for development.")
+    else:
+        venv_lib = os.path.join(project_root, ".venv", "lib")
+        if os.path.exists(venv_lib):
+            for item in os.listdir(venv_lib):
+                site_packages = os.path.join(venv_lib, item, "site-packages")
+                if os.path.isdir(site_packages):
+                    if site_packages not in sys.path:
+                        sys.path.append(site_packages)
+                        log(f"Added local venv site-packages: {item}")
+                        break
 
 
 def handle_client(conn, addr):
@@ -209,9 +241,11 @@ def register():
 
     attach_to_debugger()
     project_root = os.environ.get("BLENDER_PROBE_PROJECT_ROOT")
+    addon_name = os.environ.get("BLENDER_PROBE_ADDON_NAME")
     if project_root and project_root not in sys.path:
         sys.path.append(project_root)
         log(f"Added project root to sys.path: {project_root}")
+    setup_dependencies(project_root, addon_name)
 
     try:
         server_thread = threading.Thread(target=start_socket_server, daemon=True)
@@ -225,7 +259,7 @@ def register():
         bpy.app.timers.register(main_thread_loop)
         log("Main thread timer registered.")
 
-    if os.environ.get("BLENDER_PROBE_ADDON_NAME"):
+    if addon_name:
         bpy.app.timers.register(enable_dev_addon, first_interval=0.5)
 
 
