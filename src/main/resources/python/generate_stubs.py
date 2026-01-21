@@ -178,6 +178,7 @@ class StubGenerator:
             mod = importlib.import_module(module_name)
         except ImportError:
             print(f"Skipping {module_name} (ImportError)")
+            traceback.print_exc()
             return False
 
         print(f"Generating stub for: {module_name}")

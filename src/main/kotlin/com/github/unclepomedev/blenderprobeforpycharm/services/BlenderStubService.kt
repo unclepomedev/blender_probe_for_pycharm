@@ -151,15 +151,17 @@ class BlenderStubService(private val project: Project) {
             "--output", outputDir.absolutePath
         ).apply {
             charset = StandardCharsets.UTF_8
+            environment["PYTHONUNBUFFERED"] = "1"
         }
 
-        val handler = OSProcessHandler(commandLine)
-        val outputBuilder = StringBuilder()
+        val handler = com.intellij.execution.process.CapturingProcessHandler(commandLine)
 
         handler.addProcessListener(object : ProcessListener {
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
                 val text = event.text
-                outputBuilder.append(text)
+
+                print("[Blender Stream] $text")
+
                 if (outputType != ProcessOutputTypes.STDERR) {
                     val cleanText = text.trim()
                     if (cleanText.isNotEmpty()) {
@@ -167,37 +169,27 @@ class BlenderStubService(private val project: Project) {
                     }
                 }
             }
-
             override fun startNotified(event: ProcessEvent) {}
             override fun processTerminated(event: ProcessEvent) {}
         })
 
-        handler.startNotify()
+        val output = handler.runProcess(PROCESS_TIMEOUT_MS.toInt())
 
-        val startTime = System.currentTimeMillis()
-        var finished = false
-        while (!finished) {
-            if (indicator.isCanceled) {
-                handler.destroyProcess()
-                throw ProcessCanceledException()
-            }
-            if (System.currentTimeMillis() - startTime > PROCESS_TIMEOUT_MS) {
-                handler.destroyProcess()
-                throw RuntimeException("Blender process timed out after ${PROCESS_TIMEOUT_MS / 1000} seconds")
-            }
-            finished = handler.waitFor(500)
+        if (indicator.isCanceled) {
+            throw ProcessCanceledException()
         }
 
-        if (handler.exitCode != 0) {
+        if (output.isTimeout) {
+            throw RuntimeException("Blender process timed out.")
+        }
+
+        if (output.exitCode != 0) {
+            val errorMsg = output.stderr.ifBlank { output.stdout }
             throw RuntimeException(
-                "Blender exited with code ${handler.exitCode}.\nOutput summary:\n${
-                    outputBuilder.takeLast(
-                        1000
-                    )
-                }"
+                "Blender exited with code ${output.exitCode}.\nError Details:\n$errorMsg"
             )
         }
-        return outputBuilder.toString()
+        return output.stdout
     }
 
     private fun notifyUser(title: String, content: String, type: NotificationType) {
