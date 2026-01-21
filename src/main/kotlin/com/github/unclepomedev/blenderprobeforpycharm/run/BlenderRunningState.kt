@@ -23,6 +23,9 @@ class BlenderRunningState(
 
     var debugPort: Int? = null
     var pydevdPath: String? = null
+    var cachedBlenderPath: String? = null
+    var cachedAddonName: String? = null
+    var cachedSourceRoot: String? = null
 
     override fun execute(executor: Executor, runner: ProgramRunner<*>): ExecutionResult {
         val processHandler = startProcess()
@@ -33,8 +36,7 @@ class BlenderRunningState(
 
     override fun startProcess(): ProcessHandler {
         val project = environment.project
-        val settings = BlenderSettings.getInstance(project)
-        val blenderPath = settings.resolveBlenderPath()
+        val blenderPath = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
 
         if (blenderPath.isNullOrEmpty()) {
             throw ExecutionException("Blender executable not found. Please configure it in Settings or install 'blup'.")
@@ -42,8 +44,8 @@ class BlenderRunningState(
 
         val scriptFile = ScriptResourceUtils.extractResourceScript("python/probe_server.py", "blender_probe_server")
         val projectPath = project.basePath ?: ""
-        val addonName = BlenderProbeUtils.detectAddonModuleName(project)
-        val sourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
+        val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
+        val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
 
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
