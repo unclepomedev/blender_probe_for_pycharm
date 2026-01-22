@@ -11,7 +11,7 @@
 * **Dynamic API Stubs (Experimental)**: Generates Python type `.pyi` stubs (including daily builds) via runtime introspection.
 * **No-Config Debugging**: Attach PyCharm’s native debugger to Blender with a single click.
 * **Hot Reloading**: Instantly reload your addon code **on file save** without restarting.
-* **Code Insight**: Intelligent suppression of false-positive warnings.
+* **Code Insight**: Pre-configured warning suppression of false-positive warnings.
 * **Integrated Test Runner**: Run standard `unittest` suites inside Blender from PyCharm's UI.
 * **Project Wizard**: Scaffolds a Blender 4.2+ Extensions compliant project.
 
