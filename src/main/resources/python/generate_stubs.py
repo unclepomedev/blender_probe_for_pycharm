@@ -137,12 +137,20 @@ class StubGenerator:
             if t == 'STRING':
                 return "str"
             if t == 'BOOLEAN':
+                if getattr(prop, "is_array", False):
+                    return "list[bool]"
                 return "bool"
             if t == 'INT':
+                if getattr(prop, "is_array", False):
+                    return "list[int]"
                 return "int"
             if t == 'FLOAT':
+                if getattr(prop, "is_array", False):
+                    return "list[float]"
                 return "float"
             if t == 'ENUM':
+                if getattr(prop, "is_enum_flag", False):
+                    return "set[str]"
                 return "str"
             if t == 'POINTER':
                 if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
@@ -362,7 +370,7 @@ class StubGenerator:
             content.extend([
                 "import typing",
                 "import bpy",
-                "from typing import Any, Optional, Union, Set, Dict",
+                "from typing import Any, Optional, Union",
                 ""
             ])
 
@@ -375,7 +383,7 @@ class StubGenerator:
 
                 if rna:
                     args_sig = [
-                        "override_context: Optional[Union[Dict, 'bpy.types.Context']] = None",
+                        "override_context: Optional[Union[dict, 'bpy.types.Context']] = None",
                         "execution_context: Optional[str] = None",
                         "undo: Optional[bool] = None"
                     ]
@@ -394,7 +402,7 @@ class StubGenerator:
 
                     sig_str = ", ".join(args_sig)
                     doc = self.format_docstring(rna.description) if rna.description else ""
-                    content.append(f"def {op_name}({sig_str}) -> Set[str]:")
+                    content.append(f"def {op_name}({sig_str}) -> set[str]:")
                     if doc:
                         content.append(doc)
                     content.append("    ...")
