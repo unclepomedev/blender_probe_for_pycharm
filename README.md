@@ -29,6 +29,7 @@ Detailed description: [GitHub Repository](https://github.com/unclepomedev/blende
     * [4. Hot Reloading](#4-hot-reloading)
     * [5. Running Tests](#5-running-tests)
     * [6. Continuous Integration](#6-continuous-integration-ci)
+* [Inspired](#Inspired)
 * [License](#license)
 
 ## Prerequisites
@@ -189,6 +190,10 @@ Projects created with the **Blender Addon** wizard come with a pre-configured Gi
 * **Automatic Testing:** The workflow automatically installs a headless version of Blender (Linux) and runs your tests using the same runner logic as the IDE.
 * **Linting:** `uv` based linting (Ruff) checks your code style.
 * **Dependabot:** Keeps your actions and dependencies up to date.
+
+## Inspired
+
+[MayaCharm](https://github.com/cmcpasserby/MayaCharm)
 
 ## License
 
