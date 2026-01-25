@@ -109,8 +109,7 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
-        token.set(System.getenv("PUBLISH_TOKEN"))
-        channels.set(listOf(System.getenv("RELEASE_CHANNEL") ?: "default"))
+        channels.set(providers.environmentVariable("RELEASE_CHANNEL").orElse("default").map { listOf(it) })
     }
 
     instrumentCode {
