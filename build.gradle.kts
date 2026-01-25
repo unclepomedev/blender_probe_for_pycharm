@@ -1,5 +1,6 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
@@ -33,7 +34,7 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        pycharmCommunity("2024.3.6") // test in 2025.x is unstable
+        pycharmCommunity(providers.gradleProperty("platformVersion"))
         bundledPlugin("PythonCore")
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
         bundledModules(providers.gradleProperty("platformBundledModules").map { it.split(',') })
@@ -88,7 +89,9 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+            select {
+                types = listOf(IntelliJPlatformType.PyCharmCommunity, IntelliJPlatformType.PyCharmProfessional)
+            }
         }
     }
 }
