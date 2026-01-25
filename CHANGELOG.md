@@ -4,6 +4,13 @@
 
 ### Changed
 
+* **Stub Generation Enhancement**: Improved stub generation logic to support detailed type for return values.
+* **Build Targets**: Explicitly targeted PyCharm to resolve marketplace verification warnings.
+
+## [0.1.1] - 2026-01-22
+
+### Changed
+
 * **Blender Path Detection**: Enhanced path auto-detection logic to support projects managing versions via [blup](https://github.com/unclepomedev/blup).
 
 ### Fixed
