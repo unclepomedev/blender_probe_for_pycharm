@@ -65,6 +65,7 @@ class BlenderTestRunningState(
             .withWorkDirectory(basePath)
             .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
             .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
+            .withEnvironment("PYTHONDONTWRITEBYTECODE", "1")
 
         val processHandler = object : OSProcessHandler(cmd) {
             override fun readerOptions(): BaseOutputReader.Options {

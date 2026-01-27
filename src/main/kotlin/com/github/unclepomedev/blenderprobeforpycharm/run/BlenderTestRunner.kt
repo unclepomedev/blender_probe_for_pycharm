@@ -12,6 +12,7 @@ import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import org.jetbrains.concurrency.AsyncPromise
@@ -30,6 +31,10 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
         if (state !is BlenderTestRunningState) {
             promise.setResult(null)
             return promise
+        }
+
+        ApplicationManager.getApplication().invokeAndWait {
+            FileDocumentManager.getInstance().saveAllDocuments()
         }
 
         object : Task.Backgroundable(environment.project, "Preparing blender test execution...", true) {
@@ -53,7 +58,8 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
             override fun onSuccess() {
                 try {
                     val executionResult = state.execute(environment.executor, this@BlenderTestRunner)
-                    val descriptor = RunContentBuilder(executionResult, environment).showRunContent(environment.contentToReuse)
+                    val descriptor =
+                        RunContentBuilder(executionResult, environment).showRunContent(environment.contentToReuse)
                     promise.setResult(descriptor)
                 } catch (e: Exception) {
                     promise.setError(e)
