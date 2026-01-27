@@ -1,6 +1,9 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestConfigurationFactory
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestConfigurationType
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestRunConfiguration
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.configurations.RuntimeConfigurationException
 import org.jdom.Element

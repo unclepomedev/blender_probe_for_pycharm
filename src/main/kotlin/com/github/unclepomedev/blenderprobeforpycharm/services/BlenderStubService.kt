@@ -2,6 +2,7 @@ package com.github.unclepomedev.blenderprobeforpycharm.services
 
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.process.ProcessOutputTypes
@@ -154,7 +155,7 @@ class BlenderStubService(private val project: Project) {
             environment["PYTHONUNBUFFERED"] = "1"
         }
 
-        val handler = com.intellij.execution.process.CapturingProcessHandler(commandLine)
+        val handler = CapturingProcessHandler(commandLine)
 
         handler.addProcessListener(object : ProcessListener {
             override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
@@ -169,6 +170,7 @@ class BlenderStubService(private val project: Project) {
                     }
                 }
             }
+
             override fun startNotified(event: ProcessEvent) {}
             override fun processTerminated(event: ProcessEvent) {}
         })

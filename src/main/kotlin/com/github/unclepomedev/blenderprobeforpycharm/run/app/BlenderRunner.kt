@@ -1,4 +1,4 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
@@ -8,6 +8,7 @@ import com.intellij.execution.configurations.RunProfileState
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.executors.DefaultDebugExecutor
 import com.intellij.execution.executors.DefaultRunExecutor
+import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.runners.AsyncProgramRunner
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.RunContentBuilder
@@ -96,7 +97,7 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
 
     private fun startDebugSession(state: BlenderRunningState, environment: ExecutionEnvironment): RunContentDescriptor {
         val serverSocket = ServerSocket(0)
-        var processHandler: com.intellij.execution.process.ProcessHandler? = null
+        var processHandler: ProcessHandler? = null
 
         try {
             state.debugPort = serverSocket.localPort
