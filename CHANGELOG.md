@@ -4,6 +4,12 @@
 
 ### Changed
 
+* **Test Execution Fix**: Fixed issues where stale pycache directories interfered with test results.
+
+## [0.1.2] - 2026-01-25
+
+### Changed
+
 * **Stub Generation Enhancement**: Improved stub generation logic to support detailed type for return values.
 * **Build Targets**: Explicitly targeted PyCharm to resolve marketplace verification warnings.
 
