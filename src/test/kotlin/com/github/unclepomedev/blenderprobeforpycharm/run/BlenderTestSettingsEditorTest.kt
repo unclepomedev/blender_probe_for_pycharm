@@ -1,6 +1,9 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestConfigurationType
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestRunConfiguration
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestSettingsEditor
 import com.intellij.openapi.util.Disposer
 
 class BlenderTestSettingsEditorTest : BaseBlenderTest() {

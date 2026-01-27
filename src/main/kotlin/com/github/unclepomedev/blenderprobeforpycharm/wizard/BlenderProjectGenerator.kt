@@ -2,8 +2,8 @@ package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
-import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType
-import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestRunConfiguration
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestConfigurationType
+import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestRunConfiguration
 import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.RunManager

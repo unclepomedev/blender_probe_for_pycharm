@@ -1,31 +1,23 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
-import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
+import com.github.unclepomedev.blenderprobeforpycharm.run.common.AbstractBlenderRunningState
 import com.intellij.execution.DefaultExecutionResult
-import com.intellij.execution.ExecutionException
 import com.intellij.execution.ExecutionResult
 import com.intellij.execution.Executor
-import com.intellij.execution.configurations.CommandLineState
-import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.*
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.util.Key
 import com.intellij.util.io.BaseOutputReader
-import java.nio.charset.StandardCharsets
 
 class BlenderRunningState(
     environment: ExecutionEnvironment,
-) : CommandLineState(environment) {
+) : AbstractBlenderRunningState(environment) {
 
     var debugPort: Int? = null
     var pydevdPath: String? = null
-    var cachedBlenderPath: String? = null
-    var cachedAddonName: String? = null
-    var cachedSourceRoot: String? = null
 
     override fun execute(executor: Executor, runner: ProgramRunner<*>): ExecutionResult {
         val processHandler = startProcess()
@@ -35,26 +27,9 @@ class BlenderRunningState(
     }
 
     override fun startProcess(): ProcessHandler {
-        val project = environment.project
-        val blenderPath = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
-
-        if (blenderPath.isNullOrEmpty()) {
-            throw ExecutionException("Blender executable not found. Please configure it in Settings or install 'blup'.")
-        }
-
+        val cmd = createBaseCommandLine()
         val scriptFile = ScriptResourceUtils.extractResourceScript("python/probe_server.py", "blender_probe_server")
-        val projectPath = project.basePath ?: ""
-        val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
-        val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
-
-        val cmd = GeneralCommandLine()
-            .withExePath(blenderPath)
-            .withParameters("--factory-startup", "--python-exit-code", "1", "-P", scriptFile.absolutePath)
-            .withCharset(StandardCharsets.UTF_8)
-            .withWorkDirectory(projectPath)
-            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
-            .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
-            .withEnvironment("PYTHONUNBUFFERED", "1")
+        cmd.addParameters("--factory-startup", "--python-exit-code", "1", "-P", scriptFile.absolutePath)
 
         val port = debugPort
         val pyPath = pydevdPath

@@ -1,4 +1,4 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.test
 
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.SettingsEditor
