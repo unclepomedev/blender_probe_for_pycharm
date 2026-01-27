@@ -1,8 +1,12 @@
 #[[import sys
+import sys
 import os
 import unittest
 import importlib
 import traceback
+import shutil
+
+sys.dont_write_bytecode = True
 
 
 def escape_teamcity(text):
@@ -25,11 +29,32 @@ def tc_print(message_type, **kwargs):
     sys.stdout.flush()
 
 
+def force_clean_pycache(root_path):
+    if not os.path.exists(root_path):
+        return
+
+    count = 0
+    for root, dirs, files in os.walk(root_path):
+        if "__pycache__" in dirs:
+            pycache_path = os.path.join(root, "__pycache__")
+            try:
+                shutil.rmtree(pycache_path)
+                count += 1
+            except Exception as e:
+                tc_print("message", text=f"Failed to remove cache: {pycache_path} ({e})", status="WARNING")
+            dirs.remove("__pycache__")
+
+    if count > 0:
+        tc_print("message", text=f"Cleaned {count} __pycache__ directories.", status="NORMAL")
+
+
 def auto_register_addon():
     project_root = os.environ.get("BLENDER_PROBE_PROJECT_ROOT")
 
     if not project_root or not os.path.exists(project_root):
         return
+
+    force_clean_pycache(project_root)
 
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
@@ -146,7 +171,7 @@ if __name__ == "__main__":
         target_dir = os.getcwd()
 
         if "--" in argv:
-            args_after_dash = argv[argv.index("--") + 1 :]
+            args_after_dash = argv[argv.index("--") + 1:]
             if args_after_dash:
                 target_dir = args_after_dash[0]
             else:
