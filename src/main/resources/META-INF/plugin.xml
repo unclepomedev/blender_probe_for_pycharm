@@ -45,15 +45,15 @@
                 id="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"
                 displayName="Blender Probe"/>
         <configurationType
-                implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestConfigurationType"/>
+                implementation="com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestConfigurationType"/>
         <lang.inspectionSuppressor language="Python"
                                    implementationClass="com.github.unclepomedev.blenderprobeforpycharm.inspection.BlenderPropertySuppressor"/>
         <directoryProjectGenerator
                 implementation="com.github.unclepomedev.blenderprobeforpycharm.wizard.BlenderProjectGenerator"/>
         <configurationType
-                implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderRunConfigurationType"/>
-        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderRunner"/>
-        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.BlenderTestRunner"/>
+                implementation="com.github.unclepomedev.blenderprobeforpycharm.run.app.BlenderRunConfigurationType"/>
+        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.app.BlenderRunner"/>
+        <programRunner implementation="com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestRunner"/>
     </extensions>
     <projectListeners>
         <listener class="com.github.unclepomedev.blenderprobeforpycharm.BlenderSaveListener"

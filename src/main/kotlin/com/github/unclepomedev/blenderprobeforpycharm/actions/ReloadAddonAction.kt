@@ -10,6 +10,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import java.io.BufferedOutputStream
 import java.net.Socket
@@ -55,7 +56,7 @@ class ReloadAddonAction : AnAction() {
         })
     }
 
-    private fun showNotification(project: com.intellij.openapi.project.Project, content: String) {
+    private fun showNotification(project: Project, content: String) {
         NotificationGroupManager.getInstance()
             .getNotificationGroup("Blender Probe Notification Group")
             ?.createNotification(content, NotificationType.INFORMATION)

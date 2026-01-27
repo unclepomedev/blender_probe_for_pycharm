@@ -1,4 +1,4 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.test
 
 import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
 import com.intellij.execution.configurations.ConfigurationTypeBase

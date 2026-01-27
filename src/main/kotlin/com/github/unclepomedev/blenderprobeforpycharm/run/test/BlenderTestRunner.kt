@@ -1,4 +1,4 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.test
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings

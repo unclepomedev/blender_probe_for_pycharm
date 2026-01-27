@@ -1,8 +1,9 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.test
 
 import com.intellij.execution.configurations.ConfigurationFactory
 import com.intellij.execution.configurations.ConfigurationType
 import com.intellij.execution.configurations.RunConfiguration
+import com.intellij.execution.configurations.RunConfigurationOptions
 import com.intellij.openapi.project.Project
 
 class BlenderTestConfigurationFactory(type: ConfigurationType) : ConfigurationFactory(type) {
@@ -14,7 +15,7 @@ class BlenderTestConfigurationFactory(type: ConfigurationType) : ConfigurationFa
         return "BlenderTestConfigurationFactory"
     }
 
-    override fun getOptionsClass(): Class<out com.intellij.execution.configurations.RunConfigurationOptions> {
+    override fun getOptionsClass(): Class<out RunConfigurationOptions> {
         return BlenderTestRunConfigurationOptions::class.java
     }
 }

@@ -1,9 +1,10 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
 import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
 import com.intellij.execution.configurations.ConfigurationFactory
 import com.intellij.execution.configurations.ConfigurationType
 import com.intellij.execution.configurations.RunConfiguration
+import com.intellij.execution.configurations.RunConfigurationOptions
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import javax.swing.Icon
@@ -28,5 +29,5 @@ class BlenderProbeRunConfigurationFactory(type: ConfigurationType) : Configurati
 
     override fun getId(): String = "BlenderProbeRunFactory"
 
-    override fun getOptionsClass() = com.intellij.execution.configurations.RunConfigurationOptions::class.java
+    override fun getOptionsClass() = RunConfigurationOptions::class.java
 }

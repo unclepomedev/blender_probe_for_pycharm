@@ -1,4 +1,4 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
 import com.intellij.execution.Executor
 import com.intellij.execution.configurations.*

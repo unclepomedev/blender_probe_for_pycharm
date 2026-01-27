@@ -1,4 +1,4 @@
-package com.github.unclepomedev.blenderprobeforpycharm.run
+package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.util.ui.FormBuilder
