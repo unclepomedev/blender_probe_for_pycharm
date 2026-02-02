@@ -157,6 +157,10 @@ class StubGenerator:
                     return f"'{prop.fixed_type.identifier}'"
                 return "Any"
             if t == 'COLLECTION':
+                if hasattr(prop, "srna") and prop.srna:
+                    srna_id = prop.srna.identifier
+                    if hasattr(bpy.types, srna_id):
+                        return f"'{srna_id}'"
                 if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
                     return f"bpy_prop_collection['{prop.fixed_type.identifier}']"
                 return "bpy_prop_collection[Any]"
@@ -302,11 +306,18 @@ class StubGenerator:
             dependencies = set()
             if hasattr(cls, "bl_rna"):
                 for prop in cls.bl_rna.properties:
-                    if prop.identifier != "rna_type" and prop.type in ('POINTER', 'COLLECTION'):
+                    if prop.identifier == "rna_type":
+                        continue
+                    if prop.type in ('POINTER', 'COLLECTION'):
                         if prop.fixed_type and hasattr(prop.fixed_type, 'identifier'):
                             dep = prop.fixed_type.identifier
                             if dep != name and hasattr(bpy.types, dep):
                                 dependencies.add(dep)
+
+                        if prop.type == 'COLLECTION' and hasattr(prop, "srna") and prop.srna:
+                            srna_id = prop.srna.identifier
+                            if srna_id != name and hasattr(bpy.types, srna_id):
+                                dependencies.add(srna_id)
 
             for base in bases:
                 file_content.append(f"from .{base} import {base}")
