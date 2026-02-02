@@ -8,6 +8,10 @@ templates/modules/bpy.msgbus.pyi
 templates/types/bpy_prop_collection.pyi
 
 # Templates - Injections
+templates/injections/BMEdge.pyi
+templates/injections/BMFace.pyi
+templates/injections/BMLoop.pyi
+templates/injections/BMVert.pyi
 templates/injections/bpy_struct.pyi
 templates/injections/Context.pyi
 templates/injections/Object.pyi

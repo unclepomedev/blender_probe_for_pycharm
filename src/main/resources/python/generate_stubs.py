@@ -78,6 +78,10 @@ class GeneratorConfig:
         "ID": template_loader.get_injection("ID"),
         "SpaceView3D": template_loader.get_injection("SpaceView3D"),
         "KeyConfigurations": template_loader.get_injection("KeyConfigurations"),
+        "BMLoop": template_loader.get_injection("BMLoop"),
+        "BMVert": template_loader.get_injection("BMVert"),
+        "BMEdge": template_loader.get_injection("BMEdge"),
+        "BMFace": template_loader.get_injection("BMFace"),
     })
 
     math_types_whitelist: set[str] = field(default_factory=lambda: {
@@ -540,6 +544,11 @@ class ModuleGenerator:
 
         if name in self.context.config.math_types_whitelist:
             lines.extend(self.writer.get_math_methods(name))
+            has_member = True
+
+        if name in self.context.config.manual_injections:
+            lines.append("    # --- Injected Methods ---")
+            lines.extend(self.context.config.manual_injections[name])
             has_member = True
 
         if not has_member:
