@@ -4,7 +4,9 @@
 
 ### Changed
 
-* **Stub Generation Enhancement**: Enhanced stub generation with support for dynamic collections, iterables, and arithmetic operators.
+* **Stub Generation Enhancement**: 
+  * Enhanced stub generation with support for dynamic collections, iterables, and arithmetic operators.
+  * Adds the initial stub files for BMEdge, BMFace, BMLoop, and BMVert.
 
 ## [0.1.3] - 2026-01-27
 
