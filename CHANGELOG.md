@@ -4,6 +4,12 @@
 
 ### Changed
 
+* **Stub Generation Enhancement**: Enhanced stub generation with support for dynamic collections, iterables, and arithmetic operators.
+
+## [0.1.3] - 2026-01-27
+
+### Changed
+
 * **Test Execution Fix**: Fixed issues where stale pycache directories interfered with test results.
 
 ## [0.1.2] - 2026-01-25
