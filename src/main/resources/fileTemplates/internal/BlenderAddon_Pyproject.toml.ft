@@ -6,7 +6,7 @@ authors = [
     {name = "${AUTHOR}"}
 ]
 requires-python = ">=3.11"
-dependencies = ["pip"]
+dependencies = ["pip"]  # Include 'pip' to suppress false-positive environment warnings in PyCharm
 
 [dependency-groups]
 dev = [
