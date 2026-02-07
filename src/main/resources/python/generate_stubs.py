@@ -363,6 +363,7 @@ class BpyTypesGenerator:
             return []
 
         return [
+            f"    def __contains__(self, key: Union[str, int]) -> bool: ...",
             f"    def __iter__(self) -> Iterator['{element_type}']: ...",
             f"    def __getitem__(self, key: Union[str, int]) -> '{element_type}': ...",
             f"    def __len__(self) -> int: ..."
