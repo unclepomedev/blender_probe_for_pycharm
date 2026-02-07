@@ -7,6 +7,7 @@
 * **Stub Generation Enhancement**: 
   * Enhanced stub generation with support for dynamic collections, iterables, and arithmetic operators.
   * Adds the initial stub files for BMEdge, BMFace, BMLoop, and BMVert.
+  * Adds `__contains__` to `bpy_prop_collection` stubs
 
 ## [0.1.3] - 2026-01-27
 
