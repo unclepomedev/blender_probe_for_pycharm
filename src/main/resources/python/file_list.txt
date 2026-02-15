@@ -1,6 +1,25 @@
 # Main Script
 generate_stubs.py
 
+# Generator Modules
+generator/__init__.py
+generator/analyzer.py
+generator/config.py
+generator/context.py
+generator/core.py
+generator/gen_modules.py
+generator/gen_ops.py
+generator/gen_types.py
+generator/template_loader.py
+generator/writer.py
+
+# Templates - Core
+templates/core/class_def.pyi
+templates/core/function.pyi
+templates/core/module_header.pyi
+templates/core/property.pyi
+templates/core/property_readonly.pyi
+
 # Templates - Modules
 templates/modules/bpy.msgbus.pyi
 
