@@ -19,7 +19,7 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
             assertTrue("file size should be greater than 0", extractedFile.length() > 0)
 
             val content = extractedFile.readText()
-            assertTrue("should include import bpy", content.contains("import bpy"))
+            assertTrue("should include generator logic", content.contains("from generator.core import main"))
         } finally {
             FileUtil.delete(extractedFile.parentFile)
         }

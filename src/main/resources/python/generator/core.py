@@ -39,7 +39,7 @@ class StubGenerator:
 def main():
     args = sys.argv
     if "--" in args:
-        args = args[args.index("--") + 1:]
+        args = args[args.index("--") + 1 :]
 
     output_dir = None
     if "--output" in args:

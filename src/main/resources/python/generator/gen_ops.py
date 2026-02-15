@@ -11,7 +11,9 @@ class BpyOpsGenerator:
         self.writer = writer
 
     def generate(self):
-        print(f"Generating full bpy.ops stubs to: {os.path.join(self.context.config.bpy_dir, 'ops')}")
+        print(
+            f"Generating full bpy.ops stubs to: {os.path.join(self.context.config.bpy_dir, 'ops')}"
+        )
         ops_dir = os.path.join(self.context.config.bpy_dir, "ops")
         if not os.path.exists(ops_dir):
             os.makedirs(ops_dir)
@@ -32,10 +34,14 @@ class BpyOpsGenerator:
 
     def _generate_category_file(self, output_dir: str, cat_name: str, cat_obj: Any):
         content = list(self.context.config.common_headers)
-        content.extend([
-            "import typing", "import bpy",
-            "from typing import Any, Optional, Union", ""
-        ])
+        content.extend(
+            [
+                "import typing",
+                "import bpy",
+                "from typing import Any, Optional, Union",
+                "",
+            ]
+        )
 
         ops_in_cat = []
         for op_name in dir(cat_obj):
@@ -61,12 +67,13 @@ class BpyOpsGenerator:
         args_sig = [
             "override_context: Optional[Union[dict, 'bpy.types.Context']] = None",
             "execution_context: Optional[str] = None",
-            "undo: Optional[bool] = None"
+            "undo: Optional[bool] = None",
         ]
 
         kw_args = []
         for prop in rna.properties:
-            if prop.identifier == "rna_type": continue
+            if prop.identifier == "rna_type":
+                continue
             arg_name = self.writer.sanitize_arg_name(prop.identifier)
             arg_type = self.context.map_rna_type(prop)
             kw_args.append(f"{arg_name}: {arg_type} = ...")

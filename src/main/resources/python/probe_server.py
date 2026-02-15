@@ -10,7 +10,7 @@ import time
 import importlib
 import glob
 
-HOST = '127.0.0.1'
+HOST = "127.0.0.1"
 HEADER_SIZE = 64
 
 execution_queue = queue.Queue()
@@ -93,7 +93,7 @@ def handle_client(conn, addr):
     Protocol: Header(Length of JSON, 64bytes) + JSON Body
     """
     try:
-        msg_length_raw = conn.recv(HEADER_SIZE).decode('utf-8')
+        msg_length_raw = conn.recv(HEADER_SIZE).decode("utf-8")
         if not msg_length_raw:
             return
 
@@ -114,7 +114,7 @@ def handle_client(conn, addr):
                 break
             data += packet
 
-        message = json.loads(data.decode('utf-8'))
+        message = json.loads(data.decode("utf-8"))
         execution_queue.put(message)
         conn.sendall(b"ACK")
 
@@ -158,7 +158,11 @@ def deep_reload_addon(module_name):
             log(f"Error accessing module for unregister: {e}")
 
     # Purge from sys.modules (The Magic Step)
-    keys_to_purge = [k for k in sys.modules.keys() if k == module_name or k.startswith(module_name + ".")]
+    keys_to_purge = [
+        k
+        for k in sys.modules.keys()
+        if k == module_name or k.startswith(module_name + ".")
+    ]
 
     for key in keys_to_purge:
         del sys.modules[key]
@@ -225,8 +229,9 @@ def attach_to_debugger():
 
         try:
             import pydevd
+
             pydevd.settrace(
-                '127.0.0.1',
+                "127.0.0.1",
                 port=int(debug_port),
                 suspend=False,
             )

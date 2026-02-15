@@ -29,7 +29,9 @@ class StubWriter:
             doc_str += " "
         return f'{indent}"""{doc_str}"""'
 
-    def format_doc_with_link(self, doc_str: str | None, module_name: str, indent: str = "    ") -> str:
+    def format_doc_with_link(
+        self, doc_str: str | None, module_name: str, indent: str = "    "
+    ) -> str:
         url = self.context.get_api_docs_link(module_name)
         text = doc_str if isinstance(doc_str, str) else ""
 
@@ -59,24 +61,24 @@ class StubWriter:
 
     def get_math_methods(self, class_name: str) -> list[str]:
         methods = []
-        ops = ['add', 'sub', 'mul', 'truediv', 'floordiv', 'mod', 'pow']
+        ops = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow"]
         for op in ops:
             methods.append(f"    def __{op}__(self, other: Any) -> Any: ...")
             methods.append(f"    def __r{op}__(self, other: Any) -> Any: ...")
             methods.append(f"    def __i{op}__(self, other: Any) -> Any: ...")
 
-        for op in ['neg', 'pos', 'abs', 'invert']:
+        for op in ["neg", "pos", "abs", "invert"]:
             methods.append(f"    def __{op}__(self) -> '{class_name}': ...")
 
-        methods.append(f"    def __eq__(self, other: Any) -> bool: ...")
-        methods.append(f"    def __ne__(self, other: Any) -> bool: ...")
-        methods.append(f"    def __lt__(self, other: Any) -> bool: ...")
-        methods.append(f"    def __le__(self, other: Any) -> bool: ...")
-        methods.append(f"    def __gt__(self, other: Any) -> bool: ...")
-        methods.append(f"    def __ge__(self, other: Any) -> bool: ...")
+        methods.append("    def __eq__(self, other: Any) -> bool: ...")
+        methods.append("    def __ne__(self, other: Any) -> bool: ...")
+        methods.append("    def __lt__(self, other: Any) -> bool: ...")
+        methods.append("    def __le__(self, other: Any) -> bool: ...")
+        methods.append("    def __gt__(self, other: Any) -> bool: ...")
+        methods.append("    def __ge__(self, other: Any) -> bool: ...")
 
-        methods.append(f"    def __len__(self) -> int: ...")
-        methods.append(f"    def __getitem__(self, key: int) -> float: ...")
-        methods.append(f"    def __setitem__(self, key: int, value: float): ...")
-        methods.append(f"    def __iter__(self) -> Iterator[float]: ...")
+        methods.append("    def __len__(self) -> int: ...")
+        methods.append("    def __getitem__(self, key: int) -> float: ...")
+        methods.append("    def __setitem__(self, key: int, value: float): ...")
+        methods.append("    def __iter__(self) -> Iterator[float]: ...")
         return methods

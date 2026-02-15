@@ -9,8 +9,9 @@ if current_dir not in sys.path:
 
 try:
     from generator.core import main
+
     if __name__ == "__main__":
         main()
-except Exception as e:
+except Exception:
     traceback.print_exc()
     sys.exit(1)

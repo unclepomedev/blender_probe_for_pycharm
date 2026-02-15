@@ -35,12 +35,13 @@ class ModuleGenerator:
         content_header = self.tpl_module_header.substitute(
             common_headers="\n".join(self.context.config.common_headers),
             imports="",
-            module_doc=module_doc
+            module_doc=module_doc,
         )
         content = content_header.splitlines()
 
         for name, obj in inspect.getmembers(mod):
-            if name.startswith("_") or inspect.ismodule(obj): continue
+            if name.startswith("_") or inspect.ismodule(obj):
+                continue
 
             if inspect.isclass(obj):
                 content.extend(self._process_class(module_name, name, obj))
@@ -72,7 +73,8 @@ class ModuleGenerator:
         body_lines = []
         has_member = False
         for mem_name, mem_obj in inspect.getmembers(obj):
-            if mem_name.startswith("_") and mem_name != "__init__": continue
+            if mem_name.startswith("_") and mem_name != "__init__":
+                continue
 
             if inspect.isroutine(mem_obj):
                 sig = self.writer.get_member_signature(mem_obj)
@@ -99,13 +101,8 @@ class ModuleGenerator:
         body_str = "\n".join(body_lines)
 
         class_content = self.tpl_class_def.substitute(
-            name=name,
-            bases="",
-            doc=doc_str,
-            body=body_str
+            name=name, bases="", doc=doc_str, body=body_str
         )
-        if not doc_str:
-            class_content = class_content.replace("class", "class", 1)
 
         return class_content.splitlines()
 
@@ -122,7 +119,9 @@ class ModuleGenerator:
         lines.extend(["    ...", ""])
         return lines
 
-    def _process_submodules(self, mod: Any, module_name: str, base_output_dir: str, content: list[str]):
+    def _process_submodules(
+        self, mod: Any, module_name: str, base_output_dir: str, content: list[str]
+    ):
         submodules = set()
         if hasattr(mod, "__path__"):
             for _, sub_name, _ in pkgutil.iter_modules(mod.__path__):
@@ -145,7 +144,7 @@ class ModuleGenerator:
         prefix = module_name + "."
         for force_mod in self.context.config.force_modules:
             if force_mod.startswith(prefix):
-                submodules.add(force_mod[len(prefix):].split(".")[0])
+                submodules.add(force_mod[len(prefix) :].split(".")[0])
 
         for sub_name in sorted(submodules):
             full_sub = f"{module_name}.{sub_name}"
@@ -158,9 +157,18 @@ class ModuleGenerator:
     def generate_bpy_root(self):
         print("Generating bpy/__init__.pyi")
         content = list(self.context.config.common_headers)
-        content.extend([
-            "from . import types as types", "from . import app as app", "from . import props as props",
-            "from . import ops as ops", "from . import utils as utils", "from . import path as path",
-            "from . import msgbus as msgbus", "", "data: types.BlendData", "context: types.Context",
-        ])
+        content.extend(
+            [
+                "from . import types as types",
+                "from . import app as app",
+                "from . import props as props",
+                "from . import ops as ops",
+                "from . import utils as utils",
+                "from . import path as path",
+                "from . import msgbus as msgbus",
+                "",
+                "data: types.BlendData",
+                "context: types.Context",
+            ]
+        )
         self.writer.write_file(self.context.config.bpy_dir, "__init__.pyi", content)

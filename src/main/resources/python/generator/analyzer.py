@@ -2,6 +2,7 @@ import inspect
 import bpy
 from .context import StubContext
 
+
 class StubAnalyzer:
     def __init__(self, context: StubContext):
         self.context = context
@@ -14,9 +15,13 @@ class StubAnalyzer:
                 continue
 
             for prop in cls.bl_rna.properties:
-                if prop.type == 'COLLECTION':
+                if prop.type == "COLLECTION":
                     if hasattr(prop, "srna") and prop.srna and prop.fixed_type:
                         container_id = prop.srna.identifier
                         element_id = getattr(prop.fixed_type, "identifier", None)
-                        if container_id and element_id and hasattr(bpy.types, container_id):
+                        if (
+                            container_id
+                            and element_id
+                            and hasattr(bpy.types, container_id)
+                        ):
                             self.context.collection_mapping[container_id] = element_id
