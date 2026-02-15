@@ -8,6 +8,8 @@
   * Enhanced stub generation with support for dynamic collections, iterables, and arithmetic operators.
   * Adds the initial stub files for BMEdge, BMFace, BMLoop, and BMVert.
   * Adds `__contains__` to `bpy_prop_collection` stubs
+  * Improved detection capabilities for Blender's built-in API documentation and property descriptions.
+  * Enhanced type support with `Literal`, `Optional`, `Annotated`, and `@property`.
 
 ## [0.1.3] - 2026-01-27
 
