@@ -151,6 +151,51 @@ class StubContext:
         except Exception:
             return "Any"
 
+    def get_detail_annotated_typing(self, prop) -> str:
+        try:
+            type_hint = self.map_rna_type(prop)
+
+            if prop.type == 'ENUM' and not getattr(prop, "is_enum_flag", False):
+                items = getattr(prop, "enum_items", [])
+                if 0 < len(items) < 200:
+                    quoted_items = [f"'{item.identifier}'" for item in items]
+                    type_hint = f"Literal[{', '.join(quoted_items)}]"
+
+            if prop.type == 'POINTER':
+                if not getattr(prop, "is_never_none", False):
+                    if not type_hint.startswith("Optional"):
+                         type_hint = f"Optional[{type_hint}]"
+
+            metadata = []
+
+            subtype = getattr(prop, "subtype", "NONE")
+            if subtype != "NONE":
+                metadata.append(f'"subtype=\'{subtype}\'"')
+
+            unit = getattr(prop, "unit", "NONE")
+            if unit != "NONE":
+                metadata.append(f'"unit=\'{unit}\'"')
+
+            for attr in ['min', 'max', 'step', 'precision']:
+                val = getattr(prop, attr, None)
+                if val is not None:
+                    metadata.append(f'"{attr}={val}"')
+
+            is_animatable = getattr(prop, "is_animatable", None)
+            if is_animatable is False:
+                 metadata.append('"is_animatable=False"')
+
+            is_argument_optional = getattr(prop, "is_argument_optional", None)
+            if is_argument_optional is True:
+                 metadata.append('"is_argument_optional=True"')
+
+            if metadata:
+                 type_hint = f"Annotated[{type_hint}, {', '.join(metadata)}]"
+
+            return type_hint
+        except Exception:
+            return "Any"
+
 
 class StubWriter:
     def __init__(self, context: StubContext):
@@ -272,7 +317,7 @@ class BpyTypesGenerator:
         content = list(self.context.config.common_headers)
         content.extend([
             "import sys", "import typing",
-            "from typing import Any, Optional, Union, Sequence, Callable, Iterator",
+            "from typing import Any, Optional, Union, Sequence, Callable, Iterator, Literal, Annotated",
             "from .bpy_prop_collection import bpy_prop_collection", ""
         ])
 
@@ -331,8 +376,27 @@ class BpyTypesGenerator:
 
         if hasattr(cls, "bl_rna"):
             for prop in cls.bl_rna.properties:
-                if prop.identifier != "rna_type" and not keyword.iskeyword(prop.identifier):
-                    lines.append(f"    {prop.identifier}: {self.context.map_rna_type(prop)}")
+                if prop.identifier == "rna_type" or keyword.iskeyword(prop.identifier):
+                    continue
+
+                type_hint = self.context.get_detail_annotated_typing(prop)
+
+                description = getattr(prop, "description", None)
+
+                if getattr(prop, "is_readonly", False):
+                    lines.append("    @property")
+                    lines.append(f"    def {prop.identifier}(self) -> {type_hint}:")
+                    if description:
+                        doc_fmt = self.writer.format_docstring(description, indent="        ")
+                        if doc_fmt:
+                            lines.append(doc_fmt)
+                    lines.append("        ...")
+                else:
+                    lines.append(f"    {prop.identifier}: {type_hint}")
+                    if description:
+                        doc_fmt = self.writer.format_docstring(description, indent="    ")
+                        if doc_fmt:
+                            lines.append(doc_fmt)
 
             for func in cls.bl_rna.functions:
                 if not keyword.iskeyword(func.identifier):
