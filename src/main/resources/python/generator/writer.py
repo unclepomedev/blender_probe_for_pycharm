@@ -1,7 +1,7 @@
+import inspect
 import keyword
 import os
-import inspect
-from typing import Any, Iterator
+
 from .context import StubContext
 
 
@@ -9,19 +9,22 @@ class StubWriter:
     def __init__(self, context: StubContext):
         self.context = context
 
-    def sanitize_arg_name(self, name: str) -> str:
+    @staticmethod
+    def sanitize_arg_name(name: str) -> str:
         if keyword.iskeyword(name):
             return f"{name}_"
         return name
 
-    def write_file(self, directory: str, filename: str, content: list[str]):
+    @staticmethod
+    def write_file(directory: str, filename: str, content: list[str]):
         if not os.path.exists(directory):
             os.makedirs(directory)
         filepath = os.path.join(directory, filename)
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(content))
 
-    def format_docstring(self, doc_str: str, indent: str = "    ") -> str:
+    @staticmethod
+    def format_docstring(doc_str: str, indent: str = "    ") -> str:
         if not doc_str:
             return ""
         doc_str = doc_str.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
@@ -51,7 +54,8 @@ class StubWriter:
             return ""
         return f'{indent}"""\n{indent}Online Documentation:\n{indent}{url}\n{indent}"""'
 
-    def get_member_signature(self, obj) -> str:
+    @staticmethod
+    def get_member_signature(obj) -> str:
         try:
             sig = inspect.signature(obj)
             new_sig = sig.replace(return_annotation=inspect.Signature.empty)
@@ -59,7 +63,8 @@ class StubWriter:
         except Exception:
             return "(*args, **kwargs)"
 
-    def get_math_methods(self, class_name: str) -> list[str]:
+    @staticmethod
+    def get_math_methods(class_name: str) -> list[str]:
         methods = []
         ops = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow"]
         for op in ops:

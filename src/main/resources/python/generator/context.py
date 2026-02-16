@@ -18,7 +18,8 @@ class StubContext:
             return f"{base_url}idprop.types.html"
         return f"{base_url}{module_name}.html"
 
-    def map_rna_type(self, prop) -> str:
+    @staticmethod
+    def map_rna_type(prop) -> str:
         try:
             t = prop.type
             if t == "STRING":

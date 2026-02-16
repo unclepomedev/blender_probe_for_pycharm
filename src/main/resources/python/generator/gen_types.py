@@ -1,10 +1,11 @@
-import bpy
 import inspect
 import keyword
-from typing import Any
+
+import bpy
+
 from .context import StubContext
-from .writer import StubWriter
 from .template_loader import template_loader
+from .writer import StubWriter
 
 
 class BpyTypesGenerator:
