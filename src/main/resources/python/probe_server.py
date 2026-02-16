@@ -1,14 +1,14 @@
-import bpy
-import threading
-import socket
-import json
-import queue
-import sys
-import os
-import traceback
-import time
-import importlib
 import glob
+import importlib
+import json
+import os
+import queue
+import socket
+import sys
+import threading
+import traceback
+
+import bpy
 
 HOST = "127.0.0.1"
 HEADER_SIZE = 64

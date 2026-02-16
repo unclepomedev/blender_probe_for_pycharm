@@ -70,10 +70,10 @@ def auto_register_addon():
                             status="NORMAL",
                         )
                         found_package = True
-                except ImportError as e:
+                except ImportError as ex:
                     tc_print(
                         "message",
-                        text=f"[Blender Probe] Found package '{item_name}' but failed to import: {e}",
+                        text=f"[Blender Probe] Found package '{item_name}' but failed to import: {ex}",
                         status="WARNING",
                     )
 
@@ -84,10 +84,10 @@ def auto_register_addon():
                 status="WARNING",
             )
 
-    except Exception as e:
+    except Exception as ex:
         tc_print(
             "message",
-            text=f"[Blender Probe] Failed to auto-register addon: {e}",
+            text=f"[Blender Probe] Failed to auto-register addon: {ex}",
             status="WARNING",
         )
 
@@ -109,7 +109,8 @@ class TeamCityTestResult(unittest.TextTestResult):
         super().addFailure(test, err)
         self._report_failure(test, err, "Failure")
 
-    def _report_failure(self, test, err, status):
+    @staticmethod
+    def _report_failure(test, err, status):
         ex_type, ex_value, ex_traceback = err
         full_trace = "".join(
             traceback.format_exception(ex_type, ex_value, ex_traceback)
