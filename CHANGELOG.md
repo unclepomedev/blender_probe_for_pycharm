@@ -10,6 +10,10 @@
   * Adds `__contains__` to `bpy_prop_collection` stubs
   * Improved detection capabilities for Blender's built-in API documentation and property descriptions.
   * Enhanced type support with `Literal`, `Optional`, `Annotated`, and `@property`.
+* **Debugger Reliability**:
+  * Changed process management for debug sessions to prevent "zombie" processes. Blender instances are now reliably terminated when the debugging session is stopped.
+* **Platform Support**:
+  * Raised the minimum supported PyCharm version to **2025.3** to unify the architectural handling of Community and Professional editions.
 
 ## [0.1.3] - 2026-01-27
 

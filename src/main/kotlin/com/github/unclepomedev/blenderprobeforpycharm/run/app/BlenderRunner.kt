@@ -23,6 +23,7 @@ import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugProcessStarter
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebuggerManager
+import com.intellij.xdebugger.XDebugSessionListener
 import com.jetbrains.python.debugger.PyDebugProcess
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
@@ -48,6 +49,7 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         object : Task.Backgroundable(environment.project, "Preparing Blender execution...", true) {
             override fun run(indicator: ProgressIndicator) {
                 try {
+                    val project = environment.project
                     val path = BlenderSettings.getInstance(project).resolveBlenderPath()
                         ?: throw ExecutionException("Blender executable not found. Check settings.")
 
@@ -65,11 +67,12 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
 
                 } catch (e: Exception) {
                     promise.setError(e)
-                    throw e
                 }
             }
 
             override fun onSuccess() {
+                if (promise.state == Promise.State.REJECTED) return
+
                 try {
                     val descriptor = if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
                         startDebugSession(state, environment)
@@ -95,19 +98,24 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         return RunContentBuilder(executionResult, environment).showRunContent(environment.contentToReuse)
     }
 
+    @Suppress("DEPRECATION")
     private fun startDebugSession(state: BlenderRunningState, environment: ExecutionEnvironment): RunContentDescriptor {
         val serverSocket = ServerSocket(0)
-        var processHandler: ProcessHandler? = null
+        var createdProcessHandler: ProcessHandler? = null
 
         try {
             state.debugPort = serverSocket.localPort
 
-            val executionResult = state.execute(environment.executor, this)
-            processHandler = executionResult.processHandler
-
-            return XDebuggerManager.getInstance(environment.project)
+            val session = XDebuggerManager.getInstance(environment.project)
                 .startSession(environment, object : XDebugProcessStarter() {
                     override fun start(session: XDebugSession): XDebugProcess {
+                        val executionResult = state.execute(environment.executor, this@BlenderRunner)
+                        createdProcessHandler = executionResult.processHandler
+                        session.addSessionListener(object : XDebugSessionListener {
+                            override fun sessionStopped() {
+                                createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
+                            }
+                        })
                         return PyDebugProcess(
                             session,
                             serverSocket,
@@ -116,28 +124,37 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                             false
                         )
                     }
-                }).runContentDescriptor
+                })
+
+            return session.runContentDescriptor
+
         } catch (e: Exception) {
-            processHandler?.destroyProcess()
-            serverSocket.close()
+            createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
+            if (!serverSocket.isClosed) {
+                serverSocket.close()
+            }
             throw e
         }
     }
 
     private fun findPydevdPath(): String? {
-        val pluginIds = listOf("PythonCore", "python-ce", "python")
+        val pluginIds = listOf("Pythonid", "PythonCore", "python-ce", "python")
 
         for (id in pluginIds) {
-            val plugin = PluginManagerCore.getPlugin(PluginId.getId(id))
-            if (plugin != null) {
+            val pluginId = PluginId.getId(id)
+            val plugin = PluginManagerCore.getPlugin(pluginId)
+
+            if (plugin != null && !PluginManagerCore.isDisabled(pluginId)) {
                 val path = plugin.pluginPath.resolve("helpers/pydev").toFile()
                 if (path.exists()) return path.absolutePath
             }
         }
 
         val possiblePaths = listOf(
+            File(PathManager.getHomePath(), "plugins/python/helpers/pydev"),
             File(PathManager.getHomePath(), "plugins/python-ce/helpers/pydev"),
             File(PathManager.getHomePath(), "plugins/PythonCore/helpers/pydev"),
+            File(PathManager.getHomePath(), "Contents/plugins/python/helpers/pydev"),
             File(PathManager.getHomePath(), "Contents/plugins/python-ce/helpers/pydev"),
             File(PathManager.getHomePath(), "Contents/plugins/PythonCore/helpers/pydev")
         )
