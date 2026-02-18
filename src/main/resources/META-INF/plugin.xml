@@ -31,6 +31,12 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift R"/>
         </action>
+        <action id="com.github.unclepomedev.blenderprobeforpycharm.debugger.ForceBlenderRedrawAction"
+                class="com.github.unclepomedev.blenderprobeforpycharm.debugger.ForceBlenderRedrawAction"
+                text="Force Blender Redraw"
+                description="Updates Blender viewport manually">
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift D"/>
+        </action>
     </actions>
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="Blender Probe Notification Group"
