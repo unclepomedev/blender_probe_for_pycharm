@@ -24,6 +24,8 @@ repositories {
     // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
     intellijPlatform {
         defaultRepositories()
+        snapshots()
+        releases()
     }
 }
 
@@ -34,7 +36,7 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        pycharmCommunity(providers.gradleProperty("platformVersion"))
+        pycharm(providers.gradleProperty("platformVersion"))
         bundledPlugin("PythonCore")
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
         bundledModules(providers.gradleProperty("platformBundledModules").map { it.split(',') })
