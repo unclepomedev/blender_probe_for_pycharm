@@ -1,4 +1,7 @@
 # Blender Probe
+
+[![Version](https://img.shields.io/jetbrains/plugin/v/29756-blender-probe)](https://plugins.jetbrains.com/plugin/29756-blender-probe)
+
 <!-- Plugin description -->
 **Blender Probe** bridges PyCharm and Blender with **Code Completion**, **Testing**, **Debugging**, and **Hot Reloading**.
 
@@ -20,6 +23,7 @@ Detailed description: [GitHub Repository](https://github.com/unclepomedev/blende
 
 ## Table of Contents
 
+* [Installation](#installation)
 * [Prerequisites](#prerequisites)
 * [Configuration](#configuration)
 * [Usage](#usage)
@@ -32,8 +36,12 @@ Detailed description: [GitHub Repository](https://github.com/unclepomedev/blende
 * [Inspired](#Inspired)
 * [License](#license)
 
+## Installation
+
+[<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" alt="Get it on JetBrains Marketplace" width="200">](https://plugins.jetbrains.com/plugin/29756-blender-probe)
+
 ## Prerequisites
-* **PyCharm** (Community or Professional) 2025.2+
+* **PyCharm** (Community or Professional) 2025.3+
 * **Blender** 4.2+ or 5.x
     * *Note: Blender versions 4.1 and older are not supported.*
 
