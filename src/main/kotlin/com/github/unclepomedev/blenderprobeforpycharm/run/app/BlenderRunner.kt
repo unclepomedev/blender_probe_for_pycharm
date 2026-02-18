@@ -155,7 +155,8 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
             File(PathManager.getHomePath(), "plugins/python-ce/helpers/pydev"),
             File(PathManager.getHomePath(), "plugins/PythonCore/helpers/pydev"),
             File(PathManager.getHomePath(), "Contents/plugins/python/helpers/pydev"),
-            File(PathManager.getHomePath(), "Contents/plugins/python-ce/helpers/pydev")
+            File(PathManager.getHomePath(), "Contents/plugins/python-ce/helpers/pydev"),
+            File(PathManager.getHomePath(), "Contents/plugins/PythonCore/helpers/pydev")
         )
 
         for (path in possiblePaths) {
