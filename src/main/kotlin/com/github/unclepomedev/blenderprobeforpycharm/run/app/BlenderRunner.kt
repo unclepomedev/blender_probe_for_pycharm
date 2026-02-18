@@ -123,18 +123,14 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
 
             session.addSessionListener(object : XDebugSessionListener {
                 override fun sessionStopped() {
-                    if (createdProcessHandler != null && !createdProcessHandler.isProcessTerminated) {
-                        createdProcessHandler.destroyProcess()
-                    }
+                    createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
                 }
             })
 
             return session.runContentDescriptor
 
         } catch (e: Exception) {
-            if (createdProcessHandler != null && !createdProcessHandler.isProcessTerminated) {
-                createdProcessHandler.destroyProcess()
-            }
+            createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
             if (!serverSocket.isClosed) {
                 serverSocket.close()
             }
