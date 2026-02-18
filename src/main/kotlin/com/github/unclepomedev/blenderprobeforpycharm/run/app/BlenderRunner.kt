@@ -111,6 +111,11 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                     override fun start(session: XDebugSession): XDebugProcess {
                         val executionResult = state.execute(environment.executor, this@BlenderRunner)
                         createdProcessHandler = executionResult.processHandler
+                        session.addSessionListener(object : XDebugSessionListener {
+                            override fun sessionStopped() {
+                                createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
+                            }
+                        })
                         return PyDebugProcess(
                             session,
                             serverSocket,
@@ -120,12 +125,6 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                         )
                     }
                 })
-
-            session.addSessionListener(object : XDebugSessionListener {
-                override fun sessionStopped() {
-                    createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
-                }
-            })
 
             return session.runContentDescriptor
 
