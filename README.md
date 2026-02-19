@@ -44,6 +44,7 @@ Detailed description: [GitHub Repository](https://github.com/unclepomedev/blende
 * **PyCharm** (Community or Professional) 2025.3+
 * **Blender** 4.2+ or 5.x
     * *Note: Blender versions 4.1 and older are not supported.*
+    * Determine the source root directory using `blender_manifest.toml`.
 
 ## Configuration
 
