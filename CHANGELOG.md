@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+* **Force Blender Redraw command**: "Force Blender Redraw" action to manually trigger Blender viewport updates during debugging sessions. Access via keyboard shortcut Ctrl+Alt+Shift+D.
+
+## [0.1.4] - 2026-02-18
+
 ### Changed
 
 * **Stub Generation Enhancement**: 
