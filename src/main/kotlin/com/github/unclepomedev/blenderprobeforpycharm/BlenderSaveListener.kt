@@ -7,8 +7,18 @@ import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
 
+/**
+ * Listener for file save events to trigger automatic reload of the Blender addon.
+ * When Python files within the project are modified and saved, this listener schedules a reload.
+ */
 class BlenderSaveListener(private val project: Project) : BulkFileListener {
 
+    /**
+     * Called after files have been processed.
+     * Checks if any Python files in the project were modified and schedules a reload.
+     *
+     * @param events The list of file events.
+     */
     override fun after(events: MutableList<out VFileEvent>) {
         val projectPath = project.basePath ?: return
 

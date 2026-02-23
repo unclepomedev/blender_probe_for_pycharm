@@ -6,6 +6,10 @@ import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 
+/**
+ * Editor for the Blender Run Configuration.
+ * Displays information about the configuration settings.
+ */
 class BlenderRunConfigurationEditor : SettingsEditor<BlenderRunConfiguration>() {
 
     private val myPanel: JPanel = FormBuilder.createFormBuilder()
@@ -13,6 +17,11 @@ class BlenderRunConfigurationEditor : SettingsEditor<BlenderRunConfiguration>() 
         .addComponent(JLabel("No additional run configuration settings required."))
         .panel
 
+    /**
+     * Creates the editor component.
+     *
+     * @return The editor component.
+     */
     override fun createEditor(): JComponent {
         return myPanel
     }

@@ -8,7 +8,16 @@ import java.io.OutputStreamWriter
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 
+/**
+ * Action to send a ping command to the running Blender instance.
+ * This is used to verify connectivity with the Blender Probe server.
+ */
 class PingBlenderAction : AnAction() {
+    /**
+     * Executes the ping action.
+     *
+     * @param e The action event.
+     */
     override fun actionPerformed(e: AnActionEvent) {
         val port = BlenderProbeManager.activePort
         if (port == null) {

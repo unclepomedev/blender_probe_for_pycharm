@@ -6,6 +6,11 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.python.psi.*
 
+/**
+ * Inspection suppressor for Blender-specific Python code patterns.
+ * Suppresses warnings for Blender API usage that conflicts with standard Python inspections,
+ * such as naming conventions and type checking for properties.
+ */
 class BlenderPropertySuppressor : InspectionSuppressor {
 
     companion object {
@@ -22,6 +27,13 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         private val BLENDER_NAMING_REGEX = Regex("^[A-Z][A-Z0-9_]+_[A-Z]{2}_[a-z0-9_]+$")
     }
 
+    /**
+     * Checks if the given inspection tool should be suppressed for the element.
+     *
+     * @param element The PSI element to check.
+     * @param toolId The ID of the inspection tool.
+     * @return True if the inspection should be suppressed, false otherwise.
+     */
     @Suppress("UnstableApiUsage")
     override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
         if (toolId !in ALLOWED_IDS) {
@@ -68,6 +80,13 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         return text.startsWith("bpy.props.") || name in BLENDER_PROPS
     }
 
+    /**
+     * Returns available suppression actions.
+     *
+     * @param element The element to suppress for.
+     * @param toolId The inspection tool ID.
+     * @return An array of suppression actions.
+     */
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
         return SuppressQuickFix.EMPTY_ARRAY
     }

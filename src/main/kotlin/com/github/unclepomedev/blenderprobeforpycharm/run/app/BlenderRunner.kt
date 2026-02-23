@@ -30,14 +30,32 @@ import org.jetbrains.concurrency.Promise
 import java.io.File
 import java.net.ServerSocket
 
+/**
+ * Program runner for executing Blender.
+ * Supports both Run and Debug modes. In Debug mode, it attaches the Python debugger.
+ */
 class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
     override fun getRunnerId(): String = "BlenderRunner"
 
+    /**
+     * Checks if the runner can execute the given run profile.
+     *
+     * @param executorId The ID of the executor (Run or Debug).
+     * @param profile The run profile to check.
+     * @return True if the runner can execute the profile, false otherwise.
+     */
     override fun canRun(executorId: String, profile: RunProfile): Boolean {
         return (executorId == DefaultRunExecutor.EXECUTOR_ID || executorId == DefaultDebugExecutor.EXECUTOR_ID)
                 && profile is BlenderRunConfiguration
     }
 
+    /**
+     * Executes the run profile asynchronously.
+     *
+     * @param environment The execution environment.
+     * @param state The run profile state.
+     * @return A promise that resolves to the run content descriptor.
+     */
     override fun execute(environment: ExecutionEnvironment, state: RunProfileState): Promise<RunContentDescriptor?> {
         val promise = AsyncPromise<RunContentDescriptor?>()
 

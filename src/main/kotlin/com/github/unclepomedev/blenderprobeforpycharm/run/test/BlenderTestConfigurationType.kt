@@ -5,6 +5,10 @@ import com.intellij.execution.configurations.ConfigurationTypeBase
 import com.intellij.execution.configurations.ConfigurationTypeUtil
 import com.intellij.openapi.util.NotNullLazyValue
 
+/**
+ * Configuration type for the Blender Test run configuration.
+ * Defines the "Blender Test" entry in the "Run/Debug Configurations" dialog.
+ */
 class BlenderTestConfigurationType : ConfigurationTypeBase(
     ID,
     "Blender Test",
@@ -18,6 +22,11 @@ class BlenderTestConfigurationType : ConfigurationTypeBase(
     companion object {
         const val ID = "BlenderTestRunConfiguration"
 
+        /**
+         * Retrieves the instance of BlenderTestConfigurationType.
+         *
+         * @return The configuration type instance.
+         */
         fun getInstance(): BlenderTestConfigurationType {
             return ConfigurationTypeUtil.findConfigurationType(BlenderTestConfigurationType::class.java)
         }

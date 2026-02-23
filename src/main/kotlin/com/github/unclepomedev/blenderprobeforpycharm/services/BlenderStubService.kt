@@ -32,15 +32,32 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 
+/**
+ * Service responsible for generating Python stubs for the Blender API.
+ * It runs a Blender process in the background to extract API information and generate stub files.
+ */
 @Service(Service.Level.PROJECT)
 class BlenderStubService(private val project: Project) {
 
     companion object {
         private val LOG = Logger.getInstance(BlenderStubService::class.java)
         private const val PROCESS_TIMEOUT_MS = 5 * 60 * 1000L
+
+        /**
+         * Retrieves the instance of BlenderStubService for the given project.
+         *
+         * @param project The project to get the service for.
+         * @return The BlenderStubService instance.
+         */
         fun getInstance(project: Project): BlenderStubService = project.service()
     }
 
+    /**
+     * Generates Blender API stubs using the specified Blender executable.
+     * The process runs asynchronously with a progress indicator.
+     *
+     * @param blenderPath The path to the Blender executable.
+     */
     fun generateStubs(blenderPath: String) {
         val basePath = project.basePath ?: return
         val outputDir = File(basePath, ".blender_stubs")

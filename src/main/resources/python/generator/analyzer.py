@@ -4,10 +4,22 @@ from .context import StubContext
 
 
 class StubAnalyzer:
+    """
+    Analyzes Blender internal data structures to extract relationships.
+    """
     def __init__(self, context: StubContext):
+        """
+        Initializes the analyzer with the generation context.
+
+        :param context: The shared stub context.
+        """
         self.context = context
 
     def analyze_collections(self):
+        """
+        Analyzes bpy.types to determine the element type of collection properties.
+        Populates context.collection_mapping with the results.
+        """
         print("Analyzing collection relationships...")
         for name in dir(bpy.types):
             cls = getattr(bpy.types, name)

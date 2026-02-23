@@ -17,6 +17,10 @@ import com.intellij.openapi.util.Key
 import com.intellij.util.io.BaseOutputReader
 import java.nio.charset.StandardCharsets
 
+/**
+ * Represents the state of the Blender process during execution.
+ * Handles the startup of the Blender process and communication with the Probe Server.
+ */
 class BlenderRunningState(
     environment: ExecutionEnvironment,
 ) : CommandLineState(environment) {
@@ -27,6 +31,13 @@ class BlenderRunningState(
     var cachedAddonName: String? = null
     var cachedSourceRoot: String? = null
 
+    /**
+     * Executes the process and attaches the console.
+     *
+     * @param executor The executor.
+     * @param runner The program runner.
+     * @return The execution result containing the console and process handler.
+     */
     override fun execute(executor: Executor, runner: ProgramRunner<*>): ExecutionResult {
         val processHandler = startProcess()
         val console = createConsole(executor)
@@ -34,6 +45,11 @@ class BlenderRunningState(
         return DefaultExecutionResult(console, processHandler)
     }
 
+    /**
+     * Starts the Blender process with the necessary arguments and environment variables.
+     *
+     * @return The process handler for the started process.
+     */
     override fun startProcess(): ProcessHandler {
         val project = environment.project
         val blenderPath = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()

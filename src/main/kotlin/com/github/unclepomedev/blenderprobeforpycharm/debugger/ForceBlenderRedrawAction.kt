@@ -7,6 +7,10 @@ import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator
 import com.intellij.xdebugger.frame.XValue
 
+/**
+ * Action to force a redraw of the Blender viewport.
+ * This is useful during debugging when the Blender UI might not update automatically.
+ */
 class ForceBlenderRedrawAction : AnAction() {
 
     init {
@@ -15,6 +19,11 @@ class ForceBlenderRedrawAction : AnAction() {
         templatePresentation.icon = BlenderProbeIcons.Logo16
     }
 
+    /**
+     * Executes the redraw action by evaluating a Python script in the debugger session.
+     *
+     * @param e The action event.
+     */
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val session = XDebuggerManager.getInstance(project).currentSession ?: return

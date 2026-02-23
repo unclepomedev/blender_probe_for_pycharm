@@ -5,6 +5,10 @@ from .template_loader import template_loader
 
 @dataclass(frozen=True)
 class GeneratorConfig:
+    """
+    Configuration settings for the Blender stub generator.
+    Holds paths, module lists, and manual injections required for generation.
+    """
     output_dir: str
     extra_modules: list[str] = field(
         default_factory=lambda: [
@@ -91,12 +95,18 @@ class GeneratorConfig:
 
     @property
     def bpy_dir(self) -> str:
+        """
+        Returns the path to the 'bpy' output directory.
+        """
         import os
 
         return os.path.join(self.output_dir, "bpy")
 
     @property
     def bpy_types_dir(self) -> str:
+        """
+        Returns the path to the 'bpy.types' output directory.
+        """
         import os
 
         return os.path.join(self.bpy_dir, "types")

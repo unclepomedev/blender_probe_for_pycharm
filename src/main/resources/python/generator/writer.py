@@ -6,17 +6,38 @@ from .context import StubContext
 
 
 class StubWriter:
+    """
+    Handles file writing and string formatting operations for stub generation.
+    """
     def __init__(self, context: StubContext):
+        """
+        Initializes the writer.
+
+        :param context: The shared stub context.
+        """
         self.context = context
 
     @staticmethod
     def sanitize_arg_name(name: str) -> str:
+        """
+        Sanitizes an argument name to avoid conflicts with Python keywords.
+
+        :param name: The original argument name.
+        :return: A safe name (e.g., 'class' becomes 'class_').
+        """
         if keyword.iskeyword(name):
             return f"{name}_"
         return name
 
     @staticmethod
     def write_file(directory: str, filename: str, content: list[str]):
+        """
+        Writes a list of strings to a file.
+
+        :param directory: The target directory.
+        :param filename: The target filename.
+        :param content: The list of lines to write.
+        """
         if not os.path.exists(directory):
             os.makedirs(directory)
         filepath = os.path.join(directory, filename)
@@ -25,6 +46,13 @@ class StubWriter:
 
     @staticmethod
     def format_docstring(doc_str: str, indent: str = "    ") -> str:
+        """
+        Formats a string into a Python docstring.
+
+        :param doc_str: The raw documentation string.
+        :param indent: The indentation string.
+        :return: The formatted docstring.
+        """
         if not doc_str:
             return ""
         doc_str = doc_str.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
@@ -35,6 +63,14 @@ class StubWriter:
     def format_doc_with_link(
         self, doc_str: str | None, module_name: str, indent: str = "    "
     ) -> str:
+        """
+        Formats a docstring and appends a link to the online documentation.
+
+        :param doc_str: The raw documentation string.
+        :param module_name: The module name for generating the link.
+        :param indent: The indentation string.
+        :return: The formatted docstring with the link.
+        """
         url = self.context.get_api_docs_link(module_name)
         text = doc_str if isinstance(doc_str, str) else ""
 
@@ -49,6 +85,13 @@ class StubWriter:
         return self.format_docstring(text, indent)
 
     def make_doc_block(self, module_name: str, indent: str = "    ") -> str:
+        """
+        Creates a documentation block containing only the online link.
+
+        :param module_name: The module name.
+        :param indent: The indentation string.
+        :return: The docstring block.
+        """
         url = self.context.get_api_docs_link(module_name)
         if not url:
             return ""
@@ -56,6 +99,12 @@ class StubWriter:
 
     @staticmethod
     def get_member_signature(obj) -> str:
+        """
+        Retrieves the signature of a python object (function/method).
+
+        :param obj: The object to inspect.
+        :return: The signature string.
+        """
         try:
             sig = inspect.signature(obj)
             new_sig = sig.replace(return_annotation=inspect.Signature.empty)
@@ -65,6 +114,12 @@ class StubWriter:
 
     @staticmethod
     def get_math_methods(class_name: str) -> list[str]:
+        """
+        Generates type stubs for standard math magic methods.
+
+        :param class_name: The return type name for operations (e.g., Vector).
+        :return: A list of stub definitions for math methods.
+        """
         methods = []
         ops = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow"]
         for op in ops:
