@@ -7,7 +7,7 @@ To enable code completion for `bpy` and other Blender modules:
 3.  Wait for the progress bar to finish. A hidden folder `.blender_stubs` will be created in your project root and automatically marked as a Source Root.
 
 <div>
-  <img src="images/generate_stubs.png" style="border: 1px solid #ddd; border-radius: 4px;">
+  <img src="images/generate_stubs.png" alt="PyCharm menu showing Regenerate Blender Stubs action" style="border: 1px solid #ddd; border-radius: 4px;">
 </div>
 
 > **💡 Tip:** The `.blender_stubs` folder contains generated files that do not need to be version controlled. It is recommended to add `.blender_stubs/` to your project's `.gitignore` file.

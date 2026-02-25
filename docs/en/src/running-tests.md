@@ -13,11 +13,11 @@ You can use PyCharm `unittest`.
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0;">
   <div style="width: 40%; display: flex; flex-direction: column; gap: 10px;">
-    <img src="images/test1.png" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
-    <img src="images/test3.png" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+    <img src="images/test1.png" alt="Lead to test configuration" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+    <img src="images/test3.png" alt="Execute the tests" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
   </div>
   <div style="width: 60%;">
-    <img src="images/test2.png" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+    <img src="images/test2.png" alt="Test configuration" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
   </div>
 </div>
 
@@ -292,7 +292,7 @@ if __name__ == "__main__":
 ### Writing Tests
 
 > **🚀 Fast Track:** If you used the **Project Wizard**, fully configured test files (`tests/run_tests.py` and `tests/test_sample.py`) are already included.
-
+>
 > 💡 Tip: Setting up tests that run on a real Blender instance while integrating natively with PyCharm (TeamCity) is inherently complex. To set up tests in an existing project, the quickest way is to generate the test files using the Project Wizard in a temporary project and then copy-paste them into your own.
 
 Once configured, you can implement tests as below and begin practicing TDD.

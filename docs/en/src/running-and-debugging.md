@@ -10,8 +10,8 @@ You can launch Blender with your addon loaded and attach the debugger directly.
 4.  Click **OK**.
 
 <p align="center">
-  <img src="images/test1.png" width="48%" style="border: 1px solid #ddd; border-radius: 4px;">
-  <img src="images/run_config.png" width="48%" style="border: 1px solid #ddd; border-radius: 4px;">
+  <img src="images/test1.png" alt="Lead to Run or Debug Configuration" width="48%" style="border: 1px solid #ddd; border-radius: 4px;">
+  <img src="images/run_config.png" alt="Run or Debug Configuration" width="48%" style="border: 1px solid #ddd; border-radius: 4px;">
 </p>
 
 ## Run or Debug
@@ -21,7 +21,7 @@ You can launch Blender with your addon loaded and attach the debugger directly.
 1.  Just Click the **Run** button. (The plugin auto-detects your addon root by the `blender_manifest.toml`.)
 
 <div>
-  <img src="images/run.png" style="border: 1px solid #ddd; border-radius: 4px;">
+  <img src="images/run.png" alt="Run the addon" style="border: 1px solid #ddd; border-radius: 4px;">
 </div>
 
 ### Debug
@@ -34,7 +34,7 @@ You can launch Blender with your addon loaded and attach the debugger directly.
     * **macOS**: `Cmd + Opt + Shift + D`
 
 <div>
-  <img src="images/debug.png" style="border: 1px solid #ddd; border-radius: 4px;">
+  <img src="images/debug.png" alt="Debug the addon" style="border: 1px solid #ddd; border-radius: 4px;">
 </div>
 
 ## Hot Reloading

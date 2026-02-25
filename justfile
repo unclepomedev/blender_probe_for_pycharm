@@ -5,4 +5,4 @@ docs-build:
     cp -r docs/images/* docs/ja/book/images/
 
 docs-open:
-    open docs/en/book/index.html & open docs/ja/book/index.html
+    open docs/en/book/index.html && open docs/ja/book/index.html
