@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+* Improved error handling to ensure an invalid state is not maintained when an error occurs.
+* Refined the input stream closing process for plugin-internal scripts to prevent resource leaks.
+
+## [0.1.5] - 2026-02-20
+
+### Changed
+
 * **Force Blender Redraw command**: "Force Blender Redraw" action to manually trigger Blender viewport updates during debugging sessions. Access via keyboard shortcut Ctrl+Alt+Shift+D.
 
 ## [0.1.4] - 2026-02-18

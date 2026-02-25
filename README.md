@@ -115,6 +115,9 @@ You can launch Blender with your addon loaded and attach the debugger directly.
 1.  Set a breakpoint in your Python code (click the gutter next to a line number).
 2.  Click the **Debug** (Bug icon) button.
 3.  Blender will launch, and PyCharm will automatically attach. Execution will pause at your breakpoints.
+4.  Force Viewport Redraw: While paused at a breakpoint, you can force Blender to redraw its UI/Viewport to see the current state. (⚠️ *Note: This can be a heavy operation depending on your scene. Avoid rapid repeated presses.*)
+    * **Windows / Linux**: `Ctrl + Alt + Shift + D`
+    * **macOS**: `Cmd + Opt + Shift + D`
 
 ### 4. Hot Reloading
 
