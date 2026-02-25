@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
 > **🚀 Fast Track:** If you used the **Project Wizard**, fully configured test files (`tests/run_tests.py` and `tests/test_sample.py`) are already included.
 >
-> 💡 Tip: Setting up tests that run on a real Blender instance while integrating natively with PyCharm (TeamCity) is inherently complex. To set up tests in an existing project, the quickest way is to generate the test files using the Project Wizard in a temporary project and then copy-paste them into your own.
+> 💡 Tip: Setting up tests that run on a real Blender instance while integrating natively with PyCharm (TeamCity) and ensuring the exact same configuration runs in CI is inherently complex. To set up tests in an existing project, the quickest way is to generate the test files using the Project Wizard in a temporary project and then copy-paste them into your own.
 
 Once configured, you can implement tests as below and begin practicing TDD.
 
