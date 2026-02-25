@@ -4,6 +4,14 @@
 
 ### Changed
 
+* Improved error handling in the Wizard-generated test runner script to prevent the entire runner from crashing due to invalid add-on code.
+* Added docstrings to the Wizard-generated test runner script to improve clarity and maintainability.
+* Created a comprehensive user guide.
+
+## [0.1.6] - 2026-02-25
+
+### Changed
+
 * Improved error handling to ensure an invalid state is not maintained when an error occurs.
 * Refined the input stream closing process for plugin-internal scripts to prevent resource leaks.
 
