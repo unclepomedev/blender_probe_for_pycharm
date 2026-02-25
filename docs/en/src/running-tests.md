@@ -1,5 +1,9 @@
 # Tests
 
+> **🚀 Fast Track:** If you used the **Project Wizard**, fully configured test files (`tests/run_tests.py` and `tests/test_sample.py`) are already included.
+>
+> 💡 Tip: Setting up tests that run on a real Blender instance while integrating natively with PyCharm (TeamCity) and ensuring the exact same configuration runs in CI is inherently complex. To set up tests in an existing project, the quickest way is to generate the test files using the Project Wizard in a temporary project and then copy-paste them into your own.
+
 ## PyCharm native unit testing
 
 You can use PyCharm `unittest`.
@@ -8,7 +12,7 @@ You can use PyCharm `unittest`.
 2.  Click the **+** button and select **Blender Test**.
 3.  **Name**: Give it a name (e.g., "All Tests").
 4.  **Test Directory**: Select the folder containing your test scripts.
-5.  Create a `run_tests.py` file as shown below in your test folder.
+5.  Create a `run_tests.py` file as shown below in your test folder. (See code below)
 6.  Click the **Run** button.
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0;">
@@ -291,10 +295,6 @@ if __name__ == "__main__":
 ```
 
 ### Writing Tests
-
-> **🚀 Fast Track:** If you used the **Project Wizard**, fully configured test files (`tests/run_tests.py` and `tests/test_sample.py`) are already included.
->
-> 💡 Tip: Setting up tests that run on a real Blender instance while integrating natively with PyCharm (TeamCity) and ensuring the exact same configuration runs in CI is inherently complex. To set up tests in an existing project, the quickest way is to generate the test files using the Project Wizard in a temporary project and then copy-paste them into your own.
 
 Once configured, you can implement tests as below and begin practicing TDD.
 
