@@ -1,0 +1,14 @@
+[book]
+authors = ["unclepomedev"]
+language = "ja"
+src = "src"
+title = "Blender Probe 操作ガイド"
+
+[output.html]
+git-repository-url = "https://github.com/unclepomedev/blender_probe_for_pycharm"
+site-url = "/blender_probe_for_pycharm/ja/"
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
