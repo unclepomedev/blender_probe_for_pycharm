@@ -88,12 +88,13 @@ def auto_register_addon():
                             status="NORMAL",
                         )
                         found_package = True
-                except ImportError as ex:
+                except Exception as ex:
                     tc_print(
                         "message",
-                        text=f"[Blender Probe] Found package '{item_name}' but failed to import: {ex}",
+                        text=f"[Blender Probe] Found package '{item_name}' but failed to register/import: {ex}\n{traceback.format_exc()}",
                         status="WARNING",
                     )
+                    continue
 
         if not found_package:
             tc_print(
