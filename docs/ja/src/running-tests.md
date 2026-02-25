@@ -12,7 +12,7 @@ PyCharm の `unittest` を使用できます。
 2.  **+** ボタンをクリックし、**Blender Test** を選択します。
 3.  **Name**: 名前を付けます（例: "All Tests"）。
 4.  **Test Directory**: テストスクリプトが含まれるフォルダを選択します。
-5.  テストフォルダに[このテンプレート](https://github.com/unclepomedev/blender_probe_for_pycharm/blob/main/src/main/resources/fileTemplates/internal/BlenderAddon_RunTests.py.ft)のような `run_tests.py` ファイルを作成します。
+5.  テストフォルダに[このテンプレート](https://github.com/unclepomedev/blender_probe_for_pycharm/blob/0903621d8cd9ea3602a8911d8eda1681b1782361/src/main/resources/fileTemplates/internal/BlenderAddon_RunTests.py.ft)のような `run_tests.py` ファイルを作成します。
 6.  **Run** ボタンをクリックします。
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0;">

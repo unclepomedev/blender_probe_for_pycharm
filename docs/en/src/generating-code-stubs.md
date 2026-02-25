@@ -20,4 +20,5 @@ To enable code completion for `bpy` and other Blender modules:
 >     print(obj.location) # Autocompletion works
 > ```
 
-> **💡 Tip:** If the generated stubs don't meet your needs, feel free to delete `.blender_stubs` and opt for static stubs like `fake-bpy-module`. On the other hand, for consistent type checking (mypy/pyright/pyrefly/ty) across different environments or newer Blender versions, including the `.blender_stubs` directory in your git repository is also an option (in that case, configuring `.gitattributes` according to your needs is recommended).
+> **💡 Tip:** If the generated stubs don't meet your needs, you can delete `.blender_stubs` and use static stubs like `fake-bpy-module`.
+> **💡 Tip:** In teams that require reproducible type checking (mypy/pyright/pyrefly/ty) across environments or Blender versions, committing `.blender_stubs` can be a valid exception. If you do, configure `.gitattributes` accordingly.

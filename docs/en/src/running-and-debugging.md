@@ -41,11 +41,11 @@ You can launch Blender with your addon loaded, or use the debugger.
 
 You can use Hot Reload to apply changes instantly, making it quick to verify code changes for UI panels, operators, and more.
 
-1.  Suppose Blender is running, launched via the **Run** or **Debug** configuration from PyCharm.
+1.  Ensure Blender is running, launched via the **Run** or **Debug** configuration from PyCharm.
 2.  Make changes to your Python code.
 3.  The reload is triggered by one of the following methods:
     * **Automatically**: Simply **switch focus** from PyCharm back to Blender. (Requires **Save files when switching to a different application** enabled in **System Settings > Autosave**).
-    * **Manually**: Save your files manually according to your environment's setup.
+    * **Manually**: If the above setting is disabled, the reload is triggered by manually saving the file (e.g., Ctrl/Cmd + S).
 4.  Check the Blender console or PyCharm notification for confirmation. Your addon is now running the updated code.
 
 > **Note**: This performs a "Deep Reload" by unregistering the addon, purging relevant modules from `sys.modules`, and re-registering. This handles most code changes, but complex state changes may still require a restart.

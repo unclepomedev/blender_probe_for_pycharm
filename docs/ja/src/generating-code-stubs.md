@@ -18,4 +18,5 @@
 >     obj: bpy.types.Object = context.active_object
 >     print(obj.location) # 自動補完が機能します
 > ```
-> **💡 ヒント:** 生成されたスタブがニーズに合わない場合は、`.blender_stubs` を削除して `fake-bpy-module` などの静的スタブを使用することもできます。一方で、異なる環境や新しいBlenderバージョン間で一貫した型チェック（mypy/pyright/pyrefly/ty）を行うために、`.blender_stubs` ディレクトリをgitリポジトリに含めることも選択肢になりえます（その際には、用途に応じ `.gitattributes` を設定することを推奨します）。
+> **💡 ヒント:** 生成されたスタブがニーズに合わない場合は、`.blender_stubs` を削除して `fake-bpy-module` などの静的スタブを使用することもできます。
+> **💡 ヒント:** 異なる環境や新しいBlenderバージョン間で一貫した型チェック（mypy/pyright/pyrefly/ty）を行うために、`.blender_stubs` ディレクトリをgitリポジトリに含めることも選択肢になりえます（その際には、用途に応じ `.gitattributes` を設定することを推奨します）。一方で、そのような目的がない場合は、前述の通り `.blender_stubs` を `.gitignore` に追加してください。
