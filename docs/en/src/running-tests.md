@@ -12,7 +12,7 @@ You can use PyCharm `unittest`.
 2.  Click the **+** button and select **Blender Test**.
 3.  **Name**: Give it a name (e.g., "All Tests").
 4.  **Test Directory**: Select the folder containing your test scripts.
-5.  Create a `run_tests.py` file like [this template](https://github.com/unclepomedev/blender_probe_for_pycharm/blob/main/src/main/resources/fileTemplates/internal/BlenderAddon_RunTests.py.ft) in your test folder.
+5.  Create a `run_tests.py` file like [this template](https://github.com/unclepomedev/blender_probe_for_pycharm/blob/0903621d8cd9ea3602a8911d8eda1681b1782361/src/main/resources/fileTemplates/internal/BlenderAddon_RunTests.py.ft) in your test folder.
 6.  Click the **Run** button.
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0;">

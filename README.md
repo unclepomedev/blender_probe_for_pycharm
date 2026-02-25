@@ -24,6 +24,7 @@ Detailed description: [GitHub Repository](https://github.com/unclepomedev/blende
 ## Configuration & Usage
 
 - [English](https://unclepomedev.github.io/blender_probe_for_pycharm/en/)
+- [日本語](https://unclepomedev.github.io/blender_probe_for_pycharm/ja/)
 
 ## License
 
