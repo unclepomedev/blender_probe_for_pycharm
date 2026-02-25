@@ -76,7 +76,6 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
 
                 } catch (e: Exception) {
                     promise.setError(e)
-                    throw e
                 }
             }
 

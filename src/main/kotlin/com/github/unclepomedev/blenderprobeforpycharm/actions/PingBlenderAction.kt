@@ -25,25 +25,34 @@ class PingBlenderAction : AnAction() {
             return
         }
 
-        try {
-            Socket("127.0.0.1", port).use { socket ->
-                val writer = OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)
+        com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread {
+            try {
+                val socket = Socket()
+                socket.connect(java.net.InetSocketAddress("127.0.0.1", port), 3_000)
+                socket.soTimeout = 3_000
+                socket.use {
+                    val writer = OutputStreamWriter(it.getOutputStream(), StandardCharsets.UTF_8)
 
-                val json = """{"action": "ping"}"""
-                val jsonBytes = json.toByteArray(StandardCharsets.UTF_8)
+                    val json = """{"action": "ping"}"""
+                    val jsonBytes = json.toByteArray(StandardCharsets.UTF_8)
 
-                val header = String.format("%-64s", jsonBytes.size.toString())
+                    val header = String.format("%-64s", jsonBytes.size.toString())
 
-                writer.write(header)
-                writer.write(json)
-                writer.flush()
+                    writer.write(header)
+                    writer.write(json)
+                    writer.flush()
+                }
+                com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                    Messages.showInfoMessage("Ping sent to Blender!", "Blender Probe")
+                }
+            } catch (ex: Exception) {
+                com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                    Messages.showErrorDialog(
+                        "Could not connect to Blender. Is it running via Blender Probe?\n${ex.message}",
+                        "Connection Error"
+                    )
+                }
             }
-            Messages.showInfoMessage("Ping sent to Blender!", "Blender Probe")
-        } catch (ex: Exception) {
-            Messages.showErrorDialog(
-                "Could not connect to Blender. Is it running via Blender Probe?\n${ex.message}",
-                "Connection Error"
-            )
         }
     }
 }

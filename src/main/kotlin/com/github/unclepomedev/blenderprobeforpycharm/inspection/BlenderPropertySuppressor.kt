@@ -81,11 +81,14 @@ class BlenderPropertySuppressor : InspectionSuppressor {
     }
 
     /**
-     * Returns available suppression actions.
+     * Returns suppression quick-fix actions for [toolId] at [element].
      *
-     * @param element The element to suppress for.
-     * @param toolId The inspection tool ID.
-     * @return An array of suppression actions.
+     * This suppressor does not provide any user-visible quick-fix actions, so the
+     * returned array is always empty.
+     *
+     * `@param` element The PSI element to suppress for, or `null` if no element is available.
+     * `@param` toolId The inspection tool ID.
+     * `@return` Always [SuppressQuickFix.EMPTY_ARRAY].
      */
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
         return SuppressQuickFix.EMPTY_ARRAY

@@ -38,8 +38,7 @@ class StubWriter:
         :param filename: The target filename.
         :param content: The list of lines to write.
         """
-        if not os.path.exists(directory):
-            os.makedirs(directory)
+        os.makedirs(directory, exist_ok=True)
         filepath = os.path.join(directory, filename)
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(content))

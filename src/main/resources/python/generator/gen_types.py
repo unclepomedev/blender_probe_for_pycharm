@@ -92,10 +92,6 @@ class BpyTypesGenerator:
             name=name, bases=base_str, doc=doc_str, body=body_str
         )
 
-        # Remove empty lines if doc is empty to keep it clean (optional but good)
-        if not doc_str:
-            class_content = class_content.replace("class", "class", 1)  # dummy
-
         full_content = module_content + "\n" + class_content
         self.writer.write_file(
             self.context.config.bpy_types_dir, f"{name}.pyi", full_content.splitlines()

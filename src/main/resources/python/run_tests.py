@@ -41,8 +41,8 @@ def auto_register_addon():
     """
     Automatically detects and registers the Blender addon in the current project.
 
-    It looks for the addon package in the project root defined by 'BLENDER_PROBE_PROJECT_ROOT' environment variable
-    and calls its 'register' module function if available.
+    It looks for addon packages in the project root defined by the 'BLENDER_PROBE_PROJECT_ROOT' environment variable
+    and calls each package's 'register' function if available.
     """
     project_root = os.environ.get("BLENDER_PROBE_PROJECT_ROOT")
 
@@ -137,7 +137,7 @@ class TeamCityTestResult(unittest.TextTestResult):
         """
         Called when a test raises an unexpected exception.
 
-        :param test: The test case that failed.
+        :param test: The test case that raised an unexpected exception.
         :param err: A tuple of the exception info (type, value, traceback).
         """
         super().addError(test, err)
