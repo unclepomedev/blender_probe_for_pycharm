@@ -1,6 +1,6 @@
 # Creating a New Addon Project
 
-Start your development with a production-ready structure.
+You can start development with a simple addon, along with a structure that includes tests and CI already set up.
 
 1. Go to **File** > **New Project**
 2. Select **Blender addon** from the generator list on the left.
@@ -12,7 +12,7 @@ Start your development with a production-ready structure.
 
 This generates a clean project structure compliant with Blender 4.2+ Extensions:
 
-* `my_addon_package/`: Your actual Python package (source code).
+* `my_addon_package/`: The addon's Python package. A package with the name you entered in the wizard will be created.
 * `tests/`: A ready-to-run test suite.
 * `.github/`: CI workflows for GitHub Actions.
 * `LICENSE`: A GPLv3 license file.

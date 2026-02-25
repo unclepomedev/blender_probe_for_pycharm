@@ -1,6 +1,6 @@
 # Running & Debugging Your Addon
 
-You can launch Blender with your addon loaded and attach the debugger directly.
+You can launch Blender with your addon loaded, or use the debugger.
 
 ## Setup
 
@@ -28,7 +28,7 @@ You can launch Blender with your addon loaded and attach the debugger directly.
 
 1.  Set a breakpoint in your Python code (click the gutter next to a line number).
 2.  Click the **Debug** (Bug icon) button.
-3.  Blender will launch, and PyCharm will automatically attach. Execution will pause at your breakpoints.
+3.  Blender will launch, and PyCharm will automatically attach. When a breakpoint is reached, execution will pause.
 4.  Force Viewport Redraw: While paused at a breakpoint, you can force Blender to redraw its UI/Viewport to see the current state. (⚠️ *Note: This can be a heavy operation depending on your scene. Avoid rapid repeated presses.*)
     * **Windows / Linux**: `Ctrl + Alt + Shift + D`
     * **macOS**: `Cmd + Opt + Shift + D`
@@ -39,11 +39,11 @@ You can launch Blender with your addon loaded and attach the debugger directly.
 
 ## Hot Reloading
 
-When developing UI panels or iterating on operators, restarting Blender is slow. Use Hot Reload to apply changes instantly.
+You can use Hot Reload to apply changes instantly, making it quick to verify code changes for UI panels, operators, and more.
 
-1.  Ensure Blender is running (launched via the **Run** or **Debug** configuration from PyCharm).
+1.  Suppose Blender is running, launched via the **Run** or **Debug** configuration from PyCharm.
 2.  Make changes to your Python code.
-3.  Go to **Tools** > **Reload Addon in Blender**.
+3.  The reload is triggered by one of the following methods:
     * **Automatically**: Simply **switch focus** from PyCharm back to Blender. (Requires **Save files when switching to a different application** enabled in **System Settings > Autosave**).
     * **Manually**: Save your files manually according to your environment's setup.
 4.  Check the Blender console or PyCharm notification for confirmation. Your addon is now running the updated code.

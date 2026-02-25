@@ -6,11 +6,11 @@ Blender Probe requires the Blender runtime to function; therefore, you must conf
 
 If you manage your Blender versions with [blup](https://github.com/unclepomedev/blup), no additional configuration is required. The plugin automatically detects the correct Blender executable based on your project's `.blender-version` file or the global default.
 
-(Useful for frequent testing across multiple versions including daily builds and tracking API changes by diffing generated type stubs.)
+(This makes it easy to frequently switch the target Blender version for testing, or to track API changes by diffing generated type stubs across versions. The same applies to daily builds, enabling early response to upcoming changes.)
 
 ## OptionB: Manual Path Configuration
 
-Before using the plugin, you must configure the path to your Blender executable.
+If you don't use `blup`, you must configure the path to your Blender executable before using the plugin.
 
 1.  Go to **Settings/Preferences** > **Tools** > **Blender Probe**.
 2.  Set the **Blender Executable Path**:
