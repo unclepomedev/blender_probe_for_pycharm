@@ -15,4 +15,4 @@ Before using the plugin, you must configure the path to your Blender executable.
     * **Linux**: `/usr/bin/blender`
 3.  Click **OK**.
 
-![configuration.png](../../images/configuration.png)
+![configuration.png](./images/configuration.png)
