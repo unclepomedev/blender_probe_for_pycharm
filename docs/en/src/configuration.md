@@ -15,4 +15,6 @@ Before using the plugin, you must configure the path to your Blender executable.
     * **Linux**: `/usr/bin/blender`
 3.  Click **OK**.
 
-![configuration.png](images/configuration.png)
+<div>
+  <img src="images/configuration.png" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+</div>

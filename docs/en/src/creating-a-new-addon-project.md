@@ -6,7 +6,9 @@ Start your development with a production-ready structure.
 2. Select **Blender addon** from the generator list on the left.
 3. Configure your project location and click **Create**.
 
-![wizard.png](images/wizard.png)
+<div>
+  <img src="images/wizard.png" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+</div>
 
 This generates a clean project structure compliant with Blender 4.2+ Extensions:
 
