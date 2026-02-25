@@ -29,11 +29,23 @@ import javax.swing.Icon
 import javax.swing.JComponent
 import javax.swing.JPanel
 
+/**
+ * Generator for creating a new Blender Add-on project.
+ * Sets up the project structure, creates necessary files, and configures the environment.
+ */
 class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
 
     override fun getName(): String = "Blender addon"
     override fun getLogo(): Icon = BlenderProbeIcons.Logo16
 
+    /**
+     * Generates the project structure and content.
+     *
+     * @param project The project instance.
+     * @param baseDir The base directory of the project.
+     * @param settings The project settings.
+     * @param module The module being created.
+     */
     override fun generateProject(
         project: Project,
         baseDir: VirtualFile,

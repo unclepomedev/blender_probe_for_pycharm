@@ -6,6 +6,9 @@ import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationOptions
 import com.intellij.openapi.project.Project
 
+/**
+ * Factory for creating Blender Test run configurations.
+ */
 class BlenderTestConfigurationFactory(type: ConfigurationType) : ConfigurationFactory(type) {
     override fun createTemplateConfiguration(project: Project): RunConfiguration {
         return BlenderTestRunConfiguration(project, this, "Blender Test")

@@ -13,12 +13,21 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 
+/**
+ * Action to generate Python stubs for the Blender API.
+ * This action locates the Blender executable and runs a script to generate the stubs.
+ */
 class GenerateStubsAction : AnAction() {
 
     companion object {
         private val LOG = Logger.getInstance(GenerateStubsAction::class.java)
     }
 
+    /**
+     * Executes the stub generation action.
+     *
+     * @param e The action event.
+     */
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         resolveAndGenerate(project)

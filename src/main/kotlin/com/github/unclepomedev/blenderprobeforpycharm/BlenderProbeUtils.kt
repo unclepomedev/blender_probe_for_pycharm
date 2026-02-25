@@ -5,7 +5,19 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import java.util.*
 
+/**
+ * Utility functions for Blender Addon development.
+ * Provides helper methods to detect addon information from the project structure.
+ */
 object BlenderProbeUtils {
+    /**
+     * Detects the Python module name for the Blender addon.
+     * Attempts to find the module name from the `blender_manifest.toml` location,
+     * or falls back to a normalized version of the project name.
+     *
+     * @param project The current project.
+     * @return The detected addon module name.
+     */
     fun detectAddonModuleName(project: Project): String {
         val targetFile = findAddonEntryFile(project)
 
@@ -15,6 +27,13 @@ object BlenderProbeUtils {
         return normalizeModuleName(project.name)
     }
 
+    /**
+     * Locates the source root directory of the Blender addon.
+     * This is determined based on the location of the `blender_manifest.toml` file.
+     *
+     * @param project The current project.
+     * @return The absolute path to the source root, or null if not found.
+     */
     fun getAddonSourceRoot(project: Project): String? {
         val targetFile = findAddonEntryFile(project) ?: return null
         val addonDir = targetFile.parent ?: return null
@@ -40,6 +59,13 @@ object BlenderProbeUtils {
         return manifestFile
     }
 
+    /**
+     * Normalizes a string to be a valid Python module name.
+     * Converts to lowercase and replaces spaces and hyphens with underscores.
+     *
+     * @param name The original name.
+     * @return The normalized module name.
+     */
     fun normalizeModuleName(name: String): String {
         return name.lowercase(Locale.ROOT)
             .replace(" ", "_")

@@ -9,7 +9,16 @@ from .writer import StubWriter
 
 
 class BpyTypesGenerator:
+    """
+    Generates Python stubs for bpy.types classes.
+    """
     def __init__(self, context: StubContext, writer: StubWriter):
+        """
+        Initializes the types generator.
+
+        :param context: The shared stub context.
+        :param writer: The file writer instance.
+        """
         self.context = context
         self.writer = writer
         self.tpl_module_header = template_loader.get_template("core/module_header.pyi")
@@ -20,6 +29,9 @@ class BpyTypesGenerator:
         )
 
     def generate(self):
+        """
+        Generates stubs for all classes found in bpy.types.
+        """
         print(f"Generating types to: {self.context.config.bpy_types_dir}")
         self._generate_prop_collection_stub()
 
@@ -79,10 +91,6 @@ class BpyTypesGenerator:
         class_content = self.tpl_class_def.substitute(
             name=name, bases=base_str, doc=doc_str, body=body_str
         )
-
-        # Remove empty lines if doc is empty to keep it clean (optional but good)
-        if not doc_str:
-            class_content = class_content.replace("class", "class", 1)  # dummy
 
         full_content = module_content + "\n" + class_content
         self.writer.write_file(

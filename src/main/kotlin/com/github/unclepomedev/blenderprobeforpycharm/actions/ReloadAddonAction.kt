@@ -16,7 +16,17 @@ import java.io.BufferedOutputStream
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 
+/**
+ * Action to reload the Blender add-on.
+ * This sends a reload command to the running Blender instance via the probe server.
+ */
 class ReloadAddonAction : AnAction() {
+
+    /**
+     * Executes the reload action.
+     *
+     * @param e The action event.
+     */
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val port = BlenderProbeManager.activePort

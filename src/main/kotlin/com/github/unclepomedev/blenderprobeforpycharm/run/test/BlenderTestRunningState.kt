@@ -20,6 +20,10 @@ import com.intellij.util.io.BaseOutputReader
 import java.io.File
 import java.nio.charset.StandardCharsets
 
+/**
+ * Represents the state of the Blender test execution.
+ * Prepares the command line and environment for running tests inside Blender.
+ */
 class BlenderTestRunningState(
     environment: ExecutionEnvironment,
     private val configuration: BlenderTestRunConfiguration
@@ -28,12 +32,24 @@ class BlenderTestRunningState(
     var cachedAddonName: String? = null
     var cachedSourceRoot: String? = null
 
+    /**
+     * Executes the test process and attaches the console.
+     *
+     * @param executor The executor.
+     * @param runner The program runner.
+     * @return The execution result.
+     */
     override fun execute(executor: Executor, runner: ProgramRunner<*>): ExecutionResult {
         val processHandler = startProcess()
         val console = createConsole(executor, processHandler)
         return DefaultExecutionResult(console, processHandler)
     }
 
+    /**
+     * Starts the Blender process to run the tests.
+     *
+     * @return The process handler.
+     */
     override fun startProcess(): ProcessHandler {
         val project = environment.project
         val blenderPath = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()

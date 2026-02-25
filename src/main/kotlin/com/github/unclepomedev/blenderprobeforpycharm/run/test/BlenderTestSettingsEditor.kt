@@ -7,10 +7,19 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.util.ui.FormBuilder
 import javax.swing.JComponent
 
+/**
+ * Settings editor for the Blender Test run configuration.
+ * Provides a UI for selecting the test directory.
+ */
 class BlenderTestSettingsEditor : SettingsEditor<BlenderTestRunConfiguration>() {
 
     private val testDirField = TextFieldWithBrowseButton()
 
+    /**
+     * Creates the editor component.
+     *
+     * @return The editor component.
+     */
     override fun createEditor(): JComponent {
         val descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor()
             .withTitle("Select Test Directory")

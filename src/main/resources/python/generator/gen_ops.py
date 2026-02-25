@@ -6,11 +6,23 @@ from .writer import StubWriter
 
 
 class BpyOpsGenerator:
+    """
+    Generates Python stubs for bpy.ops operators.
+    """
     def __init__(self, context: StubContext, writer: StubWriter):
+        """
+        Initializes the operators generator.
+
+        :param context: The shared stub context.
+        :param writer: The file writer instance.
+        """
         self.context = context
         self.writer = writer
 
     def generate(self):
+        """
+        Generates stubs for all operators in bpy.ops.
+        """
         print(
             f"Generating full bpy.ops stubs to: {os.path.join(self.context.config.bpy_dir, 'ops')}"
         )

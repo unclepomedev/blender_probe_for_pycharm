@@ -9,6 +9,10 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import javax.swing.Icon
 
+/**
+ * Configuration type for the Blender Probe run configuration.
+ * Defines the type of run configuration available in the "Run/Debug Configurations" dialog.
+ */
 class BlenderRunConfigurationType : ConfigurationType, DumbAware {
     override fun getIcon(): Icon = BlenderProbeIcons.Logo16
     override fun getDisplayName(): String = "Blender Probe (Dev)"
@@ -22,6 +26,9 @@ class BlenderRunConfigurationType : ConfigurationType, DumbAware {
     }
 }
 
+/**
+ * Factory for creating Blender Probe run configurations.
+ */
 class BlenderProbeRunConfigurationFactory(type: ConfigurationType) : ConfigurationFactory(type) {
     override fun createTemplateConfiguration(project: Project): RunConfiguration {
         return BlenderRunConfiguration(project, this, "Blender Probe")

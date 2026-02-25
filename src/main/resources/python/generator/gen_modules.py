@@ -9,13 +9,29 @@ from .template_loader import template_loader
 
 
 class ModuleGenerator:
+    """
+    Generates Python stubs for standard Blender modules (bpy, mathutils, etc.).
+    """
     def __init__(self, context: StubContext, writer: StubWriter):
+        """
+        Initializes the module generator.
+
+        :param context: The shared stub context.
+        :param writer: The file writer instance.
+        """
         self.context = context
         self.writer = writer
         self.tpl_module_header = template_loader.get_template("core/module_header.pyi")
         self.tpl_class_def = template_loader.get_template("core/class_def.pyi")
 
     def generate_recursive(self, module_name: str, base_output_dir: str) -> bool:
+        """
+        Recursively generates stubs for a module and its submodules.
+
+        :param module_name: The dotted name of the module to generate.
+        :param base_output_dir: The root directory for output files.
+        :return: True if generation was successful, False otherwise.
+        """
         # exceptional handling for bpy.msgbus
         if module_name == "bpy.msgbus":
             # msgbus tends to fail with importlib, so force it to succeed by writing out a manual definition
@@ -155,6 +171,9 @@ class ModuleGenerator:
                     content.append(f"# Documentation: {link}")
 
     def generate_bpy_root(self):
+        """
+        Generates the root __init__.pyi for the bpy package.
+        """
         print("Generating bpy/__init__.pyi")
         content = list(self.context.config.common_headers)
         content.extend(

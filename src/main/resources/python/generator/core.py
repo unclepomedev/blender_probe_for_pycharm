@@ -12,7 +12,16 @@ from .gen_modules import ModuleGenerator
 
 
 class StubGenerator:
+    """
+    Main controller for the Blender stub generation process.
+    Orchestrates the analysis and generation of types, operators, and modules.
+    """
     def __init__(self, config: GeneratorConfig):
+        """
+        Initializes the generator with the given configuration.
+
+        :param config: The generator configuration.
+        """
         self.config = config
         self.context = StubContext(config)
         self.writer = StubWriter(self.context)
@@ -22,6 +31,9 @@ class StubGenerator:
         self.module_generator = ModuleGenerator(self.context, self.writer)
 
     def run(self):
+        """
+        Executes the full stub generation workflow.
+        """
         self.analyzer.analyze_collections()
         self.bpy_types_generator.generate()
 
@@ -37,6 +49,10 @@ class StubGenerator:
 
 
 def main():
+    """
+    Entry point for the stub generator script.
+    Parses command line arguments and starts the generation.
+    """
     args = sys.argv
     if "--" in args:
         args = args[args.index("--") + 1 :]

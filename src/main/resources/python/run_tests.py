@@ -6,6 +6,12 @@ import traceback
 
 
 def escape_teamcity(text):
+    """
+    Escapes a string for use in TeamCity service messages.
+
+    :param text: The text to escape.
+    :return: The escaped string.
+    """
     if not text:
         return ""
     return (
@@ -20,12 +26,24 @@ def escape_teamcity(text):
 
 
 def tc_print(message_type, **kwargs):
+    """
+    Prints a TeamCity service message to stdout.
+
+    :param message_type: The type of the message (e.g., 'testStarted', 'message').
+    :param kwargs: Key-value pairs of properties for the message.
+    """
     props = " ".join([f"{k}='{escape_teamcity(v)}'" for k, v in kwargs.items()])
     print(f"##teamcity[{message_type} {props}]")
     sys.stdout.flush()
 
 
 def auto_register_addon():
+    """
+    Automatically detects and registers Blender addon packages in the current project.
+
+    It looks for addon packages in the project root defined by the 'BLENDER_PROBE_PROJECT_ROOT' environment variable
+    and calls each package's 'register' function if available.
+    """
     project_root = os.environ.get("BLENDER_PROBE_PROJECT_ROOT")
 
     if not project_root or not os.path.exists(project_root):
@@ -93,19 +111,45 @@ def auto_register_addon():
 
 
 class TeamCityTestResult(unittest.TextTestResult):
+    """
+    A test result class that reports test progress and results using TeamCity service messages.
+    """
+
     def startTest(self, test):
+        """
+        Called when a test is started.
+
+        :param test: The test case that started.
+        """
         super().startTest(test)
         tc_print("testStarted", name=str(test))
 
     def addSuccess(self, test):
+        """
+        Called when a test has completed successfully.
+
+        :param test: The test case that succeeded.
+        """
         super().addSuccess(test)
         tc_print("testFinished", name=str(test))
 
     def addError(self, test, err):
+        """
+        Called when a test raises an unexpected exception.
+
+        :param test: The test case that raised an unexpected exception.
+        :param err: A tuple of the exception info (type, value, traceback).
+        """
         super().addError(test, err)
         self._report_failure(test, err, "Error")
 
     def addFailure(self, test, err):
+        """
+        Called when a test fails an assertion.
+
+        :param test: The test case that failed.
+        :param err: A tuple of the exception info (type, value, traceback).
+        """
         super().addFailure(test, err)
         self._report_failure(test, err, "Failure")
 
@@ -121,11 +165,23 @@ class TeamCityTestResult(unittest.TextTestResult):
 
 
 class TeamCityTestRunner(unittest.TextTestRunner):
+    """
+    A test runner that uses TeamCityTestResult to report results.
+    """
+
     def _makeResult(self):
         return TeamCityTestResult(self.stream, self.descriptions, self.verbosity)
 
 
 def run_tests(test_dir):
+    """
+    Discovers and runs tests in the specified directory.
+
+    It sets up the environment by registering the addon, then discovers tests using `unittest`
+    and runs them using `TeamCityTestRunner`.
+
+    :param test_dir: The directory to discover tests in.
+    """
     tc_print("blockOpened", name="Blender Probe Setup")
     try:
         auto_register_addon()

@@ -8,6 +8,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.util.Alarm
 
+/**
+ * Service that handles automatic reloading of the Blender add-on.
+ * Schedules a reload action when changes are detected, with debouncing.
+ */
 @Service(Service.Level.PROJECT)
 class BlenderAutoReloadService(private val project: Project) : Disposable {
 
@@ -15,6 +19,10 @@ class BlenderAutoReloadService(private val project: Project) : Disposable {
     private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val delayMillis = 500
 
+    /**
+     * Schedules a reload of the add-on.
+     * If a reload is already scheduled, it resets the timer (debounce).
+     */
     fun scheduleReload() {
         alarm.cancelAllRequests()
         alarm.addRequest({

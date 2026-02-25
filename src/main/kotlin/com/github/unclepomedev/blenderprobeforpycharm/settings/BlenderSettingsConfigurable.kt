@@ -8,10 +8,19 @@ import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.builder.AlignX
 
+/**
+ * Provides the configuration UI for Blender Probe settings.
+ * Allows users to specify the path to the Blender executable.
+ */
 class BlenderSettingsConfigurable(private val project: Project) : BoundConfigurable("Blender Probe") {
 
     private val settings = BlenderSettings.getInstance(project)
 
+    /**
+     * Creates the settings panel.
+     *
+     * @return The created DialogPanel.
+     */
     override fun createPanel(): DialogPanel {
         return panel {
             group("General") {

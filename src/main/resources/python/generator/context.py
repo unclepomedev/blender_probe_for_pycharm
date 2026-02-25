@@ -3,11 +3,26 @@ from .config import GeneratorConfig
 
 
 class StubContext:
+    """
+    Holds the shared state and configuration for the stub generation process.
+    Provides utility methods for type mapping and documentation linking.
+    """
     def __init__(self, config: GeneratorConfig):
+        """
+        Initializes the context.
+
+        :param config: The generator configuration.
+        """
         self.config = config
         self.collection_mapping: dict[str, str] = {}
 
     def get_api_docs_link(self, module_name: str) -> str | None:
+        """
+        Generates a URL to the official Blender Python API documentation.
+
+        :param module_name: The name of the module or class.
+        :return: The documentation URL, or None if documentation is disabled for the module.
+        """
         for no_doc_mod in self.config.no_docs_modules:
             if module_name == no_doc_mod or module_name.startswith(no_doc_mod + "."):
                 return None
@@ -20,6 +35,12 @@ class StubContext:
 
     @staticmethod
     def map_rna_type(prop) -> str:
+        """
+        Maps a Blender RNA property type to a Python type hint.
+
+        :param prop: The RNA property object.
+        :return: The Python type string (e.g., 'int', 'str').
+        """
         try:
             t = prop.type
             if t == "STRING":
@@ -57,6 +78,12 @@ class StubContext:
             return "Any"
 
     def get_smart_type_hint(self, prop) -> str:
+        """
+        Generates a detailed type hint including metadata (min, max, subtype).
+
+        :param prop: The RNA property object.
+        :return: A type hint string using Annotated or basic types.
+        """
         try:
             type_hint = self.map_rna_type(prop)
 

@@ -18,13 +18,38 @@ import com.intellij.openapi.progress.Task
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 
+/**
+ * Program runner for executing Blender tests.
+ * This runner handles the execution of tests within the Blender environment.
+ */
 class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
+    /**
+     * Returns the unique ID of this runner.
+     *
+     * @return The runner ID.
+     */
     override fun getRunnerId(): String = "BlenderTestRunner"
 
+    /**
+     * Checks if the runner can execute the given run profile.
+     * Only supports the standard Run executor and BlenderTestRunConfiguration.
+     *
+     * @param executorId The ID of the executor.
+     * @param profile The run profile to check.
+     * @return True if the runner can execute the profile, false otherwise.
+     */
     override fun canRun(executorId: String, profile: RunProfile): Boolean {
         return executorId == DefaultRunExecutor.EXECUTOR_ID && profile is BlenderTestRunConfiguration
     }
 
+    /**
+     * Executes the run profile asynchronously.
+     * Prepares the Blender environment, resolves paths, and starts the test execution.
+     *
+     * @param environment The execution environment.
+     * @param state The run profile state.
+     * @return A promise that resolves to the run content descriptor.
+     */
     override fun execute(environment: ExecutionEnvironment, state: RunProfileState): Promise<RunContentDescriptor?> {
         val promise = AsyncPromise<RunContentDescriptor?>()
 
@@ -39,19 +64,13 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
 
         object : Task.Backgroundable(environment.project, "Preparing blender test execution...", true) {
             override fun run(indicator: ProgressIndicator) {
-                try {
-                    val path = BlenderSettings.getInstance(project).resolveBlenderPath()
-                        ?: throw ExecutionException("Blender executable not found. Check settings.")
-                    state.cachedBlenderPath = path
+                val path = BlenderSettings.getInstance(project).resolveBlenderPath()
+                    ?: throw ExecutionException("Blender executable not found. Check settings.")
+                state.cachedBlenderPath = path
 
-                    ApplicationManager.getApplication().runReadAction {
-                        state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
-                        state.cachedSourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
-                    }
-
-                } catch (e: Exception) {
-                    promise.setError(e)
-                    throw e
+                ApplicationManager.getApplication().runReadAction {
+                    state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
+                    state.cachedSourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
                 }
             }
 
