@@ -29,7 +29,6 @@ class PingBlenderAction : AnAction() {
             try {
                 val socket = Socket()
                 socket.connect(java.net.InetSocketAddress("127.0.0.1", port), 3_000)
-                socket.soTimeout = 3_000
                 socket.use {
                     val writer = OutputStreamWriter(it.getOutputStream(), StandardCharsets.UTF_8)
 

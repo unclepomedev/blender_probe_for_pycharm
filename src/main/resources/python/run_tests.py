@@ -39,7 +39,7 @@ def tc_print(message_type, **kwargs):
 
 def auto_register_addon():
     """
-    Automatically detects and registers the Blender addon in the current project.
+    Automatically detects and registers Blender addon packages in the current project.
 
     It looks for addon packages in the project root defined by the 'BLENDER_PROBE_PROJECT_ROOT' environment variable
     and calls each package's 'register' function if available.

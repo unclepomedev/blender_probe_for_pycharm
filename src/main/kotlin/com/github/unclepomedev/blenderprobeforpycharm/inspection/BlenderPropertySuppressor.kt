@@ -86,9 +86,9 @@ class BlenderPropertySuppressor : InspectionSuppressor {
      * This suppressor does not provide any user-visible quick-fix actions, so the
      * returned array is always empty.
      *
-     * `@param` element The PSI element to suppress for, or `null` if no element is available.
-     * `@param` toolId The inspection tool ID.
-     * `@return` Always [SuppressQuickFix.EMPTY_ARRAY].
+     * @param element The PSI element to suppress for, or `null` if no element is available.
+     * @param toolId The inspection tool ID.
+     * @return Always [SuppressQuickFix.EMPTY_ARRAY].
      */
     override fun getSuppressActions(element: PsiElement?, toolId: String): Array<SuppressQuickFix> {
         return SuppressQuickFix.EMPTY_ARRAY

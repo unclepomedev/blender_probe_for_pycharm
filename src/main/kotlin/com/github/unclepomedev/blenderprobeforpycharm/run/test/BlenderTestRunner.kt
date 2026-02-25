@@ -64,18 +64,13 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
 
         object : Task.Backgroundable(environment.project, "Preparing blender test execution...", true) {
             override fun run(indicator: ProgressIndicator) {
-                try {
-                    val path = BlenderSettings.getInstance(project).resolveBlenderPath()
-                        ?: throw ExecutionException("Blender executable not found. Check settings.")
-                    state.cachedBlenderPath = path
+                val path = BlenderSettings.getInstance(project).resolveBlenderPath()
+                    ?: throw ExecutionException("Blender executable not found. Check settings.")
+                state.cachedBlenderPath = path
 
-                    ApplicationManager.getApplication().runReadAction {
-                        state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
-                        state.cachedSourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
-                    }
-
-                } catch (e: Exception) {
-                    promise.setError(e)
+                ApplicationManager.getApplication().runReadAction {
+                    state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
+                    state.cachedSourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
                 }
             }
 

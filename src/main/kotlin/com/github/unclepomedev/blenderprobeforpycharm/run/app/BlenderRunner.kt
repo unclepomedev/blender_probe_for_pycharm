@@ -66,25 +66,20 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
 
         object : Task.Backgroundable(environment.project, "Preparing Blender execution...", true) {
             override fun run(indicator: ProgressIndicator) {
-                try {
-                    val project = environment.project
-                    val path = BlenderSettings.getInstance(project).resolveBlenderPath()
-                        ?: throw ExecutionException("Blender executable not found. Check settings.")
+                val project = environment.project
+                val path = BlenderSettings.getInstance(project).resolveBlenderPath()
+                    ?: throw ExecutionException("Blender executable not found. Check settings.")
 
-                    state.cachedBlenderPath = path
+                state.cachedBlenderPath = path
 
-                    ApplicationManager.getApplication().runReadAction {
-                        state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
-                        state.cachedSourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
-                    }
-                    if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
-                        val pydevd = findPydevdPath()
-                            ?: throw ExecutionException("Could not find 'pydevd'. Debugging not possible.")
-                        state.pydevdPath = pydevd
-                    }
-
-                } catch (e: Exception) {
-                    promise.setError(e)
+                ApplicationManager.getApplication().runReadAction {
+                    state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
+                    state.cachedSourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
+                }
+                if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
+                    val pydevd = findPydevdPath()
+                        ?: throw ExecutionException("Could not find 'pydevd'. Debugging not possible.")
+                    state.pydevdPath = pydevd
                 }
             }
 
