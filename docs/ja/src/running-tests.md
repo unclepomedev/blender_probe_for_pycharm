@@ -34,11 +34,13 @@ PyCharm の `unittest` を使用できます。
 import unittest
 import bpy
 # from my_addon_package import operators  <-- 自動的に動作します！
+
 class TestSampleOperator(unittest.TestCase):
     """
     カスタムオペレーターの統合テスト。
     Blender Probe経由でBlender内で実行されます。
     """
+
     def setUp(self):
         # 1. Blenderをクリーンな状態にリセット
         bpy.ops.wm.read_homefile(use_empty=True)
@@ -46,6 +48,7 @@ class TestSampleOperator(unittest.TestCase):
         bpy.ops.mesh.primitive_cube_add()
         self.test_obj = bpy.context.object
         self.test_obj.name = "TestCube"
+
     def test_operator_logic(self):
         """オペレーターがオブジェクトの名前を変更し、プロパティを追加することを検証"""
         # [Arrange]
@@ -62,6 +65,7 @@ class TestSampleOperator(unittest.TestCase):
         # 2. 副作用を確認（ロジックの検証）
         self.assertEqual(self.test_obj.name, "TestCube_processed")
         self.assertTrue(self.test_obj.get("is_processed"))
+
 if __name__ == "__main__":
     unittest.main()
 ```
