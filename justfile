@@ -9,3 +9,6 @@ docs-serve:
 
 docs-build:
     mdbook build docs/en & mdbook build docs/ja
+    mkdir -p docs/en/book/images & mkdir -p docs/ja/book/images
+    cp -r docs/images/* docs/en/book/images/
+    cp -r docs/images/* docs/ja/book/images/
