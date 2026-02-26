@@ -8,3 +8,4 @@ build
 .venv
 **/*.pyc
 book
+docs/*/theme/
