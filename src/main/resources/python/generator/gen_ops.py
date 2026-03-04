@@ -83,6 +83,12 @@ class BpyOpsGenerator:
         ]
 
         kw_args = []
+        doc_lines = []
+
+        if rna.description:
+            doc_lines.append(rna.description)
+            doc_lines.append("")
+
         for prop in rna.properties:
             if prop.identifier == "rna_type":
                 continue
@@ -90,13 +96,37 @@ class BpyOpsGenerator:
             arg_type = self.context.map_rna_type(prop)
             kw_args.append(f"{arg_name}: {arg_type} = ...")
 
+            arg_desc = getattr(prop, "description", "") or ""
+
+            if getattr(prop, "is_deprecated", False):
+                dep_note = getattr(prop, "deprecated_note", "")
+
+                rem_version = getattr(prop, "deprecated_removal_version", "")
+                if isinstance(rem_version, tuple):
+                    rem_version = ".".join(map(str, rem_version))
+
+                warning_parts = []
+                if dep_note:
+                    warning_parts.append(dep_note)
+                if rem_version:
+                    warning_parts.append(f"removal in {rem_version}")
+
+                warning_text = f"[DEPRECATED: {'; '.join(warning_parts)}] " if warning_parts else "[DEPRECATED] "
+                arg_desc = f"{warning_text}{arg_desc}"
+
+            if arg_desc:
+                doc_lines.append(f":param {arg_name}: {arg_desc}")
+
         if kw_args:
             args_sig.append("*")
             args_sig.extend(kw_args)
 
         sig_str = ", ".join(args_sig)
         lines = []
-        doc = self.writer.format_docstring(rna.description) if rna.description else ""
+
+        raw_doc = "\n".join(doc_lines).strip()
+        doc = self.writer.format_docstring(raw_doc) if raw_doc else ""
+
         lines.append(f"def {op_name}({sig_str}) -> set[str]:")
         if doc:
             lines.append(doc)

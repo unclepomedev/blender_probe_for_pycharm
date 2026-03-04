@@ -148,7 +148,31 @@ class BpyTypesGenerator:
                     continue
 
                 type_hint = self.context.get_smart_type_hint(prop)
-                description = getattr(prop, "description", None)
+                description = getattr(prop, "description", "") or ""
+
+                if getattr(prop, "is_deprecated", False):
+                    dep_version = getattr(prop, "deprecated_version", "")
+                    if isinstance(dep_version, tuple):
+                        dep_version = ".".join(map(str, dep_version))
+
+                    rem_version = getattr(prop, "deprecated_removal_version", "")
+                    if isinstance(rem_version, tuple):
+                        rem_version = ".".join(map(str, rem_version))
+
+                    dep_note = getattr(prop, "deprecated_note", "")
+
+                    dep_tag = f".. deprecated:: {dep_version}" if dep_version else ".. deprecated::"
+
+                    note_parts = []
+                    if rem_version:
+                        note_parts.append(f"To be removed in {rem_version}.")
+                    if dep_note:
+                        note_parts.append(dep_note)
+
+                    if note_parts:
+                        dep_tag += f"\n   {' '.join(note_parts)}"
+
+                    description = f"{description}\n\n{dep_tag}".strip()
 
                 if getattr(prop, "is_readonly", False):
                     doc_fmt = (
