@@ -16,6 +16,49 @@ class StubContext:
         self.config = config
         self.collection_mapping: dict[str, str] = {}
 
+    def collect_dependencies(self, name: str, cls: type) -> set[str]:
+        """
+        Collects dependencies for a given bpy.types class.
+
+        :param name: The name of the class.
+        :param cls: The class object itself.
+        :return: A set of dependency names.
+        """
+        dependencies = set()
+
+        if hasattr(cls, "bl_rna"):
+            for prop in cls.bl_rna.properties:
+                if prop.identifier == "rna_type":
+                    continue
+
+                if getattr(prop, "is_deprecated", False):
+                    dependencies.add("deprecated")
+
+                if prop.type == "COLLECTION":
+                    dependencies.add("bpy_prop_collection")
+
+                if prop.type in ("POINTER", "COLLECTION"):
+                    if prop.fixed_type and hasattr(prop.fixed_type, "identifier"):
+                        dep = prop.fixed_type.identifier
+                        if dep != name and hasattr(bpy.types, dep):
+                            dependencies.add(dep)
+
+                    if (
+                        prop.type == "COLLECTION"
+                        and hasattr(prop, "srna")
+                        and prop.srna
+                    ):
+                        srna_id = prop.srna.identifier
+                        if srna_id != name and hasattr(bpy.types, srna_id):
+                            dependencies.add(srna_id)
+
+        if name in self.collection_mapping:
+            element_type = self.collection_mapping[name]
+            if element_type != name and hasattr(bpy.types, element_type):
+                dependencies.add(element_type)
+
+        return dependencies
+
     def get_api_docs_link(self, module_name: str) -> str | None:
         """
         Generates a URL to the official Blender Python API documentation.
