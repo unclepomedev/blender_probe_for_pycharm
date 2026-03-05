@@ -109,6 +109,9 @@ class BpyTypesGenerator:
                 if prop.identifier == "rna_type":
                     continue
 
+                if getattr(prop, "is_deprecated", False):
+                    dependencies.add("deprecated")
+
                 if prop.type == "COLLECTION":
                     dependencies.add("bpy_prop_collection")
 
@@ -135,7 +138,10 @@ class BpyTypesGenerator:
         for base in bases:
             imports.append(f"from .{base} import {base}")
         for dep in sorted(dependencies - set(bases)):
-            imports.append(f"from .{dep} import {dep}")
+            if dep == "deprecated":
+                imports.append("from warnings import deprecated")
+            else:
+                imports.append(f"from .{dep} import {dep}")
 
         return imports
 
@@ -150,6 +156,21 @@ class BpyTypesGenerator:
                 type_hint = self.context.get_smart_type_hint(prop)
                 description = getattr(prop, "description", None)
 
+                decorators = ""
+                if getattr(prop, "is_deprecated", False):
+                    dep_ver = getattr(prop, "deprecated_version", None)
+                    dep_rem = getattr(prop, "deprecated_removal_version", None)
+                    msg_parts = []
+                    if dep_ver:
+                        msg_parts.append(f"Deprecated in {'.'.join(map(str, dep_ver))}")
+                    if dep_rem:
+                        msg_parts.append(f"Removal in {'.'.join(map(str, dep_rem))}")
+                    msg = ", ".join(msg_parts)
+                    if msg:
+                        decorators = f"    @deprecated('{msg}')\n"
+                    else:
+                        decorators = "    @deprecated('Deprecated')\n"
+
                 if getattr(prop, "is_readonly", False):
                     doc_fmt = (
                         self.writer.format_docstring(description, indent="        ")
@@ -157,17 +178,17 @@ class BpyTypesGenerator:
                         else ""
                     )
                     prop_str = self.tpl_property_readonly.substitute(
-                        name=prop.identifier, type_hint=type_hint, doc=doc_fmt
+                        decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
                     )
                     lines.append(prop_str)
                 else:
                     doc_fmt = (
-                        self.writer.format_docstring(description, indent="    ")
+                        self.writer.format_docstring(description, indent="        ")
                         if description
                         else ""
                     )
                     prop_str = self.tpl_property.substitute(
-                        name=prop.identifier, type_hint=type_hint, doc=doc_fmt
+                        decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
                     )
                     lines.append(prop_str)
 
