@@ -177,8 +177,15 @@ class BpyTypesGenerator:
 
             type_hint = self.context.get_smart_type_hint(prop)
             description = getattr(prop, "description", None)
-
             decorators = self._build_deprecation_decorator(prop)
+
+            if prop.identifier.startswith("bl_"):
+                if decorators:
+                    lines.append(decorators.rstrip())
+                lines.append(f"    {prop.identifier}: {type_hint}")
+                if description:
+                    lines.append(self.writer.format_docstring(description, indent="    "))
+                continue
 
             doc_fmt = (
                 self.writer.format_docstring(description, indent="        ")
@@ -197,7 +204,8 @@ class BpyTypesGenerator:
             lines.append(prop_str)
         return lines
 
-    def _build_deprecation_decorator(self, prop) -> str:
+    @staticmethod
+    def _build_deprecation_decorator(prop) -> str:
         if not getattr(prop, "is_deprecated", False):
             return ""
             
