@@ -3,5 +3,5 @@ ${decorators}    @property
 ${doc}
         ...
 ${decorators}    @${name}.setter
-    def ${name}(self, value: ${type_hint}):
+    def ${name}(self, value: ${type_hint}) -> None:
         ...
