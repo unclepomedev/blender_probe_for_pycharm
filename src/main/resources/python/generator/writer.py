@@ -96,17 +96,8 @@ class StubWriter:
             return ""
         return f'{indent}"""\n{indent}Online Documentation:\n{indent}{url}\n{indent}"""'
 
-    @staticmethod
-    def format_deprecation_decorator(prop) -> str:
-        """
-        Formats a @deprecated decorator string based on property metadata.
-
-        :param prop: The RNA property object.
-        :return: A formatted decorator string, or empty if not deprecated.
-        """
-        if not getattr(prop, "is_deprecated", False):
-            return ""
-
+    @classmethod
+    def get_deprecation_msg(cls, prop) -> str:
         dep_ver = getattr(prop, "deprecated_version", None)
         dep_rem = getattr(prop, "deprecated_removal_version", None)
         msg_parts = []
@@ -116,9 +107,21 @@ class StubWriter:
             msg_parts.append(f"Removal in {'.'.join(map(str, dep_rem))}")
 
         msg = ", ".join(msg_parts)
-        if msg:
-            return f"    @deprecated('{msg}')\n"
-        return "    @deprecated('Deprecated')\n"
+        return msg if msg else "Deprecated"
+
+    @classmethod
+    def format_deprecation_decorator(cls, prop) -> str:
+        """
+        Formats a @deprecated decorator string based on property metadata.
+
+        :param prop: The RNA property object.
+        :return: A formatted decorator string, or empty if not deprecated.
+        """
+        if not getattr(prop, "is_deprecated", False):
+            return ""
+
+        msg = cls.get_deprecation_msg(prop)
+        return f"    @deprecated('{msg}')\n"
 
     @staticmethod
     def get_member_signature(obj) -> str:

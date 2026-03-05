@@ -141,16 +141,20 @@ class BpyTypesGenerator:
 
             type_hint = self.context.get_smart_type_hint(prop)
             description = getattr(prop, "description", None)
-            decorators = self.writer.format_deprecation_decorator(prop)
 
             if prop.identifier.startswith("bl_"):
-                if decorators:
-                    lines.append(decorators.rstrip())
                 lines.append(f"    {prop.identifier}: {type_hint}")
+
+                if getattr(prop, "is_deprecated", False):
+                    dep_msg = StubWriter.get_deprecation_msg(prop)
+                    warning_text = f"[DEPRECATED: {dep_msg}]"
+                    description = f"{warning_text}\n{description}" if description else warning_text
+
                 if description:
                     lines.append(self.writer.format_docstring(description, indent="    "))
                 continue
 
+            decorators = self.writer.format_deprecation_decorator(prop)
             doc_fmt = (
                 self.writer.format_docstring(description, indent="        ")
                 if description
