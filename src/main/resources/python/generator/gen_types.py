@@ -97,48 +97,12 @@ class BpyTypesGenerator:
             self.context.config.bpy_types_dir, f"{name}.pyi", full_content.splitlines()
         )
 
-    def _collect_dependencies(self, name: str, cls: type) -> set[str]:
-        dependencies = set()
-
-        if hasattr(cls, "bl_rna"):
-            for prop in cls.bl_rna.properties:
-                if prop.identifier == "rna_type":
-                    continue
-
-                if getattr(prop, "is_deprecated", False):
-                    dependencies.add("deprecated")
-
-                if prop.type == "COLLECTION":
-                    dependencies.add("bpy_prop_collection")
-
-                if prop.type in ("POINTER", "COLLECTION"):
-                    if prop.fixed_type and hasattr(prop.fixed_type, "identifier"):
-                        dep = prop.fixed_type.identifier
-                        if dep != name and hasattr(bpy.types, dep):
-                            dependencies.add(dep)
-
-                    if (
-                        prop.type == "COLLECTION"
-                        and hasattr(prop, "srna")
-                        and prop.srna
-                    ):
-                        srna_id = prop.srna.identifier
-                        if srna_id != name and hasattr(bpy.types, srna_id):
-                            dependencies.add(srna_id)
-
-        if name in self.context.collection_mapping:
-            element_type = self.context.collection_mapping[name]
-            if element_type != name and hasattr(bpy.types, element_type):
-                dependencies.add(element_type)
-
-        return dependencies
-
     def _build_imports(self, name: str, cls: type) -> list[str]:
         imports = []
         bases = list(
             dict.fromkeys([b.__name__ for b in cls.__bases__ if b is not object])
         )
-        dependencies = self._collect_dependencies(name, cls)
+        dependencies = self.context.collect_dependencies(name, cls)
 
         for base in bases:
             imports.append(f"from .{base} import {base}")
@@ -177,7 +141,7 @@ class BpyTypesGenerator:
 
             type_hint = self.context.get_smart_type_hint(prop)
             description = getattr(prop, "description", None)
-            decorators = self._build_deprecation_decorator(prop)
+            decorators = self.writer.format_deprecation_decorator(prop)
 
             if prop.identifier.startswith("bl_"):
                 if decorators:
@@ -203,24 +167,6 @@ class BpyTypesGenerator:
                 )
             lines.append(prop_str)
         return lines
-
-    @staticmethod
-    def _build_deprecation_decorator(prop) -> str:
-        if not getattr(prop, "is_deprecated", False):
-            return ""
-            
-        dep_ver = getattr(prop, "deprecated_version", None)
-        dep_rem = getattr(prop, "deprecated_removal_version", None)
-        msg_parts = []
-        if dep_ver:
-            msg_parts.append(f"Deprecated in {'.'.join(map(str, dep_ver))}")
-        if dep_rem:
-            msg_parts.append(f"Removal in {'.'.join(map(str, dep_rem))}")
-            
-        msg = ", ".join(msg_parts)
-        if msg:
-            return f"    @deprecated('{msg}')\n"
-        return "    @deprecated('Deprecated')\n"
 
     def _build_function_stubs(self, cls: type) -> list[str]:
         lines = []

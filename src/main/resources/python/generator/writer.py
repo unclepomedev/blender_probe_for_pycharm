@@ -97,6 +97,30 @@ class StubWriter:
         return f'{indent}"""\n{indent}Online Documentation:\n{indent}{url}\n{indent}"""'
 
     @staticmethod
+    def format_deprecation_decorator(prop) -> str:
+        """
+        Formats a @deprecated decorator string based on property metadata.
+
+        :param prop: The RNA property object.
+        :return: A formatted decorator string, or empty if not deprecated.
+        """
+        if not getattr(prop, "is_deprecated", False):
+            return ""
+
+        dep_ver = getattr(prop, "deprecated_version", None)
+        dep_rem = getattr(prop, "deprecated_removal_version", None)
+        msg_parts = []
+        if dep_ver:
+            msg_parts.append(f"Deprecated in {'.'.join(map(str, dep_ver))}")
+        if dep_rem:
+            msg_parts.append(f"Removal in {'.'.join(map(str, dep_rem))}")
+
+        msg = ", ".join(msg_parts)
+        if msg:
+            return f"    @deprecated('{msg}')\n"
+        return "    @deprecated('Deprecated')\n"
+
+    @staticmethod
     def get_member_signature(obj) -> str:
         """
         Retrieves the signature of a python object (function/method).
