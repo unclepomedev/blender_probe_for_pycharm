@@ -97,11 +97,7 @@ class BpyTypesGenerator:
             self.context.config.bpy_types_dir, f"{name}.pyi", full_content.splitlines()
         )
 
-    def _build_imports(self, name: str, cls: type) -> list[str]:
-        imports = []
-        bases = list(
-            dict.fromkeys([b.__name__ for b in cls.__bases__ if b is not object])
-        )
+    def _collect_dependencies(self, name: str, cls: type) -> set[str]:
         dependencies = set()
 
         if hasattr(cls, "bl_rna"):
@@ -135,6 +131,15 @@ class BpyTypesGenerator:
             if element_type != name and hasattr(bpy.types, element_type):
                 dependencies.add(element_type)
 
+        return dependencies
+
+    def _build_imports(self, name: str, cls: type) -> list[str]:
+        imports = []
+        bases = list(
+            dict.fromkeys([b.__name__ for b in cls.__bases__ if b is not object])
+        )
+        dependencies = self._collect_dependencies(name, cls)
+
         for base in bases:
             imports.append(f"from .{base} import {base}")
         for dep in sorted(dependencies - set(bases)):
@@ -149,54 +154,8 @@ class BpyTypesGenerator:
         lines = []
 
         if hasattr(cls, "bl_rna"):
-            for prop in cls.bl_rna.properties:
-                if prop.identifier == "rna_type" or keyword.iskeyword(prop.identifier):
-                    continue
-
-                type_hint = self.context.get_smart_type_hint(prop)
-                description = getattr(prop, "description", None)
-
-                decorators = ""
-                if getattr(prop, "is_deprecated", False):
-                    dep_ver = getattr(prop, "deprecated_version", None)
-                    dep_rem = getattr(prop, "deprecated_removal_version", None)
-                    msg_parts = []
-                    if dep_ver:
-                        msg_parts.append(f"Deprecated in {'.'.join(map(str, dep_ver))}")
-                    if dep_rem:
-                        msg_parts.append(f"Removal in {'.'.join(map(str, dep_rem))}")
-                    msg = ", ".join(msg_parts)
-                    if msg:
-                        decorators = f"    @deprecated('{msg}')\n"
-                    else:
-                        decorators = "    @deprecated('Deprecated')\n"
-
-                if getattr(prop, "is_readonly", False):
-                    doc_fmt = (
-                        self.writer.format_docstring(description, indent="        ")
-                        if description
-                        else ""
-                    )
-                    prop_str = self.tpl_property_readonly.substitute(
-                        decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
-                    )
-                    lines.append(prop_str)
-                else:
-                    doc_fmt = (
-                        self.writer.format_docstring(description, indent="        ")
-                        if description
-                        else ""
-                    )
-                    prop_str = self.tpl_property.substitute(
-                        decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
-                    )
-                    lines.append(prop_str)
-
-            for func in cls.bl_rna.functions:
-                if not keyword.iskeyword(func.identifier):
-                    lines.append(
-                        f"    def {func.identifier}(self, *args, **kwargs) -> Any: ..."
-                    )
+            lines.extend(self._build_property_stubs(cls))
+            lines.extend(self._build_function_stubs(cls))
 
         if name in self.context.collection_mapping:
             lines.extend(self._get_iterable_methods(name))
@@ -208,6 +167,60 @@ class BpyTypesGenerator:
             lines.append("    # --- Injected Methods ---")
             lines.extend(self.context.config.manual_injections[name])
 
+        return lines
+
+    def _build_property_stubs(self, cls: type) -> list[str]:
+        lines = []
+        for prop in cls.bl_rna.properties:
+            if prop.identifier == "rna_type" or keyword.iskeyword(prop.identifier):
+                continue
+
+            type_hint = self.context.get_smart_type_hint(prop)
+            description = getattr(prop, "description", None)
+
+            decorators = self._build_deprecation_decorator(prop)
+
+            doc_fmt = (
+                self.writer.format_docstring(description, indent="        ")
+                if description
+                else ""
+            )
+
+            if getattr(prop, "is_readonly", False):
+                prop_str = self.tpl_property_readonly.substitute(
+                    decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
+                )
+            else:
+                prop_str = self.tpl_property.substitute(
+                    decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
+                )
+            lines.append(prop_str)
+        return lines
+
+    def _build_deprecation_decorator(self, prop) -> str:
+        if not getattr(prop, "is_deprecated", False):
+            return ""
+            
+        dep_ver = getattr(prop, "deprecated_version", None)
+        dep_rem = getattr(prop, "deprecated_removal_version", None)
+        msg_parts = []
+        if dep_ver:
+            msg_parts.append(f"Deprecated in {'.'.join(map(str, dep_ver))}")
+        if dep_rem:
+            msg_parts.append(f"Removal in {'.'.join(map(str, dep_rem))}")
+            
+        msg = ", ".join(msg_parts)
+        if msg:
+            return f"    @deprecated('{msg}')\n"
+        return "    @deprecated('Deprecated')\n"
+
+    def _build_function_stubs(self, cls: type) -> list[str]:
+        lines = []
+        for func in cls.bl_rna.functions:
+            if not keyword.iskeyword(func.identifier):
+                lines.append(
+                    f"    def {func.identifier}(self, *args, **kwargs) -> Any: ..."
+                )
         return lines
 
     def _get_iterable_methods(self, name: str) -> list[str]:
