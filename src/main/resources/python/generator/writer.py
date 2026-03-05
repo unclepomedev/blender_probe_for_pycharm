@@ -98,6 +98,12 @@ class StubWriter:
 
     @classmethod
     def get_deprecation_msg(cls, prop) -> str:
+        """
+        Builds a deprecation message from property metadata.
+
+        :param prop: The RNA property object.
+        :return: A deprecation message string.
+        """
         dep_ver = getattr(prop, "deprecated_version", None)
         dep_rem = getattr(prop, "deprecated_removal_version", None)
         msg_parts = []

@@ -4,6 +4,13 @@
 
 ### Changed
 
+* **Stub Generation Enhancement**:
+  * Enhanced API deprecation detection.
+
+## [0.1.7] - 2026-02-26
+
+### Changed
+
 * Improved error handling in the Wizard-generated test runner script to prevent the entire runner from crashing due to invalid add-on code.
 * Added docstrings to the Wizard-generated test runner script to improve clarity and maintainability.
 * Created a comprehensive user guide.
