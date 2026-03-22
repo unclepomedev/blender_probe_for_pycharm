@@ -147,7 +147,7 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                 } catch (e: InvocationTargetException) {
                     throw e.targetException
                 } catch (e: ReflectiveOperationException) {
-                    log.warn("Blender Probe: 2026.X Debugger API unavailable, using legacy API. Error: ${e.message}")
+                    log.warn("Blender Probe: 2026.X Debugger API unavailable, using legacy API.", e)
                 }
             }
             // 2025.x or fallback
