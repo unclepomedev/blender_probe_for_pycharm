@@ -14,20 +14,19 @@ import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
-import com.intellij.xdebugger.XDebugProcess
-import com.intellij.xdebugger.XDebugProcessStarter
-import com.intellij.xdebugger.XDebugSession
-import com.intellij.xdebugger.XDebuggerManager
-import com.intellij.xdebugger.XDebugSessionListener
+import com.intellij.xdebugger.*
 import com.jetbrains.python.debugger.PyDebugProcess
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.net.ServerSocket
 
 /**
@@ -35,7 +34,9 @@ import java.net.ServerSocket
  * Supports both Run and Debug modes. In Debug mode, it attaches the Python debugger.
  */
 class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
+
     override fun getRunnerId(): String = "BlenderRunner"
+    private val log = Logger.getInstance(BlenderRunner::class.java)
 
     /**
      * Checks if the runner can execute the given run profile.
@@ -111,43 +112,83 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         return RunContentBuilder(executionResult, environment).showRunContent(environment.contentToReuse)
     }
 
-    @Suppress("DEPRECATION")
     private fun startDebugSession(state: BlenderRunningState, environment: ExecutionEnvironment): RunContentDescriptor {
         val serverSocket = ServerSocket(0)
         var createdProcessHandler: ProcessHandler? = null
+        val project = environment.project
+
+        val processStarter = object : XDebugProcessStarter() {
+            override fun start(session: XDebugSession): XDebugProcess {
+                val executionResult = state.execute(environment.executor, this@BlenderRunner)
+                createdProcessHandler = executionResult.processHandler
+                session.addSessionListener(object : XDebugSessionListener {
+                    override fun sessionStopped() {
+                        createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
+                        try {
+                            if (!serverSocket.isClosed) serverSocket.close()
+                        } catch (e: Exception) {
+                            log.warn("Failed to close debug server socket", e)
+                        }
+                    }
+                })
+                return PyDebugProcess(
+                    session, serverSocket, executionResult.executionConsole,
+                    executionResult.processHandler, false
+                )
+            }
+        }
 
         try {
             state.debugPort = serverSocket.localPort
-
-            val session = XDebuggerManager.getInstance(environment.project)
-                .startSession(environment, object : XDebugProcessStarter() {
-                    override fun start(session: XDebugSession): XDebugProcess {
-                        val executionResult = state.execute(environment.executor, this@BlenderRunner)
-                        createdProcessHandler = executionResult.processHandler
-                        session.addSessionListener(object : XDebugSessionListener {
-                            override fun sessionStopped() {
-                                createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
-                            }
-                        })
-                        return PyDebugProcess(
-                            session,
-                            serverSocket,
-                            executionResult.executionConsole,
-                            executionResult.processHandler,
-                            false
-                        )
-                    }
-                })
-
-            return session.runContentDescriptor
+            val manager = XDebuggerManager.getInstance(project)
+            if (isAtLeast2026()) {
+                try {
+                    return debugSession2026(manager, environment, processStarter)
+                } catch (e: InvocationTargetException) {
+                    throw e.targetException
+                } catch (e: ReflectiveOperationException) {
+                    log.warn("Blender Probe: 2026.X Debugger API unavailable, using legacy API. Error: ${e.message}")
+                }
+            }
+            // 2025.x or fallback
+            return debugSession2025(manager, environment, processStarter)
 
         } catch (e: Exception) {
             createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
-            if (!serverSocket.isClosed) {
-                serverSocket.close()
+            try {
+                if (!serverSocket.isClosed) serverSocket.close()
+            } catch (closeEx: Exception) {
+                e.addSuppressed(closeEx)
             }
             throw e
         }
+    }
+
+    //TODO: (HACK) using reflection to get the 2025 version to compile. change the implementation once drop the 2025 version.
+    private fun debugSession2026(
+        manager: XDebuggerManager,
+        environment: ExecutionEnvironment,
+        processStarter: XDebugProcessStarter
+    ): RunContentDescriptor {
+        val builder = manager.javaClass.getMethod("newSessionBuilder", XDebugProcessStarter::class.java)
+            .invoke(manager, processStarter)
+        val environmentMethod = builder.javaClass.getMethod("environment", ExecutionEnvironment::class.java)
+        val startSessionMethod = builder.javaClass.getMethod("startSession")
+        val descriptorMethod = startSessionMethod.returnType.getMethod("getRunContentDescriptor")
+        environmentMethod.invoke(builder, environment)
+        val result = startSessionMethod.invoke(builder)
+        return descriptorMethod.invoke(result) as? RunContentDescriptor
+            ?: throw ExecutionException("Debug session started but returned no content descriptor")
+    }
+
+    @Suppress("DEPRECATION")
+    private fun debugSession2025(
+        manager: XDebuggerManager,
+        environment: ExecutionEnvironment,
+        processStarter: XDebugProcessStarter
+    ): RunContentDescriptor {
+        val session = manager.startSession(environment, processStarter)
+        return session.runContentDescriptor
     }
 
     private fun findPydevdPath(): String? {
@@ -177,5 +218,10 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         }
 
         return null
+    }
+
+    private fun isAtLeast2026(): Boolean {
+        val build = ApplicationInfo.getInstance().build
+        return build.baselineVersion >= 261
     }
 }

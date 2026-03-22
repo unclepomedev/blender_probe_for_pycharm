@@ -5,10 +5,6 @@
 <!-- Plugin description -->
 **Blender Probe** bridges PyCharm and Blender with **Code Completion**, **Testing**, **Debugging**, and **Hot Reloading**.
 
-> **⚠️ Compatibility Note: (Public Beta)**
-> While **Blender Probe** is designed to work across Windows, macOS, and Linux, primary development and extensive testing have been conducted on **macOS**.
-> Windows and Linux support is currently **experimental**. If you encounter any pathing issues or unexpected behavior on these platforms, please [open an issue](https://github.com/unclepomedev/blender_probe_for_pycharm/issues).
-
 ## Features
 
 * **Dynamic API Stubs (Experimental)**: Generates Python type `.pyi` stubs (including daily builds) via runtime introspection.
@@ -18,7 +14,8 @@
 * **Integrated Test Runner**: Run standard `unittest` suites inside Blender from PyCharm's UI.
 * **Project Wizard**: Scaffolds a Blender 4.2+ Extensions compliant project.
 
-Detailed description: [GitHub Repository](https://github.com/unclepomedev/blender_probe_for_pycharm)
+Detailed description and Issues: [GitHub Repository](https://github.com/unclepomedev/blender_probe_for_pycharm)
+
 <!-- Plugin description end -->
 
 ## Configuration & Usage

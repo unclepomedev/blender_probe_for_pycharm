@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-03-22
+
+### Changed
+
+* **Internal API Changes**:
+  * Support JetBrains 2026.1 debugger API maintaining compatibility with 2025.3.
+
+## [0.1.8] - 2026-03-05
+
 ### Changed
 
 * **Stub Generation Enhancement**:
