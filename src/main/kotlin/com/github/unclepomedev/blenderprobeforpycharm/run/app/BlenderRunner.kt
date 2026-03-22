@@ -124,7 +124,11 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                 session.addSessionListener(object : XDebugSessionListener {
                     override fun sessionStopped() {
                         createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
-                        if (!serverSocket.isClosed) serverSocket.close()
+                        try {
+                            if (!serverSocket.isClosed) serverSocket.close()
+                        } catch (e: Exception) {
+                            log.warn("Failed to close debug server socket", e)
+                        }
                     }
                 })
                 return PyDebugProcess(
@@ -169,7 +173,8 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         val descriptorMethod = startSessionMethod.returnType.getMethod("getRunContentDescriptor")
         environmentMethod.invoke(builder, environment)
         val result = startSessionMethod.invoke(builder)
-        return descriptorMethod.invoke(result) as RunContentDescriptor
+        return descriptorMethod.invoke(result) as? RunContentDescriptor
+            ?: throw ExecutionException("Debug session started but returned no content descriptor")
     }
 
     @Suppress("DEPRECATION")
