@@ -17,18 +17,16 @@ import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
-import com.intellij.xdebugger.XDebugProcess
-import com.intellij.xdebugger.XDebugProcessStarter
-import com.intellij.xdebugger.XDebugSession
-import com.intellij.xdebugger.XDebuggerManager
-import com.intellij.xdebugger.XDebugSessionListener
+import com.intellij.xdebugger.*
 import com.jetbrains.python.debugger.PyDebugProcess
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.net.ServerSocket
 
 /**
@@ -36,7 +34,9 @@ import java.net.ServerSocket
  * Supports both Run and Debug modes. In Debug mode, it attaches the Python debugger.
  */
 class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
+
     override fun getRunnerId(): String = "BlenderRunner"
+    private val log = Logger.getInstance(BlenderRunner::class.java)
 
     /**
      * Checks if the runner can execute the given run profile.
@@ -140,8 +140,10 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
             if (isAtLeast2026()) {
                 try {
                     return debugSession2026(manager, environment, processStarter)
-                } catch (e: Exception) {
-                    System.err.println("Blender Probe: Failed to use 2026.X Debugger API, falling back to legacy API. Error: ${e.message}")
+                } catch (e: InvocationTargetException) {
+                    throw e.targetException
+                } catch (e: ReflectiveOperationException) {
+                    log.error("Blender Probe: Failed to use 2026.X Debugger API, falling back to legacy API. Error: ${e.message}")
                 }
             }
             // 2025.x or fallback
@@ -162,10 +164,12 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
     ): RunContentDescriptor {
         val builder = manager.javaClass.getMethod("newSessionBuilder", XDebugProcessStarter::class.java)
             .invoke(manager, processStarter)
-        builder.javaClass.getMethod("environment", ExecutionEnvironment::class.java)
-            .invoke(builder, environment)
-        val result = builder.javaClass.getMethod("startSession").invoke(builder)
-        return result.javaClass.getMethod("getRunContentDescriptor").invoke(result) as RunContentDescriptor
+        val environmentMethod = builder.javaClass.getMethod("environment", ExecutionEnvironment::class.java)
+        val startSessionMethod = builder.javaClass.getMethod("startSession")
+        val descriptorMethod = startSessionMethod.returnType.getMethod("getRunContentDescriptor")
+        environmentMethod.invoke(builder, environment)
+        val result = startSessionMethod.invoke(builder)
+        return descriptorMethod.invoke(result) as RunContentDescriptor
     }
 
     @Suppress("DEPRECATION")
