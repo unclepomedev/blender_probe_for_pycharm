@@ -147,7 +147,7 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                 } catch (e: InvocationTargetException) {
                     throw e.targetException
                 } catch (e: ReflectiveOperationException) {
-                    log.error("Blender Probe: Failed to use 2026.X Debugger API, falling back to legacy API. Error: ${e.message}")
+                    log.warn("Blender Probe: 2026.X Debugger API unavailable, using legacy API. Error: ${e.message}")
                 }
             }
             // 2025.x or fallback
@@ -155,7 +155,11 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
 
         } catch (e: Exception) {
             createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
-            if (!serverSocket.isClosed) serverSocket.close()
+            try {
+                if (!serverSocket.isClosed) serverSocket.close()
+            } catch (closeEx: Exception) {
+                e.addSuppressed(closeEx)
+            }
             throw e
         }
     }
