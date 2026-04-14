@@ -2,5 +2,57 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": "Gradle dependencies",
+      "matchManagers": [
+        "gradle",
+        "gradle-wrapper"
+      ],
+      "groupName": "gradle dependencies",
+      "automerge": false
+    },
+    {
+      "description": "GitHub Actions",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "github actions",
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Python (uv)",
+      "matchManagers": [
+        "pep621",
+        "uv"
+      ],
+      "groupName": "python dependencies",
+      "automerge": false
+    },
+    {
+      "description": "IntelliJ Platform version",
+      "matchPackageNames": [
+        "com.jetbrains.intellij.idea",
+        "org.jetbrains.intellij.platform"
+      ],
+      "automerge": false,
+      "labels": [
+        "intellij-platform"
+      ],
+      "schedule": [
+        "* 0-5 1 * *"
+      ]
+    }
+  ],
+  "schedule": [
+    "* 0-5 * * 1"
+  ],
+  "labels": [
+    "renovate"
+  ],
+  "assignees": [
+    "unclepomedev"
   ]
 }
