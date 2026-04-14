@@ -37,6 +37,7 @@
         "com.jetbrains.intellij.idea",
         "org.jetbrains.intellij.platform"
       ],
+      "groupName": "intellij platform",
       "automerge": false,
       "labels": [
         "intellij-platform"
