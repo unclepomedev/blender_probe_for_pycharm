@@ -2,6 +2,7 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 
 plugins {
     id("java")
@@ -76,6 +77,7 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
+            // The `untilBuild` parameter is intentionally not specified.
         }
     }
 
@@ -92,7 +94,10 @@ intellijPlatform {
     pluginVerification {
         ides {
             select {
-                types = listOf(IntelliJPlatformType.PyCharmCommunity, IntelliJPlatformType.PyCharmProfessional)
+                types = listOf(IntelliJPlatformType.PyCharmProfessional)
+                channels = listOf(ProductRelease.Channel.RELEASE, ProductRelease.Channel.EAP)
+                sinceBuild = "261"
+                untilBuild = "999.*"
             }
         }
     }
