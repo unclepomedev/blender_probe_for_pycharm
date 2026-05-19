@@ -19,7 +19,7 @@
         "github-actions"
       ],
       "groupName": "github actions",
-      "automerge": true,
+      "automerge": false,
       "automergeType": "pr",
       "pinDigests": true
     },
