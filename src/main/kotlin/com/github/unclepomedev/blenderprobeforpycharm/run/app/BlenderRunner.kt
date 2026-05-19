@@ -13,20 +13,19 @@ import com.intellij.execution.runners.AsyncProgramRunner
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
-import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
-import com.intellij.xdebugger.*
+import com.intellij.xdebugger.XDebugProcess
+import com.intellij.xdebugger.XDebugProcessStarter
+import com.intellij.xdebugger.XDebugSession
+import com.intellij.xdebugger.XDebugSessionListener
+import com.intellij.xdebugger.XDebuggerManager
+import com.jetbrains.python.PythonHelper
 import com.jetbrains.python.debugger.PyDebugProcess
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
-import java.io.File
-import java.lang.reflect.InvocationTargetException
 import java.net.ServerSocket
 
 /**
@@ -78,15 +77,12 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                     state.cachedSourceRoot = BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
                 }
                 if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
-                    val pydevd = findPydevdPath()
-                        ?: throw ExecutionException("Could not find 'pydevd'. Debugging not possible.")
-                    state.pydevdPath = pydevd
+                    state.pydevdPath = PythonHelper.DEBUGGER.pythonPathEntry
                 }
             }
 
             override fun onSuccess() {
                 if (promise.state == Promise.State.REJECTED) return
-
                 try {
                     val descriptor = if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
                         startDebugSession(state, environment)
@@ -112,7 +108,10 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         return RunContentBuilder(executionResult, environment).showRunContent(environment.contentToReuse)
     }
 
-    private fun startDebugSession(state: BlenderRunningState, environment: ExecutionEnvironment): RunContentDescriptor {
+    private fun startDebugSession(
+        state: BlenderRunningState,
+        environment: ExecutionEnvironment
+    ): RunContentDescriptor {
         val serverSocket = ServerSocket(0)
         var createdProcessHandler: ProcessHandler? = null
         val project = environment.project
@@ -140,18 +139,14 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
 
         try {
             state.debugPort = serverSocket.localPort
-            val manager = XDebuggerManager.getInstance(project)
-            if (isAtLeast2026()) {
-                try {
-                    return debugSession2026(manager, environment, processStarter)
-                } catch (e: InvocationTargetException) {
-                    throw e.targetException
-                } catch (e: ReflectiveOperationException) {
-                    log.warn("Blender Probe: 2026.X Debugger API unavailable, using legacy API.", e)
-                }
-            }
-            // 2025.x or fallback
-            return debugSession2025(manager, environment, processStarter)
+            @Suppress("UnstableApiUsage")  // newSessionBuilder is experimental
+            val session = XDebuggerManager.getInstance(project)
+                .newSessionBuilder(processStarter)
+                .environment(environment)
+                .startSession()
+            @Suppress("UnstableApiUsage")  // getRunContentDescriptor is experimental
+            return session.runContentDescriptor
+                ?: throw ExecutionException("Debug session started but returned no content descriptor")
 
         } catch (e: Exception) {
             createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
@@ -162,66 +157,5 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
             }
             throw e
         }
-    }
-
-    //TODO: (HACK) using reflection to get the 2025 version to compile. change the implementation once drop the 2025 version.
-    private fun debugSession2026(
-        manager: XDebuggerManager,
-        environment: ExecutionEnvironment,
-        processStarter: XDebugProcessStarter
-    ): RunContentDescriptor {
-        val builder = manager.javaClass.getMethod("newSessionBuilder", XDebugProcessStarter::class.java)
-            .invoke(manager, processStarter)
-        val environmentMethod = builder.javaClass.getMethod("environment", ExecutionEnvironment::class.java)
-        val startSessionMethod = builder.javaClass.getMethod("startSession")
-        val descriptorMethod = startSessionMethod.returnType.getMethod("getRunContentDescriptor")
-        environmentMethod.invoke(builder, environment)
-        val result = startSessionMethod.invoke(builder)
-        return descriptorMethod.invoke(result) as? RunContentDescriptor
-            ?: throw ExecutionException("Debug session started but returned no content descriptor")
-    }
-
-    @Suppress("DEPRECATION")
-    private fun debugSession2025(
-        manager: XDebuggerManager,
-        environment: ExecutionEnvironment,
-        processStarter: XDebugProcessStarter
-    ): RunContentDescriptor {
-        val session = manager.startSession(environment, processStarter)
-        return session.runContentDescriptor
-    }
-
-    private fun findPydevdPath(): String? {
-        val pluginIds = listOf("Pythonid", "PythonCore", "python-ce", "python")
-
-        for (id in pluginIds) {
-            val pluginId = PluginId.getId(id)
-            val plugin = PluginManagerCore.getPlugin(pluginId)
-
-            if (plugin != null && !PluginManagerCore.isDisabled(pluginId)) {
-                val path = plugin.pluginPath.resolve("helpers/pydev").toFile()
-                if (path.exists()) return path.absolutePath
-            }
-        }
-
-        val possiblePaths = listOf(
-            File(PathManager.getHomePath(), "plugins/python/helpers/pydev"),
-            File(PathManager.getHomePath(), "plugins/python-ce/helpers/pydev"),
-            File(PathManager.getHomePath(), "plugins/PythonCore/helpers/pydev"),
-            File(PathManager.getHomePath(), "Contents/plugins/python/helpers/pydev"),
-            File(PathManager.getHomePath(), "Contents/plugins/python-ce/helpers/pydev"),
-            File(PathManager.getHomePath(), "Contents/plugins/PythonCore/helpers/pydev")
-        )
-
-        for (path in possiblePaths) {
-            if (path.exists()) return path.absolutePath
-        }
-
-        return null
-    }
-
-    private fun isAtLeast2026(): Boolean {
-        val build = ApplicationInfo.getInstance().build
-        return build.baselineVersion >= 261
     }
 }

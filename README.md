@@ -5,6 +5,10 @@
 <!-- Plugin description -->
 **Blender Probe** bridges PyCharm and Blender with **Code Completion**, **Testing**, **Debugging**, and **Hot Reloading**.
 
+## Requirements
+
+PyCharm 2026.1 or later.
+
 ## Features
 
 * **Dynamic API Stubs (Experimental)**: Generates Python type `.pyi` stubs (including daily builds) via runtime introspection.
