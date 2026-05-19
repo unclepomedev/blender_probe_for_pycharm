@@ -20,7 +20,8 @@
       ],
       "groupName": "github actions",
       "automerge": true,
-      "automergeType": "pr"
+      "automergeType": "pr",
+      "pinDigests": true
     },
     {
       "description": "Python (uv)",
