@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-19
+
+### Changed
+
+- Minimum required PyCharm version is now 2026.1 (was 2025.3).
+  This is required to use the redesigned platform debugger API introduced in 2026.1 and to avoid the now-internal `PluginManagerCore.getPlugin()` API.
+
 ## [0.2.0] - 2026-03-22
 
 ### Changed
