@@ -19,8 +19,9 @@
         "github-actions"
       ],
       "groupName": "github actions",
-      "automerge": true,
-      "automergeType": "pr"
+      "automerge": false,
+      "automergeType": "pr",
+      "pinDigests": true
     },
     {
       "description": "Python (uv)",
