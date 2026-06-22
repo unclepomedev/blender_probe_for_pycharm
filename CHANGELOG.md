@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- Support for legacy add-ons that do not use `blender_manifest.toml`:
+  - A **fallback add-on name** setting (Settings > Tools > Blender Probe). When no manifest is found, this name is used as the add-on module to activate instead of the normalized project name.
+  - A **Launch Blender with `--factory-startup`** checkbox (enabled by default). Disable it to let Blender load modules installed in your user environment, which is needed for some legacy add-ons whose dependencies are installed there. Applies to both Run/Debug and test runs.
+
 ## [0.3.0] - 2026-05-19
 
 ### Changed

@@ -22,3 +22,10 @@ If you don't use `blup`, you must configure the path to your Blender executable 
 <div>
   <img src="images/configuration.png" alt="Blender Executable Path configuration" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
 </div>
+
+## Legacy Add-on Support
+
+Blender Probe assumes the add-on uses the modern `blender_manifest.toml` format. If you work with an older add-on that does not, the following settings (under **Settings/Preferences** > **Tools** > **Blender Probe**) help:
+
+* **Add-on name (fallback)**: When no `blender_manifest.toml` is found, the plugin normally derives the add-on module name from the project name. If your add-on's module name differs from the project folder, set the correct Python module name here. It is ignored when a manifest is present.
+* **Launch Blender with `--factory-startup`**: Enabled by default to match the standard behavior. Disable it if your add-on relies on dependencies installed directly into your Blender user environment — `--factory-startup` prevents Blender from loading those user-space modules. This applies to both running/debugging and running tests.

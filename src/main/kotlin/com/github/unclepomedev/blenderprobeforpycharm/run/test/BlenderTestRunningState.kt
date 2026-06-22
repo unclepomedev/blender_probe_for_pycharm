@@ -74,9 +74,20 @@ class BlenderTestRunningState(
         val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
 
+        val parameters = buildList {
+            add("-b")
+            if (BlenderSettings.getInstance(project).state.useFactoryStartup) {
+                add("--factory-startup")
+            }
+            add("-P")
+            add(scriptFile.absolutePath)
+            add("--")
+            add(testDir)
+        }
+
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
-            .withParameters("-b", "--factory-startup", "-P", scriptFile.absolutePath, "--", testDir)
+            .withParameters(parameters)
             .withCharset(StandardCharsets.UTF_8)
             .withWorkDirectory(basePath)
             .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)

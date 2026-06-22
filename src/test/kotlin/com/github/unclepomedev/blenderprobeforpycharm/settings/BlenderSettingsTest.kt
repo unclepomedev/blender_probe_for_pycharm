@@ -27,4 +27,26 @@ class BlenderSettingsTest : BaseBlenderTest() {
         settings.loadState(newState)
         assertEquals("C:\\Blender\\blender.exe", settings.state.blenderPath)
     }
+
+    fun testFactoryStartupDefaultsToTrue() {
+        val settings = BlenderSettings.getInstance(project)
+        assertTrue("--factory-startup should be enabled by default", settings.state.useFactoryStartup)
+    }
+
+    fun testFallbackAddonNameDefaultsToEmpty() {
+        val settings = BlenderSettings.getInstance(project)
+        assertEquals("", settings.state.fallbackAddonName)
+    }
+
+    fun testNewSettingsPersist() {
+        val settings = BlenderSettings.getInstance(project)
+        val newState = BlenderSettings.State(
+            fallbackAddonName = "legacy_addon",
+            useFactoryStartup = false
+        )
+
+        settings.loadState(newState)
+        assertEquals("legacy_addon", settings.state.fallbackAddonName)
+        assertFalse(settings.state.useFactoryStartup)
+    }
 }
