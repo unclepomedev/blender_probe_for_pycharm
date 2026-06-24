@@ -132,9 +132,15 @@ def main_thread_loop():
     while not execution_queue.empty():
         try:
             cmd = execution_queue.get_nowait()
-            process_command(cmd)
         except queue.Empty:
             break
+        # Never let a failing command propagate out of the timer; if it did,
+        # Blender would unregister the timer and the queue would stop draining.
+        try:
+            process_command(cmd)
+        except Exception as e:
+            log(f"Error processing command: {e}")
+            traceback.print_exc()
     return 0.1
 
 
@@ -261,7 +267,10 @@ def register():
         traceback.print_exc()
 
     if not bpy.app.timers.is_registered(main_thread_loop):
-        bpy.app.timers.register(main_thread_loop)
+        # persistent=True keeps the timer alive across .blend file loads.
+        # Without it, opening or creating a file unregisters the timer, so the
+        # queue stops draining and reload/ping commands are silently ignored.
+        bpy.app.timers.register(main_thread_loop, persistent=True)
         log("Main thread timer registered.")
 
     if addon_name:
