@@ -40,20 +40,11 @@ class BlenderSettingsConfigurable(private val project: Project) : BoundConfigura
                     checkBox("Launch Blender with <code>--factory-startup</code>")
                         .bindSelected(settings.state::useFactoryStartup)
                         .comment(
-                            "Enabled by default. Disable to let Blender load modules installed in your user " +
-                                "environment &mdash; useful for legacy add-ons whose dependencies are installed there."
+                            "Enabled by default (recommended). Disable only if your add-on relies on dependencies " +
+                                "installed in your Blender user environment.<br>" +
+                                "<b>Warning:</b> disabling it also loads third-party add-ons and may crash Blender " +
+                                "on startup. Use at your own risk &mdash; this path is outside the supported scope."
                         )
-                }
-            }
-            group("Legacy Add-on") {
-                row("Add-on name (fallback):") {
-                    textField()
-                        .bindText(settings.state::fallbackAddonName)
-                        .comment(
-                            "Used only when no <code>blender_manifest.toml</code> is found.<br>" +
-                                "Set the add-on's Python module name to activate. Leave empty to use the project name."
-                        )
-                        .align(AlignX.FILL)
                 }
             }
         }

@@ -1,6 +1,5 @@
 package com.github.unclepomedev.blenderprobeforpycharm
 
-import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.VirtualFile
@@ -13,12 +12,8 @@ import java.util.*
 object BlenderProbeUtils {
     /**
      * Detects the Python module name for the Blender addon.
-     *
-     * Resolution order:
-     * 1. The directory name containing the `blender_manifest.toml` file, if present.
-     * 2. A user-specified fallback name from the plugin settings, for legacy add-ons
-     *    that do not use a manifest.
-     * 3. A normalized version of the project name (legacy behavior).
+     * Attempts to find the module name from the `blender_manifest.toml` location,
+     * or falls back to a normalized version of the project name.
      *
      * @param project The current project.
      * @return The detected addon module name.
@@ -28,11 +23,6 @@ object BlenderProbeUtils {
 
         if (targetFile != null) {
             return targetFile.parent.name
-        }
-
-        val fallbackName = BlenderSettings.getInstance(project).state.fallbackAddonName.trim()
-        if (fallbackName.isNotEmpty()) {
-            return fallbackName
         }
 
         return normalizeModuleName(project.name)

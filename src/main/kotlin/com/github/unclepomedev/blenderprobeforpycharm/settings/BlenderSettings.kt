@@ -23,15 +23,13 @@ class BlenderSettings(private val project: Project) : PersistentStateComponent<B
      * Data class to hold the state of the settings.
      *
      * @property blenderPath The path to the Blender executable.
-     * @property fallbackAddonName The add-on module name to use when no `blender_manifest.toml`
-     *   is present. When blank, the normalized project name is used (legacy behavior).
      * @property useFactoryStartup Whether to launch Blender with the `--factory-startup` flag.
-     *   Defaults to true to mirror legacy behavior. Disable to allow Blender to load modules
-     *   installed in the user environment (e.g. add-on dependencies).
+     *   Defaults to true to mirror the standard, supported behavior. Disabling it lets Blender
+     *   load third-party add-ons and modules from the user environment, which can crash Blender
+     *   on startup (use at your own risk, outside the supported scope).
      */
     data class State(
         var blenderPath: String = "",
-        var fallbackAddonName: String = "",
         var useFactoryStartup: Boolean = true
     )
 
