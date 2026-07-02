@@ -10,6 +10,16 @@ import traceback
 
 import bpy
 
+# When Blender is launched as a subprocess its stdout is a pipe, not a TTY, so
+# Python block-buffers it. That makes addon print() output invisible until
+# something flushes the buffer (e.g. a reload). Force line buffering so prints
+# appear live. Guarded because a replaced/older stream may lack reconfigure().
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+except (AttributeError, ValueError):
+    pass
+
 HOST = "127.0.0.1"
 HEADER_SIZE = 64
 
