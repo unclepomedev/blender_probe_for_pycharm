@@ -63,9 +63,19 @@ class BlenderRunningState(
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
         val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
 
+        val parameters = buildList {
+            if (BlenderSettings.getInstance(project).state.useFactoryStartup) {
+                add("--factory-startup")
+            }
+            add("--python-exit-code")
+            add("1")
+            add("-P")
+            add(scriptFile.absolutePath)
+        }
+
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
-            .withParameters("--factory-startup", "--python-exit-code", "1", "-P", scriptFile.absolutePath)
+            .withParameters(parameters)
             .withCharset(StandardCharsets.UTF_8)
             .withWorkDirectory(projectPath)
             .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)

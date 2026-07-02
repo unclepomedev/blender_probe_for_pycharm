@@ -27,4 +27,17 @@ class BlenderSettingsTest : BaseBlenderTest() {
         settings.loadState(newState)
         assertEquals("C:\\Blender\\blender.exe", settings.state.blenderPath)
     }
+
+    fun testFactoryStartupDefaultsToTrue() {
+        val settings = BlenderSettings.getInstance(project)
+        assertTrue("--factory-startup should be enabled by default", settings.state.useFactoryStartup)
+    }
+
+    fun testFactoryStartupSettingPersists() {
+        val settings = BlenderSettings.getInstance(project)
+        val newState = BlenderSettings.State(useFactoryStartup = false)
+
+        settings.loadState(newState)
+        assertFalse(settings.state.useFactoryStartup)
+    }
 }
