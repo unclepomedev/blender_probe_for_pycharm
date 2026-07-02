@@ -37,7 +37,7 @@ class BlenderSettingsConfigurable(private val project: Project) : BoundConfigura
                         .align(AlignX.FILL)
                 }
                 row {
-                    checkBox("Launch Blender with <code>--factory-startup</code>")
+                    checkBox("Launch Blender with --factory-startup")
                         .bindSelected(settings.state::useFactoryStartup)
                         .comment(
                             "Enabled by default (recommended). Disable only if your add-on relies on dependencies " +
