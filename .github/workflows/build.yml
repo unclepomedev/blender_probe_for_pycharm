@@ -98,7 +98,7 @@ jobs:
           enable-cache: true
 
       - name: Run Python Tests
-        run: uv run pytest
+        run: uv run --group dev pytest
 
   inspectCode:
     name: Inspect code
