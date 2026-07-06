@@ -1,3 +1,6 @@
+test-python:
+    uv run --group dev pytest
+
 docs-build:
     mkdir -p docs/en/theme && cp -r docs/theme/* docs/en/theme/
     mkdir -p docs/ja/theme && cp -r docs/theme/* docs/ja/theme/

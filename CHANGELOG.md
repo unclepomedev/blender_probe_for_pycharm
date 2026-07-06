@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Hot reload (and ping) no longer stop working after a `.blend` file is opened or created in a running Blender session. 
+    The command-processing timer is now registered as `persistent=True` so it survives file loads, and a failing command can no longer unregister it.
+    Previously the reload request was sent but silently ignored until Blender was restarted.
+- Console output (`print`) calls from blender add-ons now properly print to the pycharm run console.
+
 ## [0.3.0] - 2026-05-19
 
 ### Changed
