@@ -31,6 +31,22 @@ class BlenderRunningState(
     var cachedAddonName: String? = null
     var cachedSourceRoot: String? = null
 
+    companion object {
+        /**
+         * Builds the Blender launch parameters. Extracted from [startProcess] so the
+         * `--factory-startup` behavior can be unit tested without spawning a process.
+         */
+        fun buildParameters(useFactoryStartup: Boolean, scriptPath: String): List<String> = buildList {
+            if (useFactoryStartup) {
+                add("--factory-startup")
+            }
+            add("--python-exit-code")
+            add("1")
+            add("-P")
+            add(scriptPath)
+        }
+    }
+
     /**
      * Executes the process and attaches the console.
      *
@@ -63,15 +79,10 @@ class BlenderRunningState(
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
         val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
 
-        val parameters = buildList {
-            if (BlenderSettings.getInstance(project).state.useFactoryStartup) {
-                add("--factory-startup")
-            }
-            add("--python-exit-code")
-            add("1")
-            add("-P")
-            add(scriptFile.absolutePath)
-        }
+        val parameters = buildParameters(
+            BlenderSettings.getInstance(project).state.useFactoryStartup,
+            scriptFile.absolutePath
+        )
 
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
