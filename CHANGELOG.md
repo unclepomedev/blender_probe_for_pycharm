@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+- Bundled wheel dependencies now work for packages containing compiled/native extensions, not just pure-Python ones.
+    - Wheels are now extracted before being added to `sys.path` instead of the raw `.whl` being appended.
+      Extracted wheels live in a project-local `.blender_probe/` cache.
+
 ## [0.3.1] - 2026-07-07
 
 ### Added
