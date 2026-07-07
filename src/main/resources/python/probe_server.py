@@ -8,6 +8,7 @@ import shutil
 import socket
 import sys
 import threading
+import tomllib
 import traceback
 import zipfile
 
@@ -229,50 +230,129 @@ def _extract_wheel(whl_path, cache_root):
     return dest
 
 
+def _read_manifest_wheels(manifest_path):
+    """Return the wheel paths declared in the manifest's top-level ``wheels`` array.
+
+    Returns a (possibly empty) list of the declared paths, or ``None`` when the
+    manifest is missing or cannot be parsed. ``None`` means "fall back to scanning
+    the wheels/ directory", so a manifest that is briefly invalid mid-edit doesn't
+    block a Run/Debug. An empty list means "the manifest declares no wheels", which
+    is faithful to Blender installing nothing.
+    """
+    if not os.path.isfile(manifest_path):
+        return None
+
+    try:
+        with open(manifest_path, "rb") as fh:
+            data = tomllib.load(fh)
+    except (OSError, tomllib.TOMLDecodeError) as e:
+        log(f"Could not parse {os.path.basename(manifest_path)}: {e}")
+        return None
+
+    wheels = data.get("wheels")
+    if wheels is None:
+        return []
+    if not isinstance(wheels, list):
+        log("Manifest 'wheels' is not a list; ignoring it.")
+        return []
+    return [w for w in wheels if isinstance(w, str)]
+
+
+def _mount_wheels(wheel_paths, cache_root):
+    """Extract each wheel into the cache and add the extracted dir to sys.path.
+
+    Extracting (rather than appending the raw .whl) is what lets wheels with
+    compiled extensions import: a native .so/.pyd cannot be loaded from inside a
+    zip via zipimport. Wheels built for other platforms are skipped.
+    """
+    mounted = 0
+    skipped = 0
+    for whl in wheel_paths:
+        if not _wheel_is_compatible(whl):
+            log(f"Skipping wheel for another platform: {os.path.basename(whl)}")
+            skipped += 1
+            continue
+
+        dest = _extract_wheel(whl, cache_root)
+        if dest and dest not in sys.path:
+            sys.path.append(dest)
+            mounted += 1
+
+    if mounted:
+        log(f"Mounted {mounted} wheel(s) for development.")
+    if skipped:
+        log(f"Skipped {skipped} wheel(s) not matching this platform.")
+
+
+def _warn_unlisted_wheels(wheels_dir, mounted_paths):
+    """Warn about .whl files in wheels/ that the manifest does not list.
+
+    Blender only installs manifest-listed wheels, so an unlisted file would be
+    absent once the extension is installed even though it is sitting in the folder.
+    Surfacing it here catches that dev/prod divergence early.
+    """
+    if not os.path.isdir(wheels_dir):
+        return
+
+    mounted = {os.path.normpath(p) for p in mounted_paths}
+    for whl in sorted(glob.glob(os.path.join(wheels_dir, "*.whl"))):
+        if os.path.normpath(whl) not in mounted:
+            log(
+                "Wheel present but not listed in manifest 'wheels', so Blender "
+                f"will not install it: {os.path.basename(whl)}"
+            )
+
+
+def _mount_venv_fallback(project_root):
+    """Add a local ``.venv`` site-packages to sys.path (non-wheel projects)."""
+    venv_lib = os.path.join(project_root, ".venv", "lib")
+    if os.path.exists(venv_lib):
+        for item in os.listdir(venv_lib):
+            site_packages = os.path.join(venv_lib, item, "site-packages")
+            if os.path.isdir(site_packages):
+                if site_packages not in sys.path:
+                    sys.path.append(site_packages)
+                    log(f"Added local venv site-packages: {item}")
+                    break
+
+
 def setup_dependencies(project_root, addon_name):
     if not project_root or not addon_name:
         return
 
-    wheels_dir = os.path.join(project_root, addon_name, "wheels")
+    addon_dir = os.path.join(project_root, addon_name)
+    wheels_dir = os.path.join(addon_dir, "wheels")
+    manifest_path = os.path.join(addon_dir, "blender_manifest.toml")
+    cache_root = os.path.join(project_root, ".blender_probe", "wheels")
 
-    if os.path.exists(wheels_dir):
-        log(f"Found wheels directory: {wheels_dir}")
-        whl_files = sorted(glob.glob(os.path.join(wheels_dir, "*.whl")))
+    declared = _read_manifest_wheels(manifest_path)
 
-        # Extract wheels into a persistent, project-local cache and put the
-        # extracted directories on sys.path. Appending the raw .whl (a zip) only
-        # works for pure-Python packages via zipimport; native extension modules
-        # (.so/.pyd) cannot be loaded from inside a zip. Extracting first mirrors
-        # how Blender installs extension wheels and makes both kinds importable.
-        cache_root = os.path.join(project_root, ".blender_probe", "wheels")
+    if declared is None:
+        # Manifest missing or unparsable: fall back to scanning wheels/ so a
+        # transient edit can't block development.
+        if os.path.isdir(wheels_dir):
+            log("Manifest unavailable; falling back to scanning wheels/ directory.")
+            _mount_wheels(sorted(glob.glob(os.path.join(wheels_dir, "*.whl"))), cache_root)
+        else:
+            _mount_venv_fallback(project_root)
+        return
 
-        mounted = 0
-        skipped = 0
-        for whl in whl_files:
-            if not _wheel_is_compatible(whl):
-                log(f"Skipping wheel for another platform: {os.path.basename(whl)}")
-                skipped += 1
-                continue
+    # Manifest-driven: mount exactly what Blender would install, resolving each
+    # declared path relative to the manifest.
+    wheel_paths = []
+    for entry in declared:
+        resolved = os.path.normpath(os.path.join(addon_dir, entry))
+        if os.path.isfile(resolved):
+            wheel_paths.append(resolved)
+        else:
+            log(f"Manifest lists a wheel that is missing on disk: {entry}")
 
-            dest = _extract_wheel(whl, cache_root)
-            if dest and dest not in sys.path:
-                sys.path.append(dest)
-                mounted += 1
-
-        if mounted:
-            log(f"Mounted {mounted} wheel(s) for development.")
-        if skipped:
-            log(f"Skipped {skipped} wheel(s) not matching this platform.")
+    if wheel_paths or os.path.isdir(wheels_dir):
+        _warn_unlisted_wheels(wheels_dir, wheel_paths)
+        _mount_wheels(wheel_paths, cache_root)
     else:
-        venv_lib = os.path.join(project_root, ".venv", "lib")
-        if os.path.exists(venv_lib):
-            for item in os.listdir(venv_lib):
-                site_packages = os.path.join(venv_lib, item, "site-packages")
-                if os.path.isdir(site_packages):
-                    if site_packages not in sys.path:
-                        sys.path.append(site_packages)
-                        log(f"Added local venv site-packages: {item}")
-                        break
+        # Nothing bundled and no wheels/ dir: offer the local venv as a dev aid.
+        _mount_venv_fallback(project_root)
 
 
 def handle_client(conn, addr):
