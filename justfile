@@ -11,3 +11,6 @@ docs-build:
 
 docs-open:
     open docs/en/book/index.html && open docs/ja/book/index.html
+
+c:
+    ./gradlew check

@@ -32,6 +32,19 @@ class BlenderTestRunningState(
     var cachedAddonName: String? = null
     var cachedSourceRoot: String? = null
 
+    companion object {
+        internal fun buildParameters(useFactoryStartup: Boolean, scriptPath: String, testDir: String): List<String> = buildList {
+            add("-b")
+            if (useFactoryStartup) {
+                add("--factory-startup")
+            }
+            add("-P")
+            add(scriptPath)
+            add("--")
+            add(testDir)
+        }
+    }
+
     /**
      * Executes the test process and attaches the console.
      *
@@ -74,16 +87,11 @@ class BlenderTestRunningState(
         val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
 
-        val parameters = buildList {
-            add("-b")
-            if (BlenderSettings.getInstance(project).state.useFactoryStartup) {
-                add("--factory-startup")
-            }
-            add("-P")
-            add(scriptFile.absolutePath)
-            add("--")
-            add(testDir)
-        }
+        val parameters = buildParameters(
+            BlenderSettings.getInstance(project).state.useFactoryStartup,
+            scriptFile.absolutePath,
+            testDir
+        )
 
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
