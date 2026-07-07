@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-07
+
 ### Added
 - A **Launch Blender with `--factory-startup`** setting (Settings > Tools > Blender Probe), enabled by default. Disable it to let Blender load modules installed in your user environment, which is needed for some legacy add-ons whose dependencies are installed there. Applies to both Run/Debug and test runs. Disabling it also loads third-party add-ons and may crash Blender on startup, so this path is use-at-your-own-risk and outside the supported scope.
 
