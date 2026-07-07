@@ -22,3 +22,9 @@ If you don't use `blup`, you must configure the path to your Blender executable 
 <div>
   <img src="images/configuration.png" alt="Blender Executable Path configuration" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
 </div>
+
+## Legacy Add-on Support
+
+* **Launch Blender with `--factory-startup`** (under **Settings/Preferences** > **Tools** > **Blender Probe**): Enabled by default to match the standard, supported behavior. Disable it only if your add-on relies on dependencies installed directly into your Blender user environment — `--factory-startup` prevents Blender from loading those user-space modules. This applies to both running/debugging and running tests.
+
+  > **Warning:** Disabling `--factory-startup` also loads your third-party add-ons, which can crash Blender on startup. This path is use-at-your-own-risk and outside the supported scope.

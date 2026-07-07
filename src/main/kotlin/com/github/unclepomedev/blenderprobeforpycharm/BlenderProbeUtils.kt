@@ -24,6 +24,7 @@ object BlenderProbeUtils {
         if (targetFile != null) {
             return targetFile.parent.name
         }
+
         return normalizeModuleName(project.name)
     }
 
