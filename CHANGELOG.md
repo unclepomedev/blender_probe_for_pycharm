@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Added
+- New add-on projects are now scaffolded for wheel dependencies out of the box: a `wheels/` directory (with a short README) is created next to the manifest, and `blender_manifest.toml` includes a `wheels = [...]` array and a `[build]` section so bundling a dependency is discoverable.
+
 ### Fixed
 - Bundled wheel dependencies now work for packages containing compiled/native extensions, not just pure-Python ones.
     - Wheels are now extracted before being added to `sys.path` instead of the raw `.whl` being appended.

@@ -64,6 +64,7 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         )
 
         createFileFromTemplate("BlenderAddon_Manifest.toml", srcDir, "blender_manifest.toml", props)
+        createWheelsDir(srcDir)
         createFileFromTemplate("BlenderAddon_Init.py", srcDir, "__init__.py", props)
         createFileFromTemplate("BlenderAddon_Ops.py", srcDir, "operators.py", props)
         createFileFromTemplate("BlenderAddon_Panel.py", srcDir, "panel.py", props)
@@ -147,4 +148,39 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         val content = template.getText(props)
         File(dir, fileName).writeText(content)
     }
+
+    /**
+     * Creates the `wheels/` directory next to the manifest, where bundled Python
+     * dependencies live. A README documents how to populate it (and keeps the
+     * otherwise-empty directory tracked in git). Written directly rather than via
+     * a file template so its Markdown `#`/`$` characters aren't parsed as Velocity.
+     */
+    private fun createWheelsDir(srcDir: File) {
+        val wheelsDir = File(srcDir, "wheels").apply { mkdirs() }
+        File(wheelsDir, "README.md").writeText(WHEELS_README)
+    }
 }
+
+private val WHEELS_README = """
+    # Wheels
+
+    Bundle third-party Python dependencies here as `.whl` files, then list each one
+    in the top-level `wheels = [...]` array of `blender_manifest.toml` (one directory up).
+
+    Example manifest entry:
+
+        wheels = [
+            "./wheels/requests-2.32.3-py3-none-any.whl",
+        ]
+
+    Download a wheel with pip:
+
+        pip wheel <package-name> -w ./wheels
+
+    Blender Probe extracts and mounts these wheels automatically when you run or debug
+    the add-on, so imports work in development exactly as they will once the extension
+    is installed. Wheels built for other platforms are skipped, and extracted wheels are
+    cached under `.blender_probe/`.
+
+    See: https://docs.blender.org/manual/en/latest/advanced/extensions/python_wheels.html
+""".trimIndent()

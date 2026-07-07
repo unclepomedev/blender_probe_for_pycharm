@@ -63,7 +63,13 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                     assertFalse("Placeholder replaced", manifestContent.contains("\${ADDON_NAME}"))
                     assertTrue("Slug injected", manifestContent.contains("id = \"$expectedSlug\""))
                     assertTrue("GPL License should be specified", manifestContent.contains("SPDX:GPL-3.0-or-later"))
+                    assertTrue("Wheels array should be declared", manifestContent.contains("wheels = ["))
+                    assertTrue("Build section should be present", manifestContent.contains("[build]"))
                 }
+
+                val wheelsDir = dir.findChild("wheels")
+                assertNotNull("wheels directory should exist next to the manifest", wheelsDir)
+                assertNotNull("wheels/README.md should document how to add wheels", wheelsDir?.findChild("README.md"))
             }
 
             val testsDir = baseDir.findChild("tests")

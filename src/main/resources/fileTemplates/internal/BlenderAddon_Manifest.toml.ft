@@ -13,7 +13,26 @@ license = [
     "SPDX:GPL-3.0-or-later",
 ]
 
+# Optional: bundle 3rd party Python modules as wheels.
+# Drop the .whl files into the "wheels/" folder next to this manifest and list
+# each one below. Blender Probe auto-extracts and mounts them when you run or
+# debug the add-on, and Blender installs them when the extension is built.
+# https://docs.blender.org/manual/en/latest/advanced/extensions/python_wheels.html
+wheels = [
+    # "./wheels/example_package-1.0.0-py3-none-any.whl",
+]
+
 [permissions]
 # files = "all" # Uncomment if file access is needed
+
+# Optional: advanced build settings. These mirror Blender's default exclude
+# patterns, so behavior is unchanged; edit them only if you need different options.
+# https://docs.blender.org/manual/en/latest/advanced/extensions/command_line_arguments.html#command-line-args-extension-build
+[build]
+paths_exclude_pattern = [
+    "__pycache__/",
+    "/.git/",
+    "/*.zip",
+]
 
 # see also: https://docs.blender.org/manual/en/latest/advanced/extensions/getting_started.html
