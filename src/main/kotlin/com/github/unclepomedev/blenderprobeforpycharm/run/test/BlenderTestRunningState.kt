@@ -33,7 +33,7 @@ class BlenderTestRunningState(
     var cachedSourceRoot: String? = null
 
     companion object {
-        fun buildParameters(useFactoryStartup: Boolean, scriptPath: String, testDir: String): List<String> = buildList {
+        internal fun buildParameters(useFactoryStartup: Boolean, scriptPath: String, testDir: String): List<String> = buildList {
             add("-b")
             if (useFactoryStartup) {
                 add("--factory-startup")

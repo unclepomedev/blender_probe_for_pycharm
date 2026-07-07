@@ -36,7 +36,7 @@ class BlenderRunningState(
          * Builds the Blender launch parameters. Extracted from [startProcess] so the
          * `--factory-startup` behavior can be unit tested without spawning a process.
          */
-        fun buildParameters(useFactoryStartup: Boolean, scriptPath: String): List<String> = buildList {
+        internal fun buildParameters(useFactoryStartup: Boolean, scriptPath: String): List<String> = buildList {
             if (useFactoryStartup) {
                 add("--factory-startup")
             }
