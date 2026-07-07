@@ -10,4 +10,17 @@ dependencies = []
 [dependency-groups]
 dev = [
     "ruff>=0.15.1",
+    "pytest>=8",
 ]
+
+[tool.uv]
+# This repo is a Gradle/Kotlin plugin, not an installable Python package; the
+# Python here is dev-only tooling. Mark it virtual so `uv run` provisions the
+# environment without trying to build a root package.
+package = false
+
+[tool.pytest.ini_options]
+# probe_server.py and friends live under the plugin's resources, not on the
+# default import path. Add it so the tests can `import probe_server`.
+pythonpath = ["src/main/resources/python"]
+testpaths = ["src/test/python"]
