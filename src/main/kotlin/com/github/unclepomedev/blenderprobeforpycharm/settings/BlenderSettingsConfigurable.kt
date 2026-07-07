@@ -11,7 +11,8 @@ import com.intellij.ui.dsl.builder.AlignX
 
 /**
  * Provides the configuration UI for Blender Probe settings.
- * Allows users to specify the path to the Blender executable.
+ * Lets users specify the Blender executable path and whether to launch
+ * Blender with `--factory-startup`.
  */
 class BlenderSettingsConfigurable(private val project: Project) : BoundConfigurable("Blender Probe") {
 
