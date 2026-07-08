@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm
 
 import com.intellij.openapi.util.io.FileUtil
+import java.io.File
 import java.io.IOException
 
 class ScriptResourceUtilsTest : BaseBlenderTest() {
@@ -54,6 +55,36 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
             fail("expect IOException")
         } catch (e: IOException) {
             assertTrue(e.message?.contains("Resource not found") ?: false)
+        }
+    }
+
+    fun testExtractScriptsToTempDir_ExtractsSiblingsTogether() {
+        val entryPoint = ScriptResourceUtils.extractScriptsToTempDir("probe_server.py", "wheels.py")
+
+        try {
+            assertEquals("first script should be returned as the entry point", "probe_server.py", entryPoint.name)
+            assertTrue("entry point should be physically present", entryPoint.exists())
+
+            // The sibling must land in the same directory, or probe_server.py's
+            // `from wheels import ...` would fail at runtime.
+            val sibling = File(entryPoint.parentFile, "wheels.py")
+            assertTrue("sibling module must be extracted alongside the entry point", sibling.exists())
+
+            assertTrue(
+                "entry point should import its sibling",
+                entryPoint.readText().contains("from wheels import setup_dependencies")
+            )
+        } finally {
+            FileUtil.delete(entryPoint.parentFile)
+        }
+    }
+
+    fun testExtractScriptsToTempDir_NotFound() {
+        try {
+            ScriptResourceUtils.extractScriptsToTempDir(INVALID_SCRIPT_NAME)
+            fail("should throw IllegalStateException")
+        } catch (e: IllegalStateException) {
+            assertTrue(e.message?.contains("Script not found") ?: false)
         }
     }
 }

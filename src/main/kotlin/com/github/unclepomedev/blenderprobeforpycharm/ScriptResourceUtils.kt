@@ -35,6 +35,40 @@ object ScriptResourceUtils {
     }
 
     /**
+     * Extracts several scripts from the `/python/` resources into a single shared
+     * temporary directory, preserving their file names so the entry-point script
+     * can import its siblings at runtime (e.g. `probe_server.py` importing `wheels.py`).
+     *
+     * @param scriptNames The script file names to extract; the first is treated as the
+     *   entry point and its extracted file is returned.
+     * @return The extracted entry-point script file.
+     * @throws IllegalArgumentException if [scriptNames] is empty.
+     * @throws IllegalStateException if any script resource is not found.
+     */
+    fun extractScriptsToTempDir(vararg scriptNames: String): File {
+        require(scriptNames.isNotEmpty()) { "At least one script name is required." }
+
+        val tempDir = FileUtil.createTempDirectory("blender_probe", null)
+        lateinit var entryPoint: File
+
+        scriptNames.forEachIndexed { index, scriptName ->
+            val resourcePath = "/python/$scriptName"
+            val scriptFile = File(tempDir, scriptName)
+            scriptFile.parentFile?.mkdirs()
+
+            (this::class.java.getResourceAsStream(resourcePath)
+                ?: throw IllegalStateException("Script not found: $resourcePath"))
+                .use { inputStream ->
+                    Files.copy(inputStream, scriptFile.toPath())
+                }
+
+            if (index == 0) entryPoint = scriptFile
+        }
+
+        return entryPoint
+    }
+
+    /**
      * Extracts a resource script to a temporary file with a specified prefix.
      *
      * @param resourcePath The path to the resource script.

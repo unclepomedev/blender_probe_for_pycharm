@@ -1,4 +1,4 @@
-"""Tests for wheel dependency handling in the probe server.
+"""Tests for the probe server's wheel dependency handling (``wheels`` module).
 
 Modern Blender extensions bundle their Python dependencies as wheels next to the
 manifest. These tests cover the three concerns the probe server has to get right:
@@ -7,6 +7,9 @@ manifest. These tests cover the three concerns the probe server has to get right
   extensions must be unpacked first),
 * caching (don't re-unzip an already-extracted, unchanged wheel), and
 * platform filtering (a bundle may carry wheels for several OS/arch combos).
+
+The logic lives in ``wheels.py``, which is free of any ``bpy`` dependency, so
+these tests import it directly -- no running Blender or fake ``bpy`` required.
 """
 
 import os
@@ -14,6 +17,8 @@ import sys
 import zipfile
 
 import pytest
+
+import wheels as wheels_mod
 
 
 def _make_wheel(dirpath, name, files):
@@ -72,8 +77,8 @@ def isolate_imports():
         ("not-a-wheel.whl", None),
     ],
 )
-def test_wheel_platform_tags(probe, filename, expected):
-    assert probe._wheel_platform_tags(filename) == expected
+def test_wheel_platform_tags(filename, expected):
+    assert wheels_mod._wheel_platform_tags(filename) == expected
 
 
 # --- platform compatibility ---------------------------------------------------
@@ -107,64 +112,64 @@ def test_wheel_platform_tags(probe, filename, expected):
         ("win32", "AMD64", "foo-1.0-py3-none-any.whl", True),
     ],
 )
-def test_wheel_is_compatible(probe, monkeypatch, sys_platform, machine, filename, compatible):
-    monkeypatch.setattr(probe.sys, "platform", sys_platform)
-    monkeypatch.setattr(probe.platform, "machine", lambda: machine)
-    assert probe._wheel_is_compatible(filename) is compatible
+def test_wheel_is_compatible(monkeypatch, sys_platform, machine, filename, compatible):
+    monkeypatch.setattr(wheels_mod.sys, "platform", sys_platform)
+    monkeypatch.setattr(wheels_mod.platform, "machine", lambda: machine)
+    assert wheels_mod._wheel_is_compatible(filename) is compatible
 
 
-def test_unparsable_name_defaults_to_compatible(probe):
+def test_unparsable_name_defaults_to_compatible():
     # We must not silently drop a wheel just because its name is unusual.
-    assert probe._wheel_is_compatible("weird.whl") is True
+    assert wheels_mod._wheel_is_compatible("weird.whl") is True
 
 
 # --- extraction + caching -----------------------------------------------------
 
 
-def test_extract_wheel_unpacks_contents(probe, tmp_path):
+def test_extract_wheel_unpacks_contents(tmp_path):
     whl = _make_wheel(tmp_path, "pkg-1.0-py3-none-any.whl", {"pkg/__init__.py": "V = 1\n"})
     cache = str(tmp_path / "cache")
 
-    dest = probe._extract_wheel(whl, cache)
+    dest = wheels_mod._extract_wheel(whl, cache)
 
     assert dest is not None
     assert os.path.isfile(os.path.join(dest, "pkg", "__init__.py"))
-    assert os.path.isfile(os.path.join(dest, probe._WHEEL_MARKER))
+    assert os.path.isfile(os.path.join(dest, wheels_mod._WHEEL_MARKER))
 
 
-def test_extract_wheel_is_cached(probe, tmp_path, monkeypatch):
+def test_extract_wheel_is_cached(tmp_path, monkeypatch):
     whl = _make_wheel(tmp_path, "pkg-1.0-py3-none-any.whl", {"pkg/__init__.py": "V = 1\n"})
     cache = str(tmp_path / "cache")
 
     zip_opens = {"count": 0}
-    real_zipfile = probe.zipfile.ZipFile
+    real_zipfile = wheels_mod.zipfile.ZipFile
 
     def counting_zipfile(*args, **kwargs):
         zip_opens["count"] += 1
         return real_zipfile(*args, **kwargs)
 
-    monkeypatch.setattr(probe.zipfile, "ZipFile", counting_zipfile)
+    monkeypatch.setattr(wheels_mod.zipfile, "ZipFile", counting_zipfile)
 
-    first = probe._extract_wheel(whl, cache)
-    second = probe._extract_wheel(whl, cache)
+    first = wheels_mod._extract_wheel(whl, cache)
+    second = wheels_mod._extract_wheel(whl, cache)
 
     assert first == second
     assert zip_opens["count"] == 1  # the second call hit the cache
 
 
-def test_extract_wheel_reextracts_when_wheel_changes(probe, tmp_path, monkeypatch):
+def test_extract_wheel_reextracts_when_wheel_changes(tmp_path, monkeypatch):
     name = "pkg-1.0-py3-none-any.whl"
     whl = _make_wheel(tmp_path, name, {"pkg/__init__.py": "V = 1\n"})
     cache = str(tmp_path / "cache")
 
-    probe._extract_wheel(whl, cache)
+    wheels_mod._extract_wheel(whl, cache)
 
     # Rebuild the wheel with different content (changes size) and a later mtime,
     # simulating a developer rebuilding the same-named wheel.
     whl = _make_wheel(tmp_path, name, {"pkg/__init__.py": "V = 999  # rebuilt\n"})
     os.utime(whl, (os.stat(whl).st_atime + 100, os.stat(whl).st_mtime + 100))
 
-    dest = probe._extract_wheel(whl, cache)
+    dest = wheels_mod._extract_wheel(whl, cache)
 
     with open(os.path.join(dest, "pkg", "__init__.py")) as fh:
         assert "999" in fh.read()  # stale cache was refreshed
@@ -173,32 +178,32 @@ def test_extract_wheel_reextracts_when_wheel_changes(probe, tmp_path, monkeypatc
 # --- manifest parsing ---------------------------------------------------------
 
 
-def test_read_manifest_wheels_parses_declared_list(probe, tmp_path):
+def test_read_manifest_wheels_parses_declared_list(tmp_path):
     manifest = _write_manifest(tmp_path, ["./wheels/a.whl", "./wheels/b.whl"])
-    assert probe._read_manifest_wheels(manifest) == ["./wheels/a.whl", "./wheels/b.whl"]
+    assert wheels_mod._read_manifest_wheels(manifest) == ["./wheels/a.whl", "./wheels/b.whl"]
 
 
-def test_read_manifest_wheels_missing_file_returns_none(probe, tmp_path):
+def test_read_manifest_wheels_missing_file_returns_none(tmp_path):
     # None -> caller falls back to scanning the wheels/ directory.
-    assert probe._read_manifest_wheels(os.path.join(str(tmp_path), "nope.toml")) is None
+    assert wheels_mod._read_manifest_wheels(os.path.join(str(tmp_path), "nope.toml")) is None
 
 
-def test_read_manifest_wheels_absent_array_returns_empty(probe, tmp_path):
+def test_read_manifest_wheels_absent_array_returns_empty(tmp_path):
     # A parsed manifest with no wheels key means Blender installs nothing.
     manifest = _write_manifest(tmp_path, None)
-    assert probe._read_manifest_wheels(manifest) == []
+    assert wheels_mod._read_manifest_wheels(manifest) == []
 
 
-def test_read_manifest_wheels_malformed_returns_none(probe, tmp_path, capsys):
+def test_read_manifest_wheels_malformed_returns_none(tmp_path, capsys):
     manifest = _write_manifest(tmp_path, None, raw="this is = not valid toml [[[\n")
-    assert probe._read_manifest_wheels(manifest) is None
+    assert wheels_mod._read_manifest_wheels(manifest) is None
     assert "Could not parse" in capsys.readouterr().out
 
 
 # --- end to end ---------------------------------------------------------------
 
 
-def test_setup_dependencies_mounts_only_listed_wheels(probe, tmp_path, isolate_imports, capsys):
+def test_setup_dependencies_mounts_only_listed_wheels(tmp_path, isolate_imports, capsys):
     addon = tmp_path / "myaddon"
     wheels = addon / "wheels"
     wheels.mkdir(parents=True)
@@ -206,7 +211,7 @@ def test_setup_dependencies_mounts_only_listed_wheels(probe, tmp_path, isolate_i
     _make_wheel(wheels, "extra-1.0-py3-none-any.whl", {"extra_pkg/__init__.py": "V = 2\n"})
     _write_manifest(addon, ["./wheels/listed-1.0-py3-none-any.whl"])
 
-    probe.setup_dependencies(str(tmp_path), "myaddon")
+    wheels_mod.setup_dependencies(str(tmp_path), "myaddon")
 
     import listed_pkg
 
@@ -224,10 +229,10 @@ def test_setup_dependencies_mounts_only_listed_wheels(probe, tmp_path, isolate_i
 
 
 def test_setup_dependencies_applies_platform_filter_to_listed(
-    probe, tmp_path, monkeypatch, isolate_imports
+    tmp_path, monkeypatch, isolate_imports
 ):
-    monkeypatch.setattr(probe.sys, "platform", "linux")
-    monkeypatch.setattr(probe.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(wheels_mod.sys, "platform", "linux")
+    monkeypatch.setattr(wheels_mod.platform, "machine", lambda: "x86_64")
 
     addon = tmp_path / "myaddon"
     wheels = addon / "wheels"
@@ -246,7 +251,7 @@ def test_setup_dependencies_applies_platform_filter_to_listed(
         ],
     )
 
-    probe.setup_dependencies(str(tmp_path), "myaddon")
+    wheels_mod.setup_dependencies(str(tmp_path), "myaddon")
 
     extracted = [p.name for p in (tmp_path / ".blender_probe" / "wheels").iterdir()]
     assert any(n.startswith("purepkg-1.0") for n in extracted)
@@ -254,22 +259,22 @@ def test_setup_dependencies_applies_platform_filter_to_listed(
     assert not any(n.startswith("maconly-1.0") for n in extracted)
 
 
-def test_setup_dependencies_warns_on_missing_listed_wheel(probe, tmp_path, capsys):
+def test_setup_dependencies_warns_on_missing_listed_wheel(tmp_path, capsys):
     addon = tmp_path / "myaddon"
     addon.mkdir(parents=True)
     _write_manifest(addon, ["./wheels/ghost-1.0-py3-none-any.whl"])
 
-    probe.setup_dependencies(str(tmp_path), "myaddon")  # must not raise
+    wheels_mod.setup_dependencies(str(tmp_path), "myaddon")  # must not raise
 
     assert "missing on disk" in capsys.readouterr().out
     assert not (tmp_path / ".blender_probe").exists()
 
 
 def test_setup_dependencies_without_manifest_falls_back_to_glob(
-    probe, tmp_path, monkeypatch, isolate_imports, capsys
+    tmp_path, monkeypatch, isolate_imports, capsys
 ):
-    monkeypatch.setattr(probe.sys, "platform", "linux")
-    monkeypatch.setattr(probe.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(wheels_mod.sys, "platform", "linux")
+    monkeypatch.setattr(wheels_mod.platform, "machine", lambda: "x86_64")
 
     # No manifest at all -> scan wheels/ so development isn't blocked.
     wheels = tmp_path / "myaddon" / "wheels"
@@ -281,7 +286,7 @@ def test_setup_dependencies_without_manifest_falls_back_to_glob(
         {"wrongplat/__init__.py": "x = 1\n"},
     )
 
-    probe.setup_dependencies(str(tmp_path), "myaddon")
+    wheels_mod.setup_dependencies(str(tmp_path), "myaddon")
 
     import fallbackpkg
 
@@ -292,7 +297,7 @@ def test_setup_dependencies_without_manifest_falls_back_to_glob(
 
 
 def test_setup_dependencies_parse_error_falls_back_to_glob(
-    probe, tmp_path, isolate_imports, capsys
+    tmp_path, isolate_imports, capsys
 ):
     addon = tmp_path / "myaddon"
     wheels = addon / "wheels"
@@ -300,7 +305,7 @@ def test_setup_dependencies_parse_error_falls_back_to_glob(
     _make_wheel(wheels, "brokenmani-1.0-py3-none-any.whl", {"brokenmani/__init__.py": "V = 3\n"})
     _write_manifest(addon, None, raw="wheels = [ this is broken\n")
 
-    probe.setup_dependencies(str(tmp_path), "myaddon")
+    wheels_mod.setup_dependencies(str(tmp_path), "myaddon")
 
     import brokenmani
 
@@ -310,7 +315,7 @@ def test_setup_dependencies_parse_error_falls_back_to_glob(
     assert "falling back to scanning" in out
 
 
-def test_setup_dependencies_noop_without_args(probe):
+def test_setup_dependencies_noop_without_args():
     # Missing project root / addon name must not raise.
-    probe.setup_dependencies("", "")
-    probe.setup_dependencies(None, None)
+    wheels_mod.setup_dependencies("", "")
+    wheels_mod.setup_dependencies(None, None)
