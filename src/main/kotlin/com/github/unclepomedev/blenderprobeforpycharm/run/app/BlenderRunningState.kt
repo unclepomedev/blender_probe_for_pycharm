@@ -13,8 +13,11 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.*
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.BaseOutputReader
+import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
@@ -64,25 +67,36 @@ class BlenderRunningState(
      */
     override fun startProcess(): ProcessHandler {
         val project = environment.project
-        val blenderPath = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
-
-        if (blenderPath.isNullOrEmpty()) {
-            throw ExecutionException("Blender executable not found. Please configure it in Settings or install 'blup'.")
-        }
+        val blenderPath = resolveBlenderPathOrThrow(project)
 
         val scriptFile = ScriptResourceUtils.extractScriptsToTempDir("probe_server.py", "wheels.py")
+        val tempDir = scriptFile.parentFile
+
+        try {
+            val cmd = buildCommandLine(project, blenderPath, scriptFile.absolutePath)
+            return createProcessHandler(cmd, tempDir)
+        } catch (e: Exception) {
+            FileUtil.delete(tempDir)
+            throw e
+        }
+    }
+
+    private fun resolveBlenderPathOrThrow(project: Project): String {
+        val path = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
+        if (path.isNullOrEmpty()) {
+            throw ExecutionException("Blender executable not found. Please configure it in Settings or install 'blup'.")
+        }
+        return path
+    }
+
+    private fun buildCommandLine(project: Project, blenderPath: String, scriptPath: String): GeneralCommandLine {
         val projectPath = project.basePath ?: ""
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
         val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
 
-        val parameters = buildParameters(
-            BlenderSettings.getInstance(project).state.useFactoryStartup,
-            scriptFile.absolutePath
-        )
-
         val cmd = GeneralCommandLine()
             .withExePath(blenderPath)
-            .withParameters(parameters)
+            .withParameters(buildParameters(BlenderSettings.getInstance(project).state.useFactoryStartup, scriptPath))
             .withCharset(StandardCharsets.UTF_8)
             .withWorkDirectory(projectPath)
             .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
@@ -91,43 +105,46 @@ class BlenderRunningState(
 
         val port = debugPort
         val pyPath = pydevdPath
-
         if (port != null && pyPath != null) {
             cmd.withEnvironment("BLENDER_PROBE_DEBUG_PORT", port.toString())
             cmd.withEnvironment("BLENDER_PROBE_PYDEVD_PATH", pyPath)
         }
+        return cmd
+    }
 
+    private fun createProcessHandler(cmd: GeneralCommandLine, tempDir: File): ProcessHandler {
         val processHandler = object : OSProcessHandler(cmd) {
-            override fun readerOptions(): BaseOutputReader.Options {
-                return BaseOutputReader.Options.forMostlySilentProcess()
-            }
+            override fun readerOptions(): BaseOutputReader.Options =
+                BaseOutputReader.Options.forMostlySilentProcess()
         }
-
-        processHandler.addProcessListener(object : ProcessListener {
-            override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                val text = event.text
-                text.lines().forEach { line ->
-                    val cleanLine = line.trim()
-                    if (cleanLine.startsWith("BLENDER_PROBE_PORT::")) {
-                        val portStr = cleanLine.removePrefix("BLENDER_PROBE_PORT::")
-                        try {
-                            val port = portStr.toInt()
-                            BlenderProbeManager.updatePort(port)
-                        } catch (e: NumberFormatException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-
-            override fun processTerminated(event: ProcessEvent) {
-                BlenderProbeManager.activePort = null
-            }
-
-            override fun startNotified(event: ProcessEvent) {}
-        })
-
+        processHandler.addProcessListener(ProbeProcessListener(tempDir))
         ProcessTerminatedListener.attach(processHandler)
         return processHandler
+    }
+}
+
+internal class ProbeProcessListener(private val tempDir: File) : ProcessListener {
+
+    override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+        event.text.lines().forEach { line ->
+            val cleanLine = line.trim()
+            if (cleanLine.startsWith("BLENDER_PROBE_PORT::")) {
+                val portStr = cleanLine.removePrefix("BLENDER_PROBE_PORT::")
+                try {
+                    BlenderProbeManager.updatePort(portStr.toInt())
+                } catch (e: NumberFormatException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    override fun processTerminated(event: ProcessEvent) {
+        BlenderProbeManager.activePort = null
+        try {
+            FileUtil.delete(tempDir)
+        } catch (_: Exception) {
+            // Best-effort cleanup; the dir may be locked while Blender shuts down.
+        }
     }
 }
