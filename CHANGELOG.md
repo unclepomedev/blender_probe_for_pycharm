@@ -10,6 +10,7 @@
     - Wheels are now extracted before being added to `sys.path` instead of the raw `.whl` being appended.
       Extracted wheels live in a project-local `.blender_probe/` cache.
     - To mirror what Blender actually installs, only the wheels listed in the manifest's `wheels` array are mounted.
+- Clean up the temp script directory when the Blender process exits.
 
 ## [0.3.1] - 2026-07-07
 

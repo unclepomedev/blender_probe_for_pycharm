@@ -14,6 +14,7 @@ import com.intellij.execution.process.*
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.BaseOutputReader
 import java.nio.charset.StandardCharsets
 
@@ -71,6 +72,7 @@ class BlenderRunningState(
         }
 
         val scriptFile = ScriptResourceUtils.extractScriptsToTempDir("probe_server.py", "wheels.py")
+        val tempDir = scriptFile.parentFile
         val projectPath = project.basePath ?: ""
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
         val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
@@ -122,6 +124,11 @@ class BlenderRunningState(
 
             override fun processTerminated(event: ProcessEvent) {
                 BlenderProbeManager.activePort = null
+                try {
+                    FileUtil.delete(tempDir)
+                } catch (_: Exception) {
+                    // Best-effort cleanup; the dir may be locked.
+                }
             }
 
             override fun startNotified(event: ProcessEvent) {}
