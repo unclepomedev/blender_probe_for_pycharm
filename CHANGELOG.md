@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-07-13
+
 ### Added
 - New add-on projects are now scaffolded for wheel dependencies out of the box: a `wheels/` directory (with a short README) is created next to the manifest, and `blender_manifest.toml` includes a `wheels = [...]` array and a `[build]` section so bundling a dependency is discoverable.
 
