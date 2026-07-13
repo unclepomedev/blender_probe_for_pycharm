@@ -16,6 +16,7 @@ import com.intellij.execution.runners.ProgramRunner
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.util.io.BaseOutputReader
+import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
@@ -105,36 +106,35 @@ class BlenderRunningState(
             }
         }
 
-        processHandler.addProcessListener(object : ProcessListener {
-            override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                val text = event.text
-                text.lines().forEach { line ->
-                    val cleanLine = line.trim()
-                    if (cleanLine.startsWith("BLENDER_PROBE_PORT::")) {
-                        val portStr = cleanLine.removePrefix("BLENDER_PROBE_PORT::")
-                        try {
-                            val port = portStr.toInt()
-                            BlenderProbeManager.updatePort(port)
-                        } catch (e: NumberFormatException) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
-
-            override fun processTerminated(event: ProcessEvent) {
-                BlenderProbeManager.activePort = null
-                try {
-                    FileUtil.delete(tempDir)
-                } catch (_: Exception) {
-                    // Best-effort cleanup; the dir may be locked.
-                }
-            }
-
-            override fun startNotified(event: ProcessEvent) {}
-        })
+        processHandler.addProcessListener(ProbeProcessListener(tempDir))
 
         ProcessTerminatedListener.attach(processHandler)
         return processHandler
+    }
+}
+
+private class ProbeProcessListener(private val tempDir: File) : ProcessListener {
+
+    override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+        event.text.lines().forEach { line ->
+            val cleanLine = line.trim()
+            if (cleanLine.startsWith("BLENDER_PROBE_PORT::")) {
+                val portStr = cleanLine.removePrefix("BLENDER_PROBE_PORT::")
+                try {
+                    BlenderProbeManager.updatePort(portStr.toInt())
+                } catch (e: NumberFormatException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    override fun processTerminated(event: ProcessEvent) {
+        BlenderProbeManager.activePort = null
+        try {
+            FileUtil.delete(tempDir)
+        } catch (_: Exception) {
+            // Best-effort cleanup; the dir may be locked while Blender shuts down.
+        }
     }
 }
