@@ -70,7 +70,7 @@ class BlenderRunningState(
             throw ExecutionException("Blender executable not found. Please configure it in Settings or install 'blup'.")
         }
 
-        val scriptFile = ScriptResourceUtils.extractResourceScript("python/probe_server.py", "blender_probe_server")
+        val scriptFile = ScriptResourceUtils.extractScriptsToTempDir("probe_server.py", "wheels.py")
         val projectPath = project.basePath ?: ""
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
         val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath

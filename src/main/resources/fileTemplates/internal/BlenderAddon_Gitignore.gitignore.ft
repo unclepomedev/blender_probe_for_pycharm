@@ -9,6 +9,7 @@ venv/
 
 # Blender Probe (Plugin generated)
 .blender_stubs/
+.blender_probe/
 typings/
 
 # Blender
