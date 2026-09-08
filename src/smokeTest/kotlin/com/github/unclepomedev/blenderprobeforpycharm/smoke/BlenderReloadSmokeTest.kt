@@ -3,7 +3,6 @@ package com.github.unclepomedev.blenderprobeforpycharm.smoke
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
 
 class BlenderReloadSmokeTest : BaseSmokeTest() {
 
@@ -57,14 +56,5 @@ class BlenderReloadSmokeTest : BaseSmokeTest() {
         } finally {
             process.close()
         }
-    }
-
-    private fun copyFixtureAddon(targetRoot: Path) {
-        val resourcePath = "/fixtures/smoke-addon/$addonModuleName/__init__.py"
-        val input =
-            javaClass.getResourceAsStream(resourcePath)
-                ?: error("Fixture resource not found on classpath: $resourcePath")
-        val target = targetRoot.resolve(addonModuleName).createDirectories().resolve("__init__.py")
-        input.use { Files.copy(it, target) }
     }
 }
