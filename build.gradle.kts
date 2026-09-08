@@ -138,6 +138,25 @@ tasks {
     }
 }
 
+sourceSets {
+    create("smokeTest") {
+        kotlin.srcDir("src/smokeTest/kotlin")
+        compileClasspath +=
+            sourceSets.main.get().output +
+                sourceSets.test.get().output +
+                sourceSets.test.get().compileClasspath
+        runtimeClasspath +=
+            sourceSets.main.get().output +
+                sourceSets.test.get().output +
+                sourceSets.test.get().runtimeClasspath
+    }
+}
+
+val smokeTestImplementation =
+    configurations.getByName("smokeTestImplementation") {
+        extendsFrom(configurations.testImplementation.get())
+    }
+
 intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
@@ -154,6 +173,20 @@ intellijPlatformTesting {
 
             plugins {
                 robotServerPlugin()
+            }
+        }
+    }
+
+    testIde {
+        register("smokeTest") {
+            testFramework(TestFrameworkType.Platform)
+
+            task {
+                val smokeTestSourceSet = sourceSets.getByName("smokeTest")
+                testClassesDirs += smokeTestSourceSet.output.classesDirs
+                classpath += smokeTestSourceSet.output
+                useJUnitPlatform()
+                outputs.upToDateWhen { false }
             }
         }
     }
