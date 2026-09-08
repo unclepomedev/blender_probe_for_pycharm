@@ -80,29 +80,30 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         promise: AsyncPromise<RunContentDescriptor?>,
     ) {
         object : Task.Backgroundable(environment.project, "Preparing Blender execution...", true) {
-            override fun run(indicator: ProgressIndicator) {
-                prepareExecutionState(environment.project, state, environment.executor.id)
-            }
+                override fun run(indicator: ProgressIndicator) {
+                    prepareExecutionState(environment.project, state, environment.executor.id)
+                }
 
-            override fun onSuccess() {
-                if (promise.state == Promise.State.REJECTED) return
-                try {
-                    val descriptor =
-                        if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
-                            startDebugSession(state, environment)
-                        } else {
-                            startRunSession(state, environment)
-                        }
-                    promise.setResult(descriptor)
-                } catch (e: Exception) {
-                    promise.setError(e)
+                override fun onSuccess() {
+                    if (promise.state == Promise.State.REJECTED) return
+                    try {
+                        val descriptor =
+                            if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
+                                startDebugSession(state, environment)
+                            } else {
+                                startRunSession(state, environment)
+                            }
+                        promise.setResult(descriptor)
+                    } catch (e: Exception) {
+                        promise.setError(e)
+                    }
+                }
+
+                override fun onThrowable(error: Throwable) {
+                    promise.setError(error)
                 }
             }
-
-            override fun onThrowable(error: Throwable) {
-                promise.setError(error)
-            }
-        }.queue()
+            .queue()
     }
 
     private fun prepareExecutionState(
@@ -112,9 +113,7 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
     ) {
         val path =
             BlenderSettings.getInstance(project).resolveBlenderPath()
-                ?: throw ExecutionException(
-                    "Blender executable not found. Check settings."
-                )
+                ?: throw ExecutionException("Blender executable not found. Check settings.")
 
         state.cachedBlenderPath = path
 
@@ -204,12 +203,13 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
                 .startSession()
         @Suppress("UnstableApiUsage") // getRunContentDescriptor is experimental
         return session.runContentDescriptor
-            ?: throw ExecutionException(
-                "Debug session started but returned no content descriptor"
-            )
+            ?: throw ExecutionException("Debug session started but returned no content descriptor")
     }
 
-    private fun closeServerSocketQuietly(serverSocket: ServerSocket, suppressedTo: Throwable? = null) {
+    private fun closeServerSocketQuietly(
+        serverSocket: ServerSocket,
+        suppressedTo: Throwable? = null,
+    ) {
         try {
             if (!serverSocket.isClosed) serverSocket.close()
         } catch (e: Exception) {
