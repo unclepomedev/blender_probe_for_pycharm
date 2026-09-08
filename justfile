@@ -23,3 +23,7 @@ fmt-python:
     uv run --group dev ruff check --fix
 
 fmt: fmt-kt fmt-python
+
+# Requires blup with a Blender version installed
+smoke-test:
+    ./gradlew smokeTest
