@@ -17,6 +17,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugProcessStarter
 import com.intellij.xdebugger.XDebugSession
@@ -68,49 +69,63 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
             return promise
         }
 
-        object : Task.Backgroundable(environment.project, "Preparing Blender execution...", true) {
-                override fun run(indicator: ProgressIndicator) {
-                    val project = environment.project
-                    val path =
-                        BlenderSettings.getInstance(project).resolveBlenderPath()
-                            ?: throw ExecutionException(
-                                "Blender executable not found. Check settings."
-                            )
-
-                    state.cachedBlenderPath = path
-
-                    ApplicationManager.getApplication().runReadAction {
-                        state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
-                        state.cachedSourceRoot =
-                            BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
-                    }
-                    if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
-                        state.pydevdPath = PythonHelper.DEBUGGER.pythonPathEntry
-                    }
-                }
-
-                override fun onSuccess() {
-                    if (promise.state == Promise.State.REJECTED) return
-                    try {
-                        val descriptor =
-                            if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
-                                startDebugSession(state, environment)
-                            } else {
-                                startRunSession(state, environment)
-                            }
-                        promise.setResult(descriptor)
-                    } catch (e: Exception) {
-                        promise.setError(e)
-                    }
-                }
-
-                override fun onThrowable(error: Throwable) {
-                    promise.setError(error)
-                }
-            }
-            .queue()
+        queuePreparationTask(environment, state, promise)
 
         return promise
+    }
+
+    private fun queuePreparationTask(
+        environment: ExecutionEnvironment,
+        state: BlenderRunningState,
+        promise: AsyncPromise<RunContentDescriptor?>,
+    ) {
+        object : Task.Backgroundable(environment.project, "Preparing Blender execution...", true) {
+            override fun run(indicator: ProgressIndicator) {
+                prepareExecutionState(environment.project, state, environment.executor.id)
+            }
+
+            override fun onSuccess() {
+                if (promise.state == Promise.State.REJECTED) return
+                try {
+                    val descriptor =
+                        if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
+                            startDebugSession(state, environment)
+                        } else {
+                            startRunSession(state, environment)
+                        }
+                    promise.setResult(descriptor)
+                } catch (e: Exception) {
+                    promise.setError(e)
+                }
+            }
+
+            override fun onThrowable(error: Throwable) {
+                promise.setError(error)
+            }
+        }.queue()
+    }
+
+    private fun prepareExecutionState(
+        project: Project,
+        state: BlenderRunningState,
+        executorId: String,
+    ) {
+        val path =
+            BlenderSettings.getInstance(project).resolveBlenderPath()
+                ?: throw ExecutionException(
+                    "Blender executable not found. Check settings."
+                )
+
+        state.cachedBlenderPath = path
+
+        ApplicationManager.getApplication().runReadAction {
+            state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
+            state.cachedSourceRoot =
+                BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
+        }
+        if (executorId == DefaultDebugExecutor.EXECUTOR_ID) {
+            state.pydevdPath = PythonHelper.DEBUGGER.pythonPathEntry
+        }
     }
 
     private fun startRunSession(
@@ -127,59 +142,82 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         environment: ExecutionEnvironment,
     ): RunContentDescriptor {
         val serverSocket = ServerSocket(0)
+        state.debugPort = serverSocket.localPort
         var createdProcessHandler: ProcessHandler? = null
-        val project = environment.project
 
         val processStarter =
-            object : XDebugProcessStarter() {
-                override fun start(session: XDebugSession): XDebugProcess {
-                    val executionResult = state.execute(environment.executor, this@BlenderRunner)
-                    createdProcessHandler = executionResult.processHandler
-                    session.addSessionListener(
-                        object : XDebugSessionListener {
-                            override fun sessionStopped() {
-                                createdProcessHandler
-                                    ?.takeUnless { it.isProcessTerminated }
-                                    ?.destroyProcess()
-                                try {
-                                    if (!serverSocket.isClosed) serverSocket.close()
-                                } catch (e: Exception) {
-                                    log.warn("Failed to close debug server socket", e)
-                                }
-                            }
-                        }
-                    )
-                    return PyDebugProcess(
-                        session,
-                        serverSocket,
-                        executionResult.executionConsole,
-                        executionResult.processHandler,
-                        false,
-                    )
-                }
+            createDebugProcessStarter(state, environment, serverSocket) { handler ->
+                createdProcessHandler = handler
             }
 
-        try {
-            state.debugPort = serverSocket.localPort
-            @Suppress("UnstableApiUsage") // newSessionBuilder is experimental
-            val session =
-                XDebuggerManager.getInstance(project)
-                    .newSessionBuilder(processStarter)
-                    .environment(environment)
-                    .startSession()
-            @Suppress("UnstableApiUsage") // getRunContentDescriptor is experimental
-            return session.runContentDescriptor
-                ?: throw ExecutionException(
-                    "Debug session started but returned no content descriptor"
-                )
+        return try {
+            launchDebuggerSession(environment, processStarter)
         } catch (e: Exception) {
             createdProcessHandler?.takeUnless { it.isProcessTerminated }?.destroyProcess()
-            try {
-                if (!serverSocket.isClosed) serverSocket.close()
-            } catch (closeEx: Exception) {
-                e.addSuppressed(closeEx)
-            }
+            closeServerSocketQuietly(serverSocket, e)
             throw e
+        }
+    }
+
+    private fun createDebugProcessStarter(
+        state: BlenderRunningState,
+        environment: ExecutionEnvironment,
+        serverSocket: ServerSocket,
+        onProcessCreated: (ProcessHandler) -> Unit,
+    ): XDebugProcessStarter {
+        return object : XDebugProcessStarter() {
+            override fun start(session: XDebugSession): XDebugProcess {
+                val executionResult = state.execute(environment.executor, this@BlenderRunner)
+                val handler = executionResult.processHandler
+                onProcessCreated(handler)
+
+                session.addSessionListener(
+                    object : XDebugSessionListener {
+                        override fun sessionStopped() {
+                            handler.takeUnless { it.isProcessTerminated }?.destroyProcess()
+                            closeServerSocketQuietly(serverSocket)
+                        }
+                    }
+                )
+
+                return PyDebugProcess(
+                    session,
+                    serverSocket,
+                    executionResult.executionConsole,
+                    handler,
+                    false,
+                )
+            }
+        }
+    }
+
+    private fun launchDebuggerSession(
+        environment: ExecutionEnvironment,
+        processStarter: XDebugProcessStarter,
+    ): RunContentDescriptor {
+        val project = environment.project
+        @Suppress("UnstableApiUsage") // newSessionBuilder is experimental
+        val session =
+            XDebuggerManager.getInstance(project)
+                .newSessionBuilder(processStarter)
+                .environment(environment)
+                .startSession()
+        @Suppress("UnstableApiUsage") // getRunContentDescriptor is experimental
+        return session.runContentDescriptor
+            ?: throw ExecutionException(
+                "Debug session started but returned no content descriptor"
+            )
+    }
+
+    private fun closeServerSocketQuietly(serverSocket: ServerSocket, suppressedTo: Throwable? = null) {
+        try {
+            if (!serverSocket.isClosed) serverSocket.close()
+        } catch (e: Exception) {
+            if (suppressedTo != null) {
+                suppressedTo.addSuppressed(e)
+            } else {
+                log.warn("Failed to close debug server socket", e)
+            }
         }
     }
 }
