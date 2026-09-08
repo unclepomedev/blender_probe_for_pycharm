@@ -115,6 +115,7 @@ class BlenderTestRunningState(
                 .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
                 .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
                 .withEnvironment("PYTHONDONTWRITEBYTECODE", "1")
+                .withEnvironment("PYTHONUNBUFFERED", "1")
 
         val processHandler =
             object : OSProcessHandler(cmd) {
