@@ -79,12 +79,16 @@ class BlenderSettings(private val project: Project) :
     }
 
     private fun detectPathViaBlup(): String? {
-        val basePath = project.basePath ?: return null
+        val basePath = project.basePath
 
         try {
             val cmd =
                 GeneralCommandLine("blup", "which")
-                    .withWorkDirectory(basePath)
+                    .apply {
+                        if (basePath != null) {
+                            withWorkDirectory(basePath)
+                        }
+                    }
                     .withCharset(StandardCharsets.UTF_8)
                     .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
