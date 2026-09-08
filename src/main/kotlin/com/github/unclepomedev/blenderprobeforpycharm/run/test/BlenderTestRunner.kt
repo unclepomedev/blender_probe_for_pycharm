@@ -15,6 +15,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
 import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 
@@ -62,10 +63,23 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
             return promise
         }
 
+        saveAllDocuments()
+        queuePreparationTask(environment, state, promise)
+
+        return promise
+    }
+
+    private fun saveAllDocuments() {
         ApplicationManager.getApplication().invokeAndWait {
             FileDocumentManager.getInstance().saveAllDocuments()
         }
+    }
 
+    private fun queuePreparationTask(
+        environment: ExecutionEnvironment,
+        state: BlenderTestRunningState,
+        promise: AsyncPromise<RunContentDescriptor?>,
+    ) {
         object :
                 Task.Backgroundable(
                     environment.project,
@@ -73,27 +87,12 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
                     true,
                 ) {
                 override fun run(indicator: ProgressIndicator) {
-                    val path =
-                        BlenderSettings.getInstance(project).resolveBlenderPath()
-                            ?: throw ExecutionException(
-                                "Blender executable not found. Check settings."
-                            )
-                    state.cachedBlenderPath = path
-
-                    ApplicationManager.getApplication().runReadAction {
-                        state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
-                        state.cachedSourceRoot =
-                            BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
-                    }
+                    prepareExecutionState(project, state)
                 }
 
                 override fun onSuccess() {
                     try {
-                        val executionResult =
-                            state.execute(environment.executor, this@BlenderTestRunner)
-                        val descriptor =
-                            RunContentBuilder(executionResult, environment)
-                                .showRunContent(environment.contentToReuse)
+                        val descriptor = startTestSession(environment, state)
                         promise.setResult(descriptor)
                     } catch (e: Exception) {
                         promise.setError(e)
@@ -105,7 +104,30 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
                 }
             }
             .queue()
+    }
 
-        return promise
+    private fun prepareExecutionState(
+        project: Project,
+        state: BlenderTestRunningState,
+    ) {
+        val path =
+            BlenderSettings.getInstance(project).resolveBlenderPath()
+                ?: throw ExecutionException("Blender executable not found. Check settings.")
+        state.cachedBlenderPath = path
+
+        ApplicationManager.getApplication().runReadAction {
+            state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
+            state.cachedSourceRoot =
+                BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
+        }
+    }
+
+    private fun startTestSession(
+        environment: ExecutionEnvironment,
+        state: BlenderTestRunningState,
+    ): RunContentDescriptor {
+        val executionResult = state.execute(environment.executor, this)
+        return RunContentBuilder(executionResult, environment)
+            .showRunContent(environment.contentToReuse)
     }
 }
