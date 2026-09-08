@@ -36,9 +36,17 @@ class BlenderReloadSmokeTest : BaseSmokeTest() {
                 "Fixture add-on was not enabled within 60s.\n--- output ---\n${process.output}",
                 process.awaitOutput("Successfully enabled addon: $addonModuleName", 60),
             )
+            assertTrue(
+                "Blender did not report a probe port within 60s.\n--- output ---\n${process.output}",
+                process.await(60) { BlenderProbeManager.activePort != null },
+            )
+            val port =
+                checkNotNull(BlenderProbeManager.activePort) {
+                    "Active probe port was unexpectedly null"
+                }
 
             sendProbeCommand(
-                BlenderProbeManager.activePort!!,
+                port,
                 """{"action": "reload", "module_name": "$addonModuleName"}""",
             )
 

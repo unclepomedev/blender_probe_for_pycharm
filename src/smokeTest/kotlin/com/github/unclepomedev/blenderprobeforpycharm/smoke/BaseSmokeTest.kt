@@ -101,7 +101,9 @@ abstract class BaseSmokeTest : BaseBlenderTest() {
 
         fun close() {
             handler.destroyProcess()
-            handler.waitFor()
+            if (!handler.waitFor(10_000)) {
+                error("Blender process did not terminate within 10s after destroyProcess")
+            }
         }
     }
 }
