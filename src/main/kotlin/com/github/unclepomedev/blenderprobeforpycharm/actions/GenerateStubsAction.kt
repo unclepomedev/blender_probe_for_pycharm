@@ -14,8 +14,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 
 /**
- * Action to generate Python stubs for the Blender API.
- * This action locates the Blender executable and runs a script to generate the stubs.
+ * Action to generate Python stubs for the Blender API. This action locates the Blender executable
+ * and runs a script to generate the stubs.
  */
 class GenerateStubsAction : AnAction() {
 
@@ -34,25 +34,28 @@ class GenerateStubsAction : AnAction() {
     }
 
     private fun resolveAndGenerate(project: Project) {
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Blender probe: initializing", true) {
-            override fun run(indicator: ProgressIndicator) {
-                indicator.isIndeterminate = true
-                indicator.text = "Resolving Blender executable..."
+        ProgressManager.getInstance()
+            .run(
+                object : Task.Backgroundable(project, "Blender probe: initializing", true) {
+                    override fun run(indicator: ProgressIndicator) {
+                        indicator.isIndeterminate = true
+                        indicator.text = "Resolving Blender executable..."
 
-                val settings = BlenderSettings.getInstance(project)
+                        val settings = BlenderSettings.getInstance(project)
 
-                val blenderPath = settings.resolveBlenderPath()
+                        val blenderPath = settings.resolveBlenderPath()
 
-                if (blenderPath.isNullOrBlank()) {
-                    ApplicationManager.getApplication().invokeLater {
-                        handleMissingPath(project)
+                        if (blenderPath.isNullOrBlank()) {
+                            ApplicationManager.getApplication().invokeLater {
+                                handleMissingPath(project)
+                            }
+                        } else {
+                            indicator.text = "Generating stubs..."
+                            BlenderStubService.getInstance(project).generateStubs(blenderPath)
+                        }
                     }
-                } else {
-                    indicator.text = "Generating stubs..."
-                    BlenderStubService.getInstance(project).generateStubs(blenderPath)
                 }
-            }
-        })
+            )
     }
 
     private fun handleMissingPath(project: Project) {
@@ -61,14 +64,15 @@ class GenerateStubsAction : AnAction() {
             return
         }
 
-        val result = Messages.showOkCancelDialog(
-            project,
-            "Blender executable could not be found.\nPlease configure the path manually or ensure 'blup' is installed.",
-            "Configuration Required",
-            "Open Settings",
-            "Cancel",
-            Messages.getWarningIcon()
-        )
+        val result =
+            Messages.showOkCancelDialog(
+                project,
+                "Blender executable could not be found.\nPlease configure the path manually or ensure 'blup' is installed.",
+                "Configuration Required",
+                "Open Settings",
+                "Cancel",
+                Messages.getWarningIcon(),
+            )
 
         if (result == Messages.OK) {
             ShowSettingsUtil.getInstance().showSettingsDialog(project, "Blender Probe")

@@ -7,6 +7,7 @@ class TemplateLoader:
     """
     Manages loading of string templates and code injections from the file system.
     """
+
     def __init__(self):
         """
         Initializes the loader and sets the base template path.

@@ -16,6 +16,7 @@ class StubGenerator:
     Main controller for the Blender stub generation process.
     Orchestrates the analysis and generation of types, operators, and modules.
     """
+
     def __init__(self, config: GeneratorConfig):
         """
         Initializes the generator with the given configuration.

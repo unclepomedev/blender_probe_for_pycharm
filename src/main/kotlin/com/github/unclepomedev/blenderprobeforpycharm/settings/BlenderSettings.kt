@@ -9,28 +9,29 @@ import com.intellij.openapi.project.Project
 import java.nio.charset.StandardCharsets
 
 /**
- * Manages project-level settings for Blender Probe.
- * Stores configuration such as the path to the Blender executable.
+ * Manages project-level settings for Blender Probe. Stores configuration such as the path to the
+ * Blender executable.
  */
 @Service(Service.Level.PROJECT)
 @State(
     name = "BlenderProbeSettings",
-    storages = [Storage("blender_probe.xml")]
+    storages = [Storage("blender_probe.xml")],
 )
-class BlenderSettings(private val project: Project) : PersistentStateComponent<BlenderSettings.State> {
+class BlenderSettings(private val project: Project) :
+    PersistentStateComponent<BlenderSettings.State> {
 
     /**
      * Data class to hold the state of the settings.
      *
      * @property blenderPath The path to the Blender executable.
      * @property useFactoryStartup Whether to launch Blender with the `--factory-startup` flag.
-     *   Defaults to true to mirror the standard, supported behavior. Disabling it lets Blender
-     *   load third-party add-ons and modules from the user environment, which can crash Blender
-     *   on startup (use at your own risk, outside the supported scope).
+     *   Defaults to true to mirror the standard, supported behavior. Disabling it lets Blender load
+     *   third-party add-ons and modules from the user environment, which can crash Blender on
+     *   startup (use at your own risk, outside the supported scope).
      */
     data class State(
         var blenderPath: String = "",
-        var useFactoryStartup: Boolean = true
+        var useFactoryStartup: Boolean = true,
     )
 
     private var myState = State()
@@ -64,9 +65,8 @@ class BlenderSettings(private val project: Project) : PersistentStateComponent<B
     }
 
     /**
-     * Resolves the path to the Blender executable.
-     * If a path is configured in settings, it is returned.
-     * Otherwise, it attempts to detect the path using the 'blup' tool.
+     * Resolves the path to the Blender executable. If a path is configured in settings, it is
+     * returned. Otherwise, it attempts to detect the path using the 'blup' tool.
      *
      * @return The resolved Blender path, or null if not found.
      */
@@ -82,10 +82,11 @@ class BlenderSettings(private val project: Project) : PersistentStateComponent<B
         val basePath = project.basePath ?: return null
 
         try {
-            val cmd = GeneralCommandLine("blup", "which")
-                .withWorkDirectory(basePath)
-                .withCharset(StandardCharsets.UTF_8)
-                .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+            val cmd =
+                GeneralCommandLine("blup", "which")
+                    .withWorkDirectory(basePath)
+                    .withCharset(StandardCharsets.UTF_8)
+                    .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
             val handler = CapturingProcessHandler(cmd)
             val output = handler.runProcess(2000) // 2 sec timeout

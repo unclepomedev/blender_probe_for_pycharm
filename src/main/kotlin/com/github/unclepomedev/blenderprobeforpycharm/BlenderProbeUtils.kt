@@ -6,14 +6,14 @@ import com.intellij.openapi.vfs.VirtualFile
 import java.util.*
 
 /**
- * Utility functions for Blender Addon development.
- * Provides helper methods to detect addon information from the project structure.
+ * Utility functions for Blender Addon development. Provides helper methods to detect addon
+ * information from the project structure.
  */
 object BlenderProbeUtils {
     /**
-     * Detects the Python module name for the Blender addon.
-     * Attempts to find the module name from the `blender_manifest.toml` location,
-     * or falls back to a normalized version of the project name.
+     * Detects the Python module name for the Blender addon. Attempts to find the module name from
+     * the `blender_manifest.toml` location, or falls back to a normalized version of the project
+     * name.
      *
      * @param project The current project.
      * @return The detected addon module name.
@@ -29,8 +29,8 @@ object BlenderProbeUtils {
     }
 
     /**
-     * Locates the source root directory of the Blender addon.
-     * This is determined based on the location of the `blender_manifest.toml` file.
+     * Locates the source root directory of the Blender addon. This is determined based on the
+     * location of the `blender_manifest.toml` file.
      *
      * @param project The current project.
      * @return The absolute path to the source root, or null if not found.
@@ -45,7 +45,17 @@ object BlenderProbeUtils {
         val fileIndex = ProjectRootManager.getInstance(project).fileIndex
         var manifestFile: VirtualFile? = null
 
-        val excluded = setOf("tests", "venv", ".idea", ".git", "__pycache__", "build", "dist", ".blender_stubs")
+        val excluded =
+            setOf(
+                "tests",
+                "venv",
+                ".idea",
+                ".git",
+                "__pycache__",
+                "build",
+                "dist",
+                ".blender_stubs",
+            )
         fileIndex.iterateContent { file: VirtualFile ->
             if (!file.isDirectory) {
                 if (file.name == "blender_manifest.toml") {
@@ -61,15 +71,13 @@ object BlenderProbeUtils {
     }
 
     /**
-     * Normalizes a string to be a valid Python module name.
-     * Converts to lowercase and replaces spaces and hyphens with underscores.
+     * Normalizes a string to be a valid Python module name. Converts to lowercase and replaces
+     * spaces and hyphens with underscores.
      *
      * @param name The original name.
      * @return The normalized module name.
      */
     fun normalizeModuleName(name: String): String {
-        return name.lowercase(Locale.ROOT)
-            .replace(" ", "_")
-            .replace("-", "_")
+        return name.lowercase(Locale.ROOT).replace(" ", "_").replace("-", "_")
     }
 }

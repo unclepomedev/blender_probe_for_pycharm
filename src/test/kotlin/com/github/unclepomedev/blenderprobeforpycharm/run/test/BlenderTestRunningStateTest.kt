@@ -17,16 +17,17 @@ class BlenderTestRunningStateTest : BaseBlenderTest() {
         val settings = BlenderSettings.getInstance(project)
         settings.state.useFactoryStartup = enabled
 
-        val params = BlenderTestRunningState.buildParameters(
-            useFactoryStartup = settings.state.useFactoryStartup,
-            scriptPath = "/tmp/run_tests.py",
-            testDir = "/tmp/tests"
-        )
+        val params =
+            BlenderTestRunningState.buildParameters(
+                useFactoryStartup = settings.state.useFactoryStartup,
+                scriptPath = "/tmp/run_tests.py",
+                testDir = "/tmp/tests",
+            )
 
         assertEquals(
             "--factory-startup presence should match the setting (enabled=$enabled)",
             expected,
-            "--factory-startup" in params
+            "--factory-startup" in params,
         )
     }
 }

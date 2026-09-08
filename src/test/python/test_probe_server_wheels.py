@@ -127,7 +127,9 @@ def test_unparsable_name_defaults_to_compatible():
 
 
 def test_extract_wheel_unpacks_contents(tmp_path):
-    whl = _make_wheel(tmp_path, "pkg-1.0-py3-none-any.whl", {"pkg/__init__.py": "V = 1\n"})
+    whl = _make_wheel(
+        tmp_path, "pkg-1.0-py3-none-any.whl", {"pkg/__init__.py": "V = 1\n"}
+    )
     cache = str(tmp_path / "cache")
 
     dest = wheels_mod._extract_wheel(whl, cache)
@@ -138,7 +140,9 @@ def test_extract_wheel_unpacks_contents(tmp_path):
 
 
 def test_extract_wheel_is_cached(tmp_path, monkeypatch):
-    whl = _make_wheel(tmp_path, "pkg-1.0-py3-none-any.whl", {"pkg/__init__.py": "V = 1\n"})
+    whl = _make_wheel(
+        tmp_path, "pkg-1.0-py3-none-any.whl", {"pkg/__init__.py": "V = 1\n"}
+    )
     cache = str(tmp_path / "cache")
 
     zip_opens = {"count": 0}
@@ -180,12 +184,18 @@ def test_extract_wheel_reextracts_when_wheel_changes(tmp_path, monkeypatch):
 
 def test_read_manifest_wheels_parses_declared_list(tmp_path):
     manifest = _write_manifest(tmp_path, ["./wheels/a.whl", "./wheels/b.whl"])
-    assert wheels_mod._read_manifest_wheels(manifest) == ["./wheels/a.whl", "./wheels/b.whl"]
+    assert wheels_mod._read_manifest_wheels(manifest) == [
+        "./wheels/a.whl",
+        "./wheels/b.whl",
+    ]
 
 
 def test_read_manifest_wheels_missing_file_returns_none(tmp_path):
     # None -> caller falls back to scanning the wheels/ directory.
-    assert wheels_mod._read_manifest_wheels(os.path.join(str(tmp_path), "nope.toml")) is None
+    assert (
+        wheels_mod._read_manifest_wheels(os.path.join(str(tmp_path), "nope.toml"))
+        is None
+    )
 
 
 def test_read_manifest_wheels_absent_array_returns_empty(tmp_path):
@@ -203,12 +213,18 @@ def test_read_manifest_wheels_malformed_returns_none(tmp_path, capsys):
 # --- end to end ---------------------------------------------------------------
 
 
-def test_setup_dependencies_mounts_only_listed_wheels(tmp_path, isolate_imports, capsys):
+def test_setup_dependencies_mounts_only_listed_wheels(
+    tmp_path, isolate_imports, capsys
+):
     addon = tmp_path / "myaddon"
     wheels = addon / "wheels"
     wheels.mkdir(parents=True)
-    _make_wheel(wheels, "listed-1.0-py3-none-any.whl", {"listed_pkg/__init__.py": "V = 1\n"})
-    _make_wheel(wheels, "extra-1.0-py3-none-any.whl", {"extra_pkg/__init__.py": "V = 2\n"})
+    _make_wheel(
+        wheels, "listed-1.0-py3-none-any.whl", {"listed_pkg/__init__.py": "V = 1\n"}
+    )
+    _make_wheel(
+        wheels, "extra-1.0-py3-none-any.whl", {"extra_pkg/__init__.py": "V = 2\n"}
+    )
     _write_manifest(addon, ["./wheels/listed-1.0-py3-none-any.whl"])
 
     wheels_mod.setup_dependencies(str(tmp_path), "myaddon")
@@ -237,7 +253,9 @@ def test_setup_dependencies_applies_platform_filter_to_listed(
     addon = tmp_path / "myaddon"
     wheels = addon / "wheels"
     wheels.mkdir(parents=True)
-    _make_wheel(wheels, "purepkg-1.0-py3-none-any.whl", {"purepkg/__init__.py": "V = 1\n"})
+    _make_wheel(
+        wheels, "purepkg-1.0-py3-none-any.whl", {"purepkg/__init__.py": "V = 1\n"}
+    )
     _make_wheel(
         wheels,
         "maconly-1.0-cp311-cp311-macosx_11_0_arm64.whl",
@@ -279,7 +297,11 @@ def test_setup_dependencies_without_manifest_falls_back_to_glob(
     # No manifest at all -> scan wheels/ so development isn't blocked.
     wheels = tmp_path / "myaddon" / "wheels"
     wheels.mkdir(parents=True)
-    _make_wheel(wheels, "fallbackpkg-1.0-py3-none-any.whl", {"fallbackpkg/__init__.py": "V = 7\n"})
+    _make_wheel(
+        wheels,
+        "fallbackpkg-1.0-py3-none-any.whl",
+        {"fallbackpkg/__init__.py": "V = 7\n"},
+    )
     _make_wheel(
         wheels,
         "wrongplat-1.0-cp311-cp311-macosx_11_0_arm64.whl",
@@ -293,7 +315,9 @@ def test_setup_dependencies_without_manifest_falls_back_to_glob(
     assert fallbackpkg.V == 7
     assert "falling back to scanning" in capsys.readouterr().out
     extracted = [p.name for p in (tmp_path / ".blender_probe" / "wheels").iterdir()]
-    assert not any(n.startswith("wrongplat") for n in extracted)  # still platform-filtered
+    assert not any(
+        n.startswith("wrongplat") for n in extracted
+    )  # still platform-filtered
 
 
 def test_setup_dependencies_parse_error_falls_back_to_glob(
@@ -302,7 +326,9 @@ def test_setup_dependencies_parse_error_falls_back_to_glob(
     addon = tmp_path / "myaddon"
     wheels = addon / "wheels"
     wheels.mkdir(parents=True)
-    _make_wheel(wheels, "brokenmani-1.0-py3-none-any.whl", {"brokenmani/__init__.py": "V = 3\n"})
+    _make_wheel(
+        wheels, "brokenmani-1.0-py3-none-any.whl", {"brokenmani/__init__.py": "V = 3\n"}
+    )
     _write_manifest(addon, None, raw="wheels = [ this is broken\n")
 
     wheels_mod.setup_dependencies(str(tmp_path), "myaddon")

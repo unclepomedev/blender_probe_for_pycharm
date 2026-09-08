@@ -7,23 +7,33 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.python.psi.*
 
 /**
- * Inspection suppressor for Blender-specific Python code patterns.
- * Suppresses warnings for Blender API usage that conflicts with standard Python inspections,
- * such as naming conventions and type checking for properties.
+ * Inspection suppressor for Blender-specific Python code patterns. Suppresses warnings for Blender
+ * API usage that conflicts with standard Python inspections, such as naming conventions and type
+ * checking for properties.
  */
 class BlenderPropertySuppressor : InspectionSuppressor {
 
     companion object {
-        private val ALLOWED_IDS = setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints", "PyPep8Naming")
+        private val ALLOWED_IDS =
+            setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints", "PyPep8Naming")
 
-        private val BLENDER_PROPS = setOf(
-            "StringProperty", "IntProperty", "BoolProperty", "FloatProperty",
-            "EnumProperty", "PointerProperty", "CollectionProperty",
-            "FloatVectorProperty", "IntVectorProperty", "BoolVectorProperty",
-            "RemoveProperty"
-        )
+        private val BLENDER_PROPS =
+            setOf(
+                "StringProperty",
+                "IntProperty",
+                "BoolProperty",
+                "FloatProperty",
+                "EnumProperty",
+                "PointerProperty",
+                "CollectionProperty",
+                "FloatVectorProperty",
+                "IntVectorProperty",
+                "BoolVectorProperty",
+                "RemoveProperty",
+            )
 
-        // Matches Blender naming convention (e.g. MY_ADDON_OT_op_name). Allows underscores in the prefix.
+        // Matches Blender naming convention (e.g. MY_ADDON_OT_op_name). Allows underscores in the
+        // prefix.
         private val BLENDER_NAMING_REGEX = Regex("^[A-Z][A-Z0-9_]+_[A-Z]{2}_[a-z0-9_]+$")
     }
 
@@ -59,7 +69,8 @@ class BlenderPropertySuppressor : InspectionSuppressor {
             return false
         }
 
-        val annotation = PsiTreeUtil.getParentOfType(element, PyAnnotation::class.java) ?: return false
+        val annotation =
+            PsiTreeUtil.getParentOfType(element, PyAnnotation::class.java) ?: return false
         val value = annotation.value as? PyCallExpression ?: return false
         val callee = value.callee as? PyReferenceExpression ?: return false
 
@@ -75,16 +86,18 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         val name = callee.referencedName ?: return false
 
         // Accept strict "bpy.props.*" prefix OR simple name match as a fallback.
-        // Fallback is needed for cases like "from bpy.props import StringProperty" where resolution fails.
-        // Note: This matches any function with these names, creating a potential false positive trade-off.
+        // Fallback is needed for cases like "from bpy.props import StringProperty" where resolution
+        // fails.
+        // Note: This matches any function with these names, creating a potential false positive
+        // trade-off.
         return text.startsWith("bpy.props.") || name in BLENDER_PROPS
     }
 
     /**
      * Returns suppression quick-fix actions for [toolId] at [element].
      *
-     * This suppressor does not provide any user-visible quick-fix actions, so the
-     * returned array is always empty.
+     * This suppressor does not provide any user-visible quick-fix actions, so the returned array is
+     * always empty.
      *
      * @param element The PSI element to suppress for, or `null` if no element is available.
      * @param toolId The inspection tool ID.

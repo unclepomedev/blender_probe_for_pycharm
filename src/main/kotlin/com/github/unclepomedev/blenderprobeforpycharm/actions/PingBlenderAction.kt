@@ -9,8 +9,8 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 
 /**
- * Action to send a ping command to the running Blender instance.
- * This is used to verify connectivity with the Blender Probe server.
+ * Action to send a ping command to the running Blender instance. This is used to verify
+ * connectivity with the Blender Probe server.
  */
 class PingBlenderAction : AnAction() {
     /**
@@ -21,7 +21,10 @@ class PingBlenderAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val port = BlenderProbeManager.activePort
         if (port == null) {
-            Messages.showErrorDialog("Blender is not running or Probe server is not ready.", "Connection Error")
+            Messages.showErrorDialog(
+                "Blender is not running or Probe server is not ready.",
+                "Connection Error",
+            )
             return
         }
 
@@ -48,7 +51,7 @@ class PingBlenderAction : AnAction() {
                 com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
                     Messages.showErrorDialog(
                         "Could not connect to Blender. Is it running via Blender Probe?\n${ex.message}",
-                        "Connection Error"
+                        "Connection Error",
                     )
                 }
             }

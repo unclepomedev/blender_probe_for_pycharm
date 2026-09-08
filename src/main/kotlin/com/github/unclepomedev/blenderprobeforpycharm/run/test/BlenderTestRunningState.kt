@@ -21,19 +21,23 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
- * Represents the state of the Blender test execution.
- * Prepares the command line and environment for running tests inside Blender.
+ * Represents the state of the Blender test execution. Prepares the command line and environment for
+ * running tests inside Blender.
  */
 class BlenderTestRunningState(
     environment: ExecutionEnvironment,
-    private val configuration: BlenderTestRunConfiguration
+    private val configuration: BlenderTestRunConfiguration,
 ) : CommandLineState(environment) {
     var cachedBlenderPath: String? = null
     var cachedAddonName: String? = null
     var cachedSourceRoot: String? = null
 
     companion object {
-        internal fun buildParameters(useFactoryStartup: Boolean, scriptPath: String, testDir: String): List<String> = buildList {
+        internal fun buildParameters(
+            useFactoryStartup: Boolean,
+            scriptPath: String,
+            testDir: String,
+        ): List<String> = buildList {
             add("-b")
             if (useFactoryStartup) {
                 add("--factory-startup")
@@ -65,10 +69,13 @@ class BlenderTestRunningState(
      */
     override fun startProcess(): ProcessHandler {
         val project = environment.project
-        val blenderPath = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
+        val blenderPath =
+            cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
 
         if (blenderPath.isNullOrEmpty()) {
-            throw ExecutionException("Blender executable not found. Please configure it in Settings or ensure 'blup' is installed.")
+            throw ExecutionException(
+                "Blender executable not found. Please configure it in Settings or ensure 'blup' is installed."
+            )
         }
 
         val testDir = configuration.testDir
@@ -78,35 +85,43 @@ class BlenderTestRunningState(
 
         val basePath = project.basePath ?: throw ExecutionException("Project base path is invalid.")
         val projectScript = File(basePath, "tests/run_tests.py")
-        val scriptFile = if (projectScript.exists()) {
-            projectScript
-        } else {
-            ScriptResourceUtils.extractResourceScript("python/run_tests.py", "blender_test_runner")
-        }
+        val scriptFile =
+            if (projectScript.exists()) {
+                projectScript
+            } else {
+                ScriptResourceUtils.extractResourceScript(
+                    "python/run_tests.py",
+                    "blender_test_runner",
+                )
+            }
 
-        val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
+        val sourceRoot =
+            cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
 
-        val parameters = buildParameters(
-            BlenderSettings.getInstance(project).state.useFactoryStartup,
-            scriptFile.absolutePath,
-            testDir
-        )
+        val parameters =
+            buildParameters(
+                BlenderSettings.getInstance(project).state.useFactoryStartup,
+                scriptFile.absolutePath,
+                testDir,
+            )
 
-        val cmd = GeneralCommandLine()
-            .withExePath(blenderPath)
-            .withParameters(parameters)
-            .withCharset(StandardCharsets.UTF_8)
-            .withWorkDirectory(basePath)
-            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
-            .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
-            .withEnvironment("PYTHONDONTWRITEBYTECODE", "1")
+        val cmd =
+            GeneralCommandLine()
+                .withExePath(blenderPath)
+                .withParameters(parameters)
+                .withCharset(StandardCharsets.UTF_8)
+                .withWorkDirectory(basePath)
+                .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
+                .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
+                .withEnvironment("PYTHONDONTWRITEBYTECODE", "1")
 
-        val processHandler = object : OSProcessHandler(cmd) {
-            override fun readerOptions(): BaseOutputReader.Options {
-                return BaseOutputReader.Options.forMostlySilentProcess()
+        val processHandler =
+            object : OSProcessHandler(cmd) {
+                override fun readerOptions(): BaseOutputReader.Options {
+                    return BaseOutputReader.Options.forMostlySilentProcess()
+                }
             }
-        }
         ProcessTerminatedListener.attach(processHandler)
         return processHandler
     }
@@ -117,7 +132,7 @@ class BlenderTestRunningState(
         return SMTestRunnerConnectionUtil.createAndAttachConsole(
             "BlenderTest",
             processHandler,
-            properties
+            properties,
         )
     }
 }

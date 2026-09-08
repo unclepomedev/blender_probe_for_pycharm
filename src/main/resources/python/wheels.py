@@ -285,7 +285,9 @@ def setup_dependencies(project_root, addon_name):
         # transient edit can't block development.
         if os.path.isdir(wheels_dir):
             log("Manifest unavailable; falling back to scanning wheels/ directory.")
-            _mount_wheels(sorted(glob.glob(os.path.join(wheels_dir, "*.whl"))), cache_root)
+            _mount_wheels(
+                sorted(glob.glob(os.path.join(wheels_dir, "*.whl"))), cache_root
+            )
         else:
             _mount_venv_fallback(project_root)
         return

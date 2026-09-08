@@ -12,6 +12,7 @@ class BpyTypesGenerator:
     """
     Generates Python stubs for bpy.types classes.
     """
+
     def __init__(self, context: StubContext, writer: StubWriter):
         """
         Initializes the types generator.
@@ -148,10 +149,16 @@ class BpyTypesGenerator:
                 if getattr(prop, "is_deprecated", False):
                     dep_msg = StubWriter.get_deprecation_msg(prop)
                     warning_text = f"[DEPRECATED: {dep_msg}]"
-                    description = f"{warning_text}\n{description}" if description else warning_text
+                    description = (
+                        f"{warning_text}\n{description}"
+                        if description
+                        else warning_text
+                    )
 
                 if description:
-                    lines.append(self.writer.format_docstring(description, indent="    "))
+                    lines.append(
+                        self.writer.format_docstring(description, indent="    ")
+                    )
                 continue
 
             decorators = self.writer.format_deprecation_decorator(prop)
@@ -163,11 +170,17 @@ class BpyTypesGenerator:
 
             if getattr(prop, "is_readonly", False):
                 prop_str = self.tpl_property_readonly.substitute(
-                    decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
+                    decorators=decorators,
+                    name=prop.identifier,
+                    type_hint=type_hint,
+                    doc=doc_fmt,
                 )
             else:
                 prop_str = self.tpl_property.substitute(
-                    decorators=decorators, name=prop.identifier, type_hint=type_hint, doc=doc_fmt
+                    decorators=decorators,
+                    name=prop.identifier,
+                    type_hint=type_hint,
+                    doc=doc_fmt,
                 )
             lines.append(prop_str)
         return lines

@@ -53,7 +53,9 @@ class BlenderTestRunConfigurationTest : BaseBlenderTest() {
         try {
             config.checkConfiguration()
         } catch (e: RuntimeConfigurationException) {
-            fail("Should NOT throw RuntimeConfigurationException even if Blender path is missing (it implies auto-detect). Error: ${e.localizedMessage}")
+            fail(
+                "Should NOT throw RuntimeConfigurationException even if Blender path is missing (it implies auto-detect). Error: ${e.localizedMessage}"
+            )
         }
     }
 

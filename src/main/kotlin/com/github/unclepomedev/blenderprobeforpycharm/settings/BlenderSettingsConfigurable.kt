@@ -4,17 +4,17 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.builder.AlignX
 
 /**
- * Provides the configuration UI for Blender Probe settings.
- * Lets users specify the Blender executable path and whether to launch
- * Blender with `--factory-startup`.
+ * Provides the configuration UI for Blender Probe settings. Lets users specify the Blender
+ * executable path and whether to launch Blender with `--factory-startup`.
  */
-class BlenderSettingsConfigurable(private val project: Project) : BoundConfigurable("Blender Probe") {
+class BlenderSettingsConfigurable(private val project: Project) :
+    BoundConfigurable("Blender Probe") {
 
     private val settings = BlenderSettings.getInstance(project)
 
@@ -27,14 +27,17 @@ class BlenderSettingsConfigurable(private val project: Project) : BoundConfigura
         return panel {
             group("General") {
                 row("Blender executable:") {
-                    val descriptor = FileChooserDescriptorFactory.createSingleFileOrExecutableAppDescriptor()
-                        .withTitle("Select Blender Executable")
+                    val descriptor =
+                        FileChooserDescriptorFactory.createSingleFileOrExecutableAppDescriptor()
+                            .withTitle("Select Blender Executable")
                     textFieldWithBrowseButton(
-                        project = project,
-                        fileChooserDescriptor = descriptor
-                    )
+                            project = project,
+                            fileChooserDescriptor = descriptor,
+                        )
                         .bindText(settings.state::blenderPath)
-                        .comment("Leave empty to auto-detect via <code>blup</code> (Recommended).<br>Or specify the absolute path to override.")
+                        .comment(
+                            "Leave empty to auto-detect via <code>blup</code> (Recommended).<br>Or specify the absolute path to override."
+                        )
                         .align(AlignX.FILL)
                 }
                 row {

@@ -9,32 +9,37 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.util.Alarm
 
 /**
- * Service that handles automatic reloading of the Blender add-on.
- * Schedules a reload action when changes are detected, with debouncing.
+ * Service that handles automatic reloading of the Blender add-on. Schedules a reload action when
+ * changes are detected, with debouncing.
  */
 @Service(Service.Level.PROJECT)
 class BlenderAutoReloadService(private val project: Project) : Disposable {
 
-    @Suppress("UnstableApiUsage")
-    private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
+    @Suppress("UnstableApiUsage") private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val delayMillis = 500
 
     /**
-     * Schedules a reload of the add-on.
-     * If a reload is already scheduled, it resets the timer (debounce).
+     * Schedules a reload of the add-on. If a reload is already scheduled, it resets the timer
+     * (debounce).
      */
     fun scheduleReload() {
         alarm.cancelAllRequests()
-        alarm.addRequest({
-            performReload()
-        }, delayMillis)
+        alarm.addRequest(
+            {
+                performReload()
+            },
+            delayMillis,
+        )
     }
 
     private fun performReload() {
         if (BlenderProbeManager.activePort == null) return
 
         val actionManager = ActionManager.getInstance()
-        val action = actionManager.getAction("com.github.unclepomedev.blenderprobeforpycharm.actions.ReloadAddonAction")
+        val action =
+            actionManager.getAction(
+                "com.github.unclepomedev.blenderprobeforpycharm.actions.ReloadAddonAction"
+            )
 
         if (action != null) {
             val frame = WindowManager.getInstance().getFrame(project)

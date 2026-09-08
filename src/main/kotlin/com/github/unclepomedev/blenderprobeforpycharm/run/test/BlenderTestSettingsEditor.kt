@@ -8,8 +8,8 @@ import com.intellij.util.ui.FormBuilder
 import javax.swing.JComponent
 
 /**
- * Settings editor for the Blender Test run configuration.
- * Provides a UI for selecting the test directory.
+ * Settings editor for the Blender Test run configuration. Provides a UI for selecting the test
+ * directory.
  */
 class BlenderTestSettingsEditor : SettingsEditor<BlenderTestRunConfiguration>() {
 
@@ -21,14 +21,15 @@ class BlenderTestSettingsEditor : SettingsEditor<BlenderTestRunConfiguration>() 
      * @return The editor component.
      */
     override fun createEditor(): JComponent {
-        val descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor()
-            .withTitle("Select Test Directory")
-            .withDescription("Select the directory containing your Blender Python tests")
+        val descriptor =
+            FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                .withTitle("Select Test Directory")
+                .withDescription("Select the directory containing your Blender Python tests")
 
         testDirField.addBrowseFolderListener(
             null,
             descriptor,
-            TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT
+            TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT,
         )
 
         return FormBuilder.createFormBuilder()

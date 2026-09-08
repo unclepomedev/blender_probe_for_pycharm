@@ -7,15 +7,15 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 
 /**
- * Editor for the Blender Run Configuration.
- * Displays information about the configuration settings.
+ * Editor for the Blender Run Configuration. Displays information about the configuration settings.
  */
 class BlenderRunConfigurationEditor : SettingsEditor<BlenderRunConfiguration>() {
 
-    private val myPanel: JPanel = FormBuilder.createFormBuilder()
-        .addComponent(JLabel("Blender path is configured in Settings > Tools > Blender Probe."))
-        .addComponent(JLabel("No additional run configuration settings required."))
-        .panel
+    private val myPanel: JPanel =
+        FormBuilder.createFormBuilder()
+            .addComponent(JLabel("Blender path is configured in Settings > Tools > Blender Probe."))
+            .addComponent(JLabel("No additional run configuration settings required."))
+            .panel
 
     /**
      * Creates the editor component.
@@ -26,9 +26,7 @@ class BlenderRunConfigurationEditor : SettingsEditor<BlenderRunConfiguration>() 
         return myPanel
     }
 
-    override fun resetEditorFrom(s: BlenderRunConfiguration) {
-    }
+    override fun resetEditorFrom(s: BlenderRunConfiguration) {}
 
-    override fun applyEditorTo(s: BlenderRunConfiguration) {
-    }
+    override fun applyEditorTo(s: BlenderRunConfiguration) {}
 }

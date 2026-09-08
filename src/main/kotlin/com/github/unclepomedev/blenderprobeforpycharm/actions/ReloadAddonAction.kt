@@ -17,8 +17,8 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 
 /**
- * Action to reload the Blender add-on.
- * This sends a reload command to the running Blender instance via the probe server.
+ * Action to reload the Blender add-on. This sends a reload command to the running Blender instance
+ * via the probe server.
  */
 class ReloadAddonAction : AnAction() {
 
@@ -38,32 +38,38 @@ class ReloadAddonAction : AnAction() {
 
         val addonName = BlenderProbeUtils.detectAddonModuleName(project)
 
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Reloading blender addon", false) {
-            override fun run(indicator: ProgressIndicator) {
-                try {
-                    Socket("127.0.0.1", port).use { socket ->
-                        val out = BufferedOutputStream(socket.getOutputStream())
+        ProgressManager.getInstance()
+            .run(
+                object : Task.Backgroundable(project, "Reloading blender addon", false) {
+                    override fun run(indicator: ProgressIndicator) {
+                        try {
+                            Socket("127.0.0.1", port).use { socket ->
+                                val out = BufferedOutputStream(socket.getOutputStream())
 
-                        val safeName = addonName.replace("\\", "\\\\").replace("\"", "\\\"")
-                        val json = """{"action": "reload", "module_name": "$safeName"}"""
-                        val jsonBytes = json.toByteArray(StandardCharsets.UTF_8)
-                        val header = String.format("%-64s", jsonBytes.size.toString())
-                        val headerBytes = header.toByteArray(StandardCharsets.UTF_8)
+                                val safeName = addonName.replace("\\", "\\\\").replace("\"", "\\\"")
+                                val json = """{"action": "reload", "module_name": "$safeName"}"""
+                                val jsonBytes = json.toByteArray(StandardCharsets.UTF_8)
+                                val header = String.format("%-64s", jsonBytes.size.toString())
+                                val headerBytes = header.toByteArray(StandardCharsets.UTF_8)
 
-                        out.write(headerBytes)
-                        out.write(jsonBytes)
-                        out.flush()
-                    }
+                                out.write(headerBytes)
+                                out.write(jsonBytes)
+                                out.flush()
+                            }
 
-                    showNotification(project, "Reload command sent to Blender: $addonName")
-
-                } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Failed to send command: ${ex.message}", "Connection Error")
+                            showNotification(project, "Reload command sent to Blender: $addonName")
+                        } catch (ex: Exception) {
+                            ApplicationManager.getApplication().invokeLater {
+                                Messages.showErrorDialog(
+                                    project,
+                                    "Failed to send command: ${ex.message}",
+                                    "Connection Error",
+                                )
+                            }
+                        }
                     }
                 }
-            }
-        })
+            )
     }
 
     private fun showNotification(project: Project, content: String) {

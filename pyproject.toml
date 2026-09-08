@@ -19,6 +19,11 @@ dev = [
 # environment without trying to build a root package.
 package = false
 
+[tool.ruff]
+extend-exclude = [
+    "src/main/resources/python/templates",
+]
+
 [tool.pytest.ini_options]
 # probe_server.py and friends live under the plugin's resources, not on the
 # default import path. Add it so the tests can `import probe_server`.

@@ -21,12 +21,10 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
- * Represents the state of the Blender process during execution.
- * Handles the startup of the Blender process and communication with the Probe Server.
+ * Represents the state of the Blender process during execution. Handles the startup of the Blender
+ * process and communication with the Probe Server.
  */
-class BlenderRunningState(
-    environment: ExecutionEnvironment,
-) : CommandLineState(environment) {
+class BlenderRunningState(environment: ExecutionEnvironment) : CommandLineState(environment) {
 
     var debugPort: Int? = null
     var pydevdPath: String? = null
@@ -35,15 +33,16 @@ class BlenderRunningState(
     var cachedSourceRoot: String? = null
 
     companion object {
-        internal fun buildParameters(useFactoryStartup: Boolean, scriptPath: String): List<String> = buildList {
-            if (useFactoryStartup) {
-                add("--factory-startup")
+        internal fun buildParameters(useFactoryStartup: Boolean, scriptPath: String): List<String> =
+            buildList {
+                if (useFactoryStartup) {
+                    add("--factory-startup")
+                }
+                add("--python-exit-code")
+                add("1")
+                add("-P")
+                add(scriptPath)
             }
-            add("--python-exit-code")
-            add("1")
-            add("-P")
-            add(scriptPath)
-        }
     }
 
     /**
@@ -84,24 +83,37 @@ class BlenderRunningState(
     private fun resolveBlenderPathOrThrow(project: Project): String {
         val path = cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
         if (path.isNullOrEmpty()) {
-            throw ExecutionException("Blender executable not found. Please configure it in Settings or install 'blup'.")
+            throw ExecutionException(
+                "Blender executable not found. Please configure it in Settings or install 'blup'."
+            )
         }
         return path
     }
 
-    private fun buildCommandLine(project: Project, blenderPath: String, scriptPath: String): GeneralCommandLine {
+    private fun buildCommandLine(
+        project: Project,
+        blenderPath: String,
+        scriptPath: String,
+    ): GeneralCommandLine {
         val projectPath = project.basePath ?: ""
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
-        val sourceRoot = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
+        val sourceRoot =
+            cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
 
-        val cmd = GeneralCommandLine()
-            .withExePath(blenderPath)
-            .withParameters(buildParameters(BlenderSettings.getInstance(project).state.useFactoryStartup, scriptPath))
-            .withCharset(StandardCharsets.UTF_8)
-            .withWorkDirectory(projectPath)
-            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
-            .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
-            .withEnvironment("PYTHONUNBUFFERED", "1")
+        val cmd =
+            GeneralCommandLine()
+                .withExePath(blenderPath)
+                .withParameters(
+                    buildParameters(
+                        BlenderSettings.getInstance(project).state.useFactoryStartup,
+                        scriptPath,
+                    )
+                )
+                .withCharset(StandardCharsets.UTF_8)
+                .withWorkDirectory(projectPath)
+                .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
+                .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
+                .withEnvironment("PYTHONUNBUFFERED", "1")
 
         val port = debugPort
         val pyPath = pydevdPath
@@ -113,10 +125,11 @@ class BlenderRunningState(
     }
 
     private fun createProcessHandler(cmd: GeneralCommandLine, tempDir: File): ProcessHandler {
-        val processHandler = object : OSProcessHandler(cmd) {
-            override fun readerOptions(): BaseOutputReader.Options =
-                BaseOutputReader.Options.forMostlySilentProcess()
-        }
+        val processHandler =
+            object : OSProcessHandler(cmd) {
+                override fun readerOptions(): BaseOutputReader.Options =
+                    BaseOutputReader.Options.forMostlySilentProcess()
+            }
         processHandler.addProcessListener(ProbeProcessListener(tempDir))
         ProcessTerminatedListener.attach(processHandler)
         return processHandler

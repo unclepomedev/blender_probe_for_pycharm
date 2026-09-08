@@ -7,6 +7,7 @@ class StubContext:
     Holds the shared state and configuration for the stub generation process.
     Provides utility methods for type mapping and documentation linking.
     """
+
     def __init__(self, config: GeneratorConfig):
         """
         Initializes the context.

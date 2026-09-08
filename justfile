@@ -14,3 +14,12 @@ docs-open:
 
 c:
     ./gradlew check
+
+fmt-kt:
+    ktfmt --kotlinlang-style .
+
+fmt-python:
+    uv run --group dev ruff format
+    uv run --group dev ruff check --fix
+
+fmt: fmt-kt fmt-python

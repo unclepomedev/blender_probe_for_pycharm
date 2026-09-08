@@ -18,8 +18,9 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
             settings.state.blenderPath = "/dummy/path/to/blender"
 
             val basePath = project.basePath ?: error("Project base path is null")
-            val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath)
-                ?: error("VirtualFile not found for $basePath")
+            val baseDir =
+                LocalFileSystem.getInstance().findFileByPath(basePath)
+                    ?: error("VirtualFile not found for $basePath")
             val module = myFixture.module
 
             generator.generateProject(project, baseDir, Any(), module)
@@ -41,9 +42,18 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
             pyproject?.let {
                 val content = VfsUtil.loadText(it)
                 val expectedSlug = BlenderProbeUtils.normalizeModuleName(project.name)
-                assertTrue("Should contain project name", content.contains("name = \"$expectedSlug\""))
-                assertTrue("Should contain pip dependency", content.contains("dependencies = [\"pip\"]"))
-                assertTrue("Should use hatchling", content.contains("build-backend = \"hatchling.build\""))
+                assertTrue(
+                    "Should contain project name",
+                    content.contains("name = \"$expectedSlug\""),
+                )
+                assertTrue(
+                    "Should contain pip dependency",
+                    content.contains("dependencies = [\"pip\"]"),
+                )
+                assertTrue(
+                    "Should use hatchling",
+                    content.contains("build-backend = \"hatchling.build\""),
+                )
             }
 
             val expectedSlug = BlenderProbeUtils.normalizeModuleName(project.name)
@@ -62,21 +72,36 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                     val manifestContent = VfsUtil.loadText(manifestFile)
                     assertFalse("Placeholder replaced", manifestContent.contains("\${ADDON_NAME}"))
                     assertTrue("Slug injected", manifestContent.contains("id = \"$expectedSlug\""))
-                    assertTrue("GPL License should be specified", manifestContent.contains("SPDX:GPL-3.0-or-later"))
-                    assertTrue("Wheels array should be declared", manifestContent.contains("wheels = ["))
-                    assertTrue("Build section should be present", manifestContent.contains("[build]"))
+                    assertTrue(
+                        "GPL License should be specified",
+                        manifestContent.contains("SPDX:GPL-3.0-or-later"),
+                    )
+                    assertTrue(
+                        "Wheels array should be declared",
+                        manifestContent.contains("wheels = ["),
+                    )
+                    assertTrue(
+                        "Build section should be present",
+                        manifestContent.contains("[build]"),
+                    )
                 }
 
                 val wheelsDir = dir.findChild("wheels")
                 assertNotNull("wheels directory should exist next to the manifest", wheelsDir)
-                assertNotNull("wheels/README.md should document how to add wheels", wheelsDir?.findChild("README.md"))
+                assertNotNull(
+                    "wheels/README.md should document how to add wheels",
+                    wheelsDir?.findChild("README.md"),
+                )
             }
 
             val testsDir = baseDir.findChild("tests")
             assertNotNull("tests directory should exist", testsDir)
             testsDir?.let { dir ->
                 assertNotNull("test_sample.py missing", dir.findChild("test_sample.py"))
-                assertNotNull("run_tests.py missing (Required for CI)", dir.findChild("run_tests.py"))
+                assertNotNull(
+                    "run_tests.py missing (Required for CI)",
+                    dir.findChild("run_tests.py"),
+                )
             }
 
             val githubDir = baseDir.findChild(".github")
@@ -90,14 +115,16 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                 assertNotNull("CI workflow file missing", ciFile)
                 ciFile?.let {
                     val content = VfsUtil.loadText(it)
-                    assertTrue("Should run on ubuntu-latest", content.contains("runs-on: ubuntu-latest"))
+                    assertTrue(
+                        "Should run on ubuntu-latest",
+                        content.contains("runs-on: ubuntu-latest"),
+                    )
                     assertTrue("Should contain matrix strategy", content.contains("matrix:"))
                 }
             }
 
             val dependabot = githubDir?.findChild("dependabot.yml")
             assertNotNull("dependabot.yml missing", dependabot)
-
         } finally {
             settings.state.blenderPath = prevBlenderPath
         }
