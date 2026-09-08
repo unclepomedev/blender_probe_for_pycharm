@@ -1,0 +1,52 @@
+name: Smoke
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Smoke (${{ matrix.os }}, Blender ${{ matrix.blender-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        blender-version: [ "4.5.13", "5.2.1" ]
+
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Java
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      - name: Setup blup + Blender ${{ matrix.blender-version }}
+        uses: unclepomedev/setup-blup@v0
+        with:
+          blender-version: ${{ matrix.blender-version }}
+          cache: true
+
+      - name: Run smoke tests
+        shell: bash
+        run: ./gradlew smokeTest
+
+      - name: Collect smoke test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: smoke-test-result-${{ matrix.os }}-${{ matrix.blender-version }}
+          path: build/reports/tests/smokeTest
