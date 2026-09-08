@@ -218,6 +218,7 @@ def run_tests(test_dir):
 
     if result and not result.wasSuccessful():
         sys.exit(1)
+    sys.exit(0)
 
 
 if __name__ == "__main__":
