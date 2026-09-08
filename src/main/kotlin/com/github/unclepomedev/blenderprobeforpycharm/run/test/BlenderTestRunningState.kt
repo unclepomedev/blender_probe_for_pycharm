@@ -83,10 +83,10 @@ class BlenderTestRunningState(
             throw ExecutionException("Test directory is not specified in Run Configuration.")
         }
 
-        val basePath = project.basePath ?: throw ExecutionException("Project base path is invalid.")
-        val projectScript = File(basePath, "tests/run_tests.py")
+        val basePath = project.basePath
+        val projectScript = basePath?.let { File(it, "tests/run_tests.py") }
         val scriptFile =
-            if (projectScript.exists()) {
+            if (projectScript != null && projectScript.exists()) {
                 projectScript
             } else {
                 ScriptResourceUtils.extractResourceScript(
@@ -96,7 +96,7 @@ class BlenderTestRunningState(
             }
 
         val sourceRoot =
-            cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
+            cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath ?: ""
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
 
         val parameters =
@@ -106,15 +106,18 @@ class BlenderTestRunningState(
                 testDir,
             )
 
+        val workDir = cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
+
         val cmd =
             GeneralCommandLine()
                 .withExePath(blenderPath)
                 .withParameters(parameters)
                 .withCharset(StandardCharsets.UTF_8)
-                .withWorkDirectory(basePath)
+                .withWorkDirectory(workDir)
                 .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
                 .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
                 .withEnvironment("PYTHONDONTWRITEBYTECODE", "1")
+                .withEnvironment("PYTHONUNBUFFERED", "1")
 
         val processHandler =
             object : OSProcessHandler(cmd) {

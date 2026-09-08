@@ -27,3 +27,6 @@ fmt: fmt-kt fmt-python
 # Requires blup with a Blender version installed
 smoke-test:
     ./gradlew smokeTest
+
+r:
+    ./gradlew runIde
