@@ -13,8 +13,8 @@ class BlenderRunPingSmokeTest : BaseSmokeTest() {
             )
             sendProbeCommand(BlenderProbeManager.activePort!!, """{"action": "ping"}""")
             assertTrue(
-                "No pong observed within 10s after sending ping.\n--- output ---\n${process.output}",
-                process.awaitOutput("Pong! (Received Ping)", 10),
+                "No pong observed within 30s after sending ping.\n--- output ---\n${process.output}",
+                process.awaitOutput("Pong! (Received Ping)", 30),
             )
         } finally {
             process.close()

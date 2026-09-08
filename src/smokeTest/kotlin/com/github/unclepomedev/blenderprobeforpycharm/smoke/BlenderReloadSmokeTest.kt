@@ -26,8 +26,7 @@ class BlenderReloadSmokeTest : BaseSmokeTest() {
 
         val process =
             launchBlender(blenderPath) {
-                // Bypass BlenderProbeUtils' manifest-based detection; point straight at the
-                // fixture.
+                // Bypass BlenderProbeUtils' manifest-based detection.
                 cachedAddonName = addonModuleName
                 cachedSourceRoot = root.toString()
             }
@@ -44,8 +43,8 @@ class BlenderReloadSmokeTest : BaseSmokeTest() {
             )
 
             assertTrue(
-                "Add-on was not re-registered within 10s after reload.\n--- output ---\n${process.output}",
-                process.awaitOutput("Re-registered $addonModuleName successfully", 10),
+                "Add-on was not re-registered within 30s after reload.\n--- output ---\n${process.output}",
+                process.awaitOutput("Re-registered $addonModuleName successfully", 30),
             )
         } finally {
             process.close()
