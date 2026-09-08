@@ -1,20 +1,16 @@
 package com.github.unclepomedev.blenderprobeforpycharm.smoke
 
-import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
-import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
-import org.junit.Assume
 
 /**
  * Verifies that the Blender binary resolved via blup (BlenderSettings.resolveBlenderPath()) can
  * actually be launched. Skipped if blup or a Blender install is unavailable.
  */
-class BlenderBinarySmokeTest : BaseBlenderTest() {
+class BlenderBinarySmokeTest : BaseSmokeTest() {
 
     fun testResolvedBlenderBinaryRuns() {
-        val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
-        Assume.assumeTrue("No Blender resolved via blup; skipping.", blenderPath != null)
+        val blenderPath = requireBlenderBinary()
 
         val commandLine = GeneralCommandLine(blenderPath, "--background", "--version")
         val output = CapturingProcessHandler(commandLine).runProcess(30_000)
