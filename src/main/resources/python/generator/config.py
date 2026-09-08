@@ -9,6 +9,7 @@ class GeneratorConfig:
     Configuration settings for the Blender stub generator.
     Holds paths, module lists, and manual injections required for generation.
     """
+
     output_dir: str
     extra_modules: list[str] = field(
         default_factory=lambda: [

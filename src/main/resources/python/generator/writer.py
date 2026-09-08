@@ -9,6 +9,7 @@ class StubWriter:
     """
     Handles file writing and string formatting operations for stub generation.
     """
+
     def __init__(self, context: StubContext):
         """
         Initializes the writer.

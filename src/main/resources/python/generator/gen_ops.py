@@ -9,6 +9,7 @@ class BpyOpsGenerator:
     """
     Generates Python stubs for bpy.ops operators.
     """
+
     def __init__(self, context: StubContext, writer: StubWriter):
         """
         Initializes the operators generator.

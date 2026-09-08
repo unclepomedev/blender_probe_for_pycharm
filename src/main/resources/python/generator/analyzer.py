@@ -7,6 +7,7 @@ class StubAnalyzer:
     """
     Analyzes Blender internal data structures to extract relationships.
     """
+
     def __init__(self, context: StubContext):
         """
         Initializes the analyzer with the generation context.

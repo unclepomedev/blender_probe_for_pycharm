@@ -1,7 +1,7 @@
 import typing
 from typing import Any, Union, Sequence, TypeVar, Generic, Optional, Callable, Iterator
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 class bpy_prop_collection(Sequence[T], Generic[T]):
     def values(self) -> list[T]: ...
@@ -14,7 +14,7 @@ class bpy_prop_collection(Sequence[T], Generic[T]):
 
     # --- Generic fallbacks (Injected via Blender Probe) ---
 
-    def new(self, name: str = '', *args, **kwargs) -> T:
+    def new(self, name: str = "", *args, **kwargs) -> T:
         """
         Create a new item in this collection.
 
@@ -25,7 +25,13 @@ class bpy_prop_collection(Sequence[T], Generic[T]):
         """
         ...
 
-    def remove(self, value: T, do_unlink: bool = True, do_id_user: bool = True, do_ui_user: bool = True) -> None:
+    def remove(
+        self,
+        value: T,
+        do_unlink: bool = True,
+        do_id_user: bool = True,
+        do_ui_user: bool = True,
+    ) -> None:
         """
         Remove an item from this collection.
 
@@ -44,7 +50,13 @@ class bpy_prop_collection(Sequence[T], Generic[T]):
         """
         ...
 
-    def load(self, filepath: str, link: bool = False, relative: bool = False, assets: bool = False) -> Any:
+    def load(
+        self,
+        filepath: str,
+        link: bool = False,
+        relative: bool = False,
+        assets: bool = False,
+    ) -> Any:
         """
         Load data from an external blend file (Context Manager).
 

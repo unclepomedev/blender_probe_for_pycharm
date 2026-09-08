@@ -12,6 +12,7 @@ class ModuleGenerator:
     """
     Generates Python stubs for standard Blender modules (bpy, mathutils, etc.).
     """
+
     def __init__(self, context: StubContext, writer: StubWriter):
         """
         Initializes the module generator.
