@@ -48,7 +48,10 @@ class BlenderProbeUtilsTest : BaseBlenderTest() {
 
         val sourceRoot = BlenderProbeUtils.getAddonSourceRoot(project)
         assertNotNull(sourceRoot)
-        assertTrue("Source root should be the parent of 'savepoints'", sourceRoot!!.endsWith("/project_root"))
+        assertTrue(
+            "Source root should be the parent of 'savepoints'",
+            sourceRoot!!.endsWith("/project_root"),
+        )
     }
 
     fun testDetectAddonModuleName_Fallback() {

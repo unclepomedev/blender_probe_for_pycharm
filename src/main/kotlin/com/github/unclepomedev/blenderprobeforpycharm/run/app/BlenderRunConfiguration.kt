@@ -7,13 +7,13 @@ import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 
 /**
- * Run configuration for running Blender with the Probe Server.
- * This configuration does not require user settings as it uses the project-level Blender settings.
+ * Run configuration for running Blender with the Probe Server. This configuration does not require
+ * user settings as it uses the project-level Blender settings.
  */
 class BlenderRunConfiguration(
     project: Project,
     factory: ConfigurationFactory,
-    name: String
+    name: String,
 ) : RunConfigurationBase<RunConfigurationOptions>(project, factory, name) {
 
     /**

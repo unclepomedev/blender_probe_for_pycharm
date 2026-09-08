@@ -8,8 +8,8 @@ import com.intellij.xdebugger.evaluation.XDebuggerEvaluator
 import com.intellij.xdebugger.frame.XValue
 
 /**
- * Action to force a redraw of the Blender viewport.
- * This is useful during debugging when the Blender UI might not update automatically.
+ * Action to force a redraw of the Blender viewport. This is useful during debugging when the
+ * Blender UI might not update automatically.
  */
 class ForceBlenderRedrawAction : AnAction() {
 
@@ -29,17 +29,23 @@ class ForceBlenderRedrawAction : AnAction() {
         val session = XDebuggerManager.getInstance(project).currentSession ?: return
         val evaluator = session.debugProcess.evaluator ?: return
 
-        val scriptContent = try {
-            this.javaClass.classLoader.getResource("python/redraw.py")?.readText()
-        } catch (_: Exception) {
-            null
-        } ?: return
+        val scriptContent =
+            try {
+                this.javaClass.classLoader.getResource("python/redraw.py")?.readText()
+            } catch (_: Exception) {
+                null
+            } ?: return
 
-        evaluator.evaluate(scriptContent, object : XDebuggerEvaluator.XEvaluationCallback {
-            override fun evaluated(result: XValue) {}
-            override fun errorOccurred(errorMessage: String) {
-                println("Blender Probe Redraw Error: $errorMessage")
-            }
-        }, null)
+        evaluator.evaluate(
+            scriptContent,
+            object : XDebuggerEvaluator.XEvaluationCallback {
+                override fun evaluated(result: XValue) {}
+
+                override fun errorOccurred(errorMessage: String) {
+                    println("Blender Probe Redraw Error: $errorMessage")
+                }
+            },
+            null,
+        )
     }
 }

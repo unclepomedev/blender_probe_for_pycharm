@@ -30,12 +30,13 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 
 /**
- * Generator for creating a new Blender Add-on project.
- * Sets up the project structure, creates necessary files, and configures the environment.
+ * Generator for creating a new Blender Add-on project. Sets up the project structure, creates
+ * necessary files, and configures the environment.
  */
 class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
 
     override fun getName(): String = "Blender addon"
+
     override fun getLogo(): Icon = BlenderProbeIcons.Logo16
 
     /**
@@ -50,18 +51,19 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         project: Project,
         baseDir: VirtualFile,
         settings: Any,
-        module: Module
+        module: Module,
     ) {
         val rootIoFile = VfsUtil.virtualToIoFile(baseDir)
 
         val slug = BlenderProbeUtils.normalizeModuleName(project.name)
         val srcDir = File(rootIoFile, slug).apply { mkdirs() }
         val testsDir = File(rootIoFile, "tests").apply { mkdirs() }
-        val props = mapOf(
-            "ADDON_NAME" to project.name,
-            "ADDON_NAME_SLUG" to slug,
-            "AUTHOR" to (System.getProperty("user.name") ?: "Developer")
-        )
+        val props =
+            mapOf(
+                "ADDON_NAME" to project.name,
+                "ADDON_NAME_SLUG" to slug,
+                "AUTHOR" to (System.getProperty("user.name") ?: "Developer"),
+            )
 
         createFileFromTemplate("BlenderAddon_Manifest.toml", srcDir, "blender_manifest.toml", props)
         createWheelsDir(srcDir)
@@ -82,32 +84,36 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
 
         VfsUtil.markDirtyAndRefresh(true, true, true, baseDir)
         ProgressManager.getInstance()
-            .run(object : Task.Backgroundable(project, "Configuring Blender environment", false) {
-                override fun run(indicator: ProgressIndicator) {
-                    DumbService.getInstance(project).waitForSmartMode()
-                    ApplicationManager.getApplication().invokeLater {
-                        createDefaultRunConfiguration(project)
-                    }
-
-                    indicator.text = "Detecting Blender executable..."
-                    val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
-
-                    if (blenderPath != null) {
+            .run(
+                object : Task.Backgroundable(project, "Configuring Blender environment", false) {
+                    override fun run(indicator: ProgressIndicator) {
+                        DumbService.getInstance(project).waitForSmartMode()
                         ApplicationManager.getApplication().invokeLater {
-                            try {
-                                BlenderStubService.getInstance(project).generateStubs(blenderPath)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
+                            createDefaultRunConfiguration(project)
+                        }
+
+                        indicator.text = "Detecting Blender executable..."
+                        val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
+
+                        if (blenderPath != null) {
+                            ApplicationManager.getApplication().invokeLater {
+                                try {
+                                    BlenderStubService.getInstance(project)
+                                        .generateStubs(blenderPath)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
                             }
                         }
                     }
                 }
-            })
+            )
     }
 
     private fun createDefaultRunConfiguration(project: Project) {
         val runManager = RunManager.getInstance(project)
-        val type = ConfigurationTypeUtil.findConfigurationType(BlenderTestConfigurationType::class.java)
+        val type =
+            ConfigurationTypeUtil.findConfigurationType(BlenderTestConfigurationType::class.java)
         val factory = type.configurationFactories.firstOrNull() ?: return
 
         if (runManager.findConfigurationByTypeAndName(type.id, "All Tests") != null) return
@@ -129,12 +135,14 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         return object : ProjectGeneratorPeer<Any> {
             override fun getSettings(): Any = Any()
 
-            override fun getComponent(myLocationField: TextFieldWithBrowseButton, checkValid: Runnable): JComponent {
+            override fun getComponent(
+                myLocationField: TextFieldWithBrowseButton,
+                checkValid: Runnable,
+            ): JComponent {
                 return JPanel()
             }
 
-            override fun buildUI(settingsStep: SettingsStep) {
-            }
+            override fun buildUI(settingsStep: SettingsStep) {}
 
             override fun validate(): ValidationInfo? = null
 
@@ -142,7 +150,12 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         }
     }
 
-    private fun createFileFromTemplate(templateName: String, dir: File, fileName: String, props: Map<String, Any>) {
+    private fun createFileFromTemplate(
+        templateName: String,
+        dir: File,
+        fileName: String,
+        props: Map<String, Any>,
+    ) {
         val manager = FileTemplateManager.getDefaultInstance()
         val template = manager.getInternalTemplate(templateName)
         val content = template.getText(props)
@@ -150,10 +163,10 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
     }
 
     /**
-     * Creates the `wheels/` directory next to the manifest, where bundled Python
-     * dependencies live. A README documents how to populate it (and keeps the
-     * otherwise-empty directory tracked in git). Written directly rather than via
-     * a file template so its Markdown `#`/`$` characters aren't parsed as Velocity.
+     * Creates the `wheels/` directory next to the manifest, where bundled Python dependencies live.
+     * A README documents how to populate it (and keeps the otherwise-empty directory tracked in
+     * git). Written directly rather than via a file template so its Markdown `#`/`$` characters
+     * aren't parsed as Velocity.
      */
     private fun createWheelsDir(srcDir: File) {
         val wheelsDir = File(srcDir, "wheels").apply { mkdirs() }
@@ -161,7 +174,8 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
     }
 }
 
-private val WHEELS_README = """
+private val WHEELS_README =
+    """
     # Wheels
 
     Bundle third-party Python dependencies here as `.whl` files, then list each one
@@ -183,4 +197,5 @@ private val WHEELS_README = """
     cached under `.blender_probe/`.
 
     See: https://docs.blender.org/manual/en/latest/advanced/extensions/python_wheels.html
-""".trimIndent()
+    """
+        .trimIndent()

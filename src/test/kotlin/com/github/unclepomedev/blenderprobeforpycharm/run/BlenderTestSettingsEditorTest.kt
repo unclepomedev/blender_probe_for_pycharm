@@ -19,11 +19,15 @@ class BlenderTestSettingsEditorTest : BaseBlenderTest() {
             config.testDir = initialPath
             editor.resetFrom(config)
 
-            val newConfig = factory.createTemplateConfiguration(project) as BlenderTestRunConfiguration
+            val newConfig =
+                factory.createTemplateConfiguration(project) as BlenderTestRunConfiguration
 
             editor.applyTo(newConfig)
-            assertEquals("UI state should be applied to the configuration", initialPath, newConfig.testDir)
-
+            assertEquals(
+                "UI state should be applied to the configuration",
+                initialPath,
+                newConfig.testDir,
+            )
         } finally {
             Disposer.dispose(editor)
         }

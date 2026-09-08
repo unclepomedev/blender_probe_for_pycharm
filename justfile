@@ -14,3 +14,8 @@ docs-open:
 
 c:
     ./gradlew check
+
+fmt-kt:
+    ktfmt --kotlinlang-style .
+
+fmt: fmt-kt

@@ -20,7 +20,10 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
             assertTrue("file size should be greater than 0", extractedFile.length() > 0)
 
             val content = extractedFile.readText()
-            assertTrue("should include generator logic", content.contains("from generator.core import main"))
+            assertTrue(
+                "should include generator logic",
+                content.contains("from generator.core import main"),
+            )
         } finally {
             FileUtil.delete(extractedFile.parentFile)
         }
@@ -62,17 +65,24 @@ class ScriptResourceUtilsTest : BaseBlenderTest() {
         val entryPoint = ScriptResourceUtils.extractScriptsToTempDir("probe_server.py", "wheels.py")
 
         try {
-            assertEquals("first script should be returned as the entry point", "probe_server.py", entryPoint.name)
+            assertEquals(
+                "first script should be returned as the entry point",
+                "probe_server.py",
+                entryPoint.name,
+            )
             assertTrue("entry point should be physically present", entryPoint.exists())
 
             // The sibling must land in the same directory, or probe_server.py's
             // `from wheels import ...` would fail at runtime.
             val sibling = File(entryPoint.parentFile, "wheels.py")
-            assertTrue("sibling module must be extracted alongside the entry point", sibling.exists())
+            assertTrue(
+                "sibling module must be extracted alongside the entry point",
+                sibling.exists(),
+            )
 
             assertTrue(
                 "entry point should import its sibling",
-                entryPoint.readText().contains("from wheels import setup_dependencies")
+                entryPoint.readText().contains("from wheels import setup_dependencies"),
             )
         } finally {
             FileUtil.delete(entryPoint.parentFile)

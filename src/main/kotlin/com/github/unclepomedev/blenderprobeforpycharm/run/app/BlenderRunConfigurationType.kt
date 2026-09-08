@@ -10,13 +10,17 @@ import com.intellij.openapi.project.Project
 import javax.swing.Icon
 
 /**
- * Configuration type for the Blender Probe run configuration.
- * Defines the type of run configuration available in the "Run/Debug Configurations" dialog.
+ * Configuration type for the Blender Probe run configuration. Defines the type of run configuration
+ * available in the "Run/Debug Configurations" dialog.
  */
 class BlenderRunConfigurationType : ConfigurationType, DumbAware {
     override fun getIcon(): Icon = BlenderProbeIcons.Logo16
+
     override fun getDisplayName(): String = "Blender Probe (Dev)"
-    override fun getConfigurationTypeDescription(): String = "Run blender with Probe Server for development"
+
+    override fun getConfigurationTypeDescription(): String =
+        "Run blender with Probe Server for development"
+
     override fun getId(): String = "BlenderProbeRunConfiguration"
 
     private val factory: ConfigurationFactory = BlenderProbeRunConfigurationFactory(this)
@@ -26,9 +30,7 @@ class BlenderRunConfigurationType : ConfigurationType, DumbAware {
     }
 }
 
-/**
- * Factory for creating Blender Probe run configurations.
- */
+/** Factory for creating Blender Probe run configurations. */
 class BlenderProbeRunConfigurationFactory(type: ConfigurationType) : ConfigurationFactory(type) {
     override fun createTemplateConfiguration(project: Project): RunConfiguration {
         return BlenderRunConfiguration(project, this, "Blender Probe")

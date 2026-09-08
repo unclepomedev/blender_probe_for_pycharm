@@ -30,7 +30,10 @@ class BlenderSettingsTest : BaseBlenderTest() {
 
     fun testFactoryStartupDefaultsToTrue() {
         val settings = BlenderSettings.getInstance(project)
-        assertTrue("--factory-startup should be enabled by default", settings.state.useFactoryStartup)
+        assertTrue(
+            "--factory-startup should be enabled by default",
+            settings.state.useFactoryStartup,
+        )
     }
 
     fun testFactoryStartupSettingPersists() {

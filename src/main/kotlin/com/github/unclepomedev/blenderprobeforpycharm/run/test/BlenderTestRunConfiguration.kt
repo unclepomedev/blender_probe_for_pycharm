@@ -7,18 +7,16 @@ import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 
 /**
- * Run configuration for executing Blender tests.
- * Allows users to specify the directory containing the tests to run.
+ * Run configuration for executing Blender tests. Allows users to specify the directory containing
+ * the tests to run.
  */
 class BlenderTestRunConfiguration(
     project: Project,
     factory: ConfigurationFactory,
-    name: String
+    name: String,
 ) : RunConfigurationBase<BlenderTestRunConfigurationOptions>(project, factory, name) {
 
-    /**
-     * The directory containing the tests to be executed.
-     */
+    /** The directory containing the tests to be executed. */
     var testDir: String
         get() = options.testDir
         set(value) {
