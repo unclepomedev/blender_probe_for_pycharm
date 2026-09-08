@@ -22,16 +22,14 @@ class BlenderTestConfigurationType :
 
     companion object {
         const val ID = "BlenderTestRunConfiguration"
-
-        /**
-         * Retrieves the instance of BlenderTestConfigurationType.
-         *
-         * @return The configuration type instance.
-         */
-        fun getInstance(): BlenderTestConfigurationType {
-            return ConfigurationTypeUtil.findConfigurationType(
-                BlenderTestConfigurationType::class.java
-            )
-        }
     }
+}
+
+/**
+ * Retrieves the instance of BlenderTestConfigurationType.
+ *
+ * @return The configuration type instance.
+ */
+fun getInstance(): BlenderTestConfigurationType {
+    return ConfigurationTypeUtil.findConfigurationType(BlenderTestConfigurationType::class.java)
 }
