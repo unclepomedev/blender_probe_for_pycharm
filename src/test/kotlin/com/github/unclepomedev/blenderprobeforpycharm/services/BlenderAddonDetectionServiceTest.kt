@@ -77,8 +77,11 @@ class BlenderAddonDetectionServiceTest : BaseBlenderTest() {
         }
 
         val service = BlenderAddonDetectionService.getInstance(project)
-        val detectedName = service.getAddonModuleName()
-        assertEquals("real_addon", detectedName)
+        val result = service.getDetectionResult()
+        assertFalse(result.rejectedCandidates.any { it.path.contains("/tests/") })
+        assertFalse(result.isAmbiguous)
+        assertEquals("real_addon", service.getAddonModuleName())
+        assertEquals("real_addon", result.moduleName)
     }
 
     fun testManifestDeepInsideExcludedDirectory() {

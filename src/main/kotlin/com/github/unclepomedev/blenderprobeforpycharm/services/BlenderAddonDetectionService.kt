@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.services
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -60,7 +61,9 @@ class BlenderAddonDetectionService(project: Project) {
         }
 
     private fun computeAndCacheResult(): AddonDetectionResult {
-        val result = detector.detect()
+        val result = ApplicationManager.getApplication().runReadAction<AddonDetectionResult> {
+            detector.detect()
+        }
         reporter.report(result)
         cachedResult = result
         return result

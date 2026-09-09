@@ -3,6 +3,7 @@ package com.github.unclepomedev.blenderprobeforpycharm
 import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
@@ -31,7 +32,7 @@ class BlenderManifestChangeListener(private val project: Project) : BulkFileList
             is VFileDeleteEvent -> event.file.name == manifestName
             is VFileMoveEvent -> event.file.name == manifestName
             is VFilePropertyChangeEvent -> {
-                event.propertyName == "name" &&
+                event.propertyName == VirtualFile.PROP_NAME &&
                     (event.oldValue == manifestName || event.newValue == manifestName)
             }
             else -> false
