@@ -75,20 +75,20 @@ class BlenderSettingsTest : BaseBlenderTest() {
         val settings = BlenderSettings.getInstance(project)
         settings.loadState(BlenderSettings.State())
 
-        val entry1 = BlenderEntry("Blender 4.1", "/usr/local/bin/blender-4.1")
-        val entry2 = BlenderEntry("Blender 4.2", "/usr/local/bin/blender-4.2")
+        val entry1 = BlenderEntry("Blender 4.5", "/usr/local/bin/blender-4.5")
+        val entry2 = BlenderEntry("Blender 5.2", "/usr/local/bin/blender-5.2")
         settings.state.entries.add(entry1)
         settings.state.entries.add(entry2)
 
         // Select entry1
-        settings.setActiveEntry("Blender 4.1")
-        assertEquals("Blender 4.1", settings.state.currentEntryName)
-        assertEquals("/usr/local/bin/blender-4.1", settings.resolveBlenderPath())
+        settings.setActiveEntry("Blender 4.5")
+        assertEquals("Blender 4.5", settings.state.currentEntryName)
+        assertEquals("/usr/local/bin/blender-4.5", settings.resolveBlenderPath())
 
         // Switch to entry2
-        settings.setActiveEntry("Blender 4.2")
-        assertEquals("Blender 4.2", settings.state.currentEntryName)
-        assertEquals("/usr/local/bin/blender-4.2", settings.resolveBlenderPath())
+        settings.setActiveEntry("Blender 5.2")
+        assertEquals("Blender 5.2", settings.state.currentEntryName)
+        assertEquals("/usr/local/bin/blender-5.2", settings.resolveBlenderPath())
     }
 
     fun testMigrationFromLegacyBlenderPath() {

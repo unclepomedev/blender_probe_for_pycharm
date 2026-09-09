@@ -13,8 +13,8 @@ If you manage your Blender versions with [blup](https://github.com/unclepomedev/
 If you don't use `blup`, or if you want to quickly switch between multiple Blender versions (such as stable, LTS, and daily builds), you can register and manage Blender binaries in the settings dialog (similar to managing Python interpreters in PyCharm).
 
 1. Go to **Settings/Preferences** > **Tools** > **Blender Probe**.
-2. Click the **+** button under the **Configured Blender Executables** table, specify a **Name** (e.g. `Blender 4.2 LTS`), and select the **Executable path**:
-   * **Windows**: `C:\Program Files\Blender Foundation\Blender 5.0\blender.exe`
+2. Click the **+** button under the **Configured Blender Executables** table, specify a **Name** (e.g. `Blender 5.2 LTS`), and select the **Executable path**:
+   * **Windows**: `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`
    * **macOS**: `/Applications/Blender.app/Contents/MacOS/Blender`
    * **Linux**: `/usr/bin/blender`
 3. Select the binary you want to use from the **Active Blender executable** dropdown (choose `<Auto-detect via blup>` to use `blup` automatic detection).

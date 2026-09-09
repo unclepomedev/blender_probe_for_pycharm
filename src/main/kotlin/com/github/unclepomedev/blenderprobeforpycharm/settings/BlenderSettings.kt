@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets
 /**
  * Represents a configured Blender executable entry.
  *
- * @property name A display name for the Blender binary (e.g. "Blender 4.2", "Daily Build").
+ * @property name A display name for the Blender binary (e.g. "Blender 5.2", "Daily Build").
  * @property path The absolute path to the Blender executable.
  */
 data class BlenderEntry(

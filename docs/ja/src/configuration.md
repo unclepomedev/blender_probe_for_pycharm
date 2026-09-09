@@ -13,8 +13,8 @@ Blender Probe の動作には Blender ランタイムが必要です。そのた
 `blup` を使わない場合、あるいは複数の Blender バージョン（安定版、LTS、デイリービルドなど）を用途に応じて素早く切り替えたい場合、設定画面でバイナリを登録・管理できます（PyCharm における Python インタプリタの管理と同様です）。
 
 1. **Settings/Preferences** > **Tools** > **Blender Probe** を開きます。
-2. **Configured Blender Executables** のテーブル下の **+** ボタンをクリックし、**Name**（例: `Blender 4.2 LTS`）と **Executable path** を入力して追加します:
-   * **Windows**: `C:\Program Files\Blender Foundation\Blender 5.0\blender.exe`
+2. **Configured Blender Executables** のテーブル下の **+** ボタンをクリックし、**Name**（例: `Blender 5.2 LTS`）と **Executable path** を入力して追加します:
+   * **Windows**: `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`
    * **macOS**: `/Applications/Blender.app/Contents/MacOS/Blender`
    * **Linux**: `/usr/bin/blender`
 3. **Active Blender executable** ドロップダウンから、現在使用したい Blender 実行ファイルを選択します（`<Auto-detect via blup>` を選択すると `blup` による自動検出が行われます）。
