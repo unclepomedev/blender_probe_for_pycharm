@@ -21,12 +21,12 @@ Blender Probe の動作には Blender ランタイムが必要です。そのた
 4. **OK** または **Apply** をクリックします。
 
 <div>
-  <img src="images/configuration.png" alt="Blender実行ファイルパスの設定" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+  <img src="images/configuration.png" alt="Blender実行バイナリ一覧テーブルとアクティブ実行バイナリ選択UI" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
 </div>
 
 ## レガシーアドオンのサポート
 
 * **Launch Blender with `--factory-startup`**（**Settings/Preferences** > **Tools** > **Blender Probe** 内）:
-  標準のサポート動作に合わせてデフォルトで有効になっています。ユーザー環境（アドオンディレクトリ）に直接インストールされたサードパーティモジュールに依存している場合のみ無効化してください（`--factory-startup` はそれらのユーザー空間モジュールの読み込みを防ぎます）。これは実行/デバッグおよびテスト実行の両方に適用されます。
+  標準のサポート動作に合わせてデフォルトで有効になっています。アプリ実行、テスト実行、および型スタブ生成時にユーザーの `startup.blend` ファイルの読み込みをスキップし、クリーンで再現性の高い環境を保証します。カスタムの初期設定ファイル読み込みが必要な場合のみ無効化してください。
 
-  > **警告:** `--factory-startup` を無効化すると、インストール済みのサードパーティ製アドオンもすべて読み込まれるため、Blender の起動時にクラッシュする原因となる可能性があります。自己責任での利用となり、サポート対象外となります。
+  > **警告:** `--factory-startup` を無効化すると、カスタマイズされた初期スタートアップ設定が読み込まれるため、初期シーンや状態が変化し、テスト実行やアプリ起動時に予期しない動作を引き起こす可能性があります。

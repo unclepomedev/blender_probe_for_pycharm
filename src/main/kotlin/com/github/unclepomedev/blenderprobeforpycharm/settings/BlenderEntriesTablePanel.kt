@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.settings
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
 import com.intellij.ui.ToolbarDecorator
 import com.intellij.ui.table.JBTable
 import java.awt.BorderLayout
@@ -45,6 +46,14 @@ class BlenderEntriesTablePanel(
         if (dialog.showAndGet()) {
             val name = dialog.getEntryName()
             val path = dialog.getEntryPath()
+            if (containsName(name)) {
+                Messages.showErrorDialog(
+                    project,
+                    "An entry with the name '$name' already exists.",
+                    "Duplicate Name",
+                )
+                return
+            }
             tableModel.addRow(arrayOf(name, path))
             onEntriesChanged()
         }
@@ -73,6 +82,14 @@ class BlenderEntriesTablePanel(
             if (dialog.showAndGet()) {
                 val newName = dialog.getEntryName()
                 val newPath = dialog.getEntryPath()
+                if (newName != currentName && containsName(newName)) {
+                    Messages.showErrorDialog(
+                        project,
+                        "An entry with the name '$newName' already exists.",
+                        "Duplicate Name",
+                    )
+                    return
+                }
                 tableModel.setValueAt(newName, selectedRow, 0)
                 tableModel.setValueAt(newPath, selectedRow, 1)
                 onEntriesChanged()

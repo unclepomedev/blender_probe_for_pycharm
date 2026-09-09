@@ -40,9 +40,8 @@ class BlenderSettings(private val project: Project) :
      * @property entries List of configured Blender executables.
      * @property currentEntryName Name of the currently selected Blender executable from [entries].
      * @property useFactoryStartup Whether to launch Blender with the `--factory-startup` flag.
-     *   Defaults to true to mirror the standard, supported behavior. Disabling it lets Blender load
-     *   third-party add-ons and modules from the user environment, which can crash Blender on
-     *   startup (use at your own risk, outside the supported scope).
+     *   Defaults to true to mirror the standard, supported behavior, skipping the user's
+     *   `startup.blend` file across application runs, test runs, and stub generation.
      */
     data class State(
         var blenderPath: String = "",
@@ -95,13 +94,9 @@ class BlenderSettings(private val project: Project) :
     /** Returns the currently selected [BlenderEntry], or null if none is selected. */
     fun getSelectedEntry(): BlenderEntry? {
         if (myState.currentEntryName.isNotBlank()) {
-            myState.entries
-                .find { it.name == myState.currentEntryName }
-                ?.let {
-                    return it
-                }
+            return myState.entries.find { it.name == myState.currentEntryName }
         }
-        return myState.entries.firstOrNull()
+        return null
     }
 
     /**
@@ -126,13 +121,15 @@ class BlenderSettings(private val project: Project) :
 
     /**
      * Sets the active Blender entry by name. Updates both [State.currentEntryName] and
-     * [State.blenderPath].
+     * [State.blenderPath]. If [name] does not match any entry, [State.blenderPath] is cleared.
      */
     fun setActiveEntry(name: String) {
         myState.currentEntryName = name
         val entry = myState.entries.find { it.name == name }
         if (entry != null) {
             myState.blenderPath = entry.path
+        } else {
+            myState.blenderPath = ""
         }
     }
 

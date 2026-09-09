@@ -143,6 +143,10 @@ class BlenderSettingsConfigurable(project: Project) : Configurable {
         updateComboBox(selectName = targetSelection)
     }
 
+    override fun disposeUIResources() {
+        mainPanel = null
+    }
+
     private fun resolveTargetSelection(): String {
         val state = settings.state
         return when {

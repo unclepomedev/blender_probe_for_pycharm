@@ -91,6 +91,22 @@ class BlenderSettingsTest : BaseBlenderTest() {
         assertEquals("/usr/local/bin/blender-5.2", settings.resolveBlenderPath())
     }
 
+    fun testBlankCurrentEntryNameReturnsNullSelectedEntry() {
+        val settings = BlenderSettings.getInstance(project)
+        settings.loadState(BlenderSettings.State())
+
+        val entry = BlenderEntry("Blender 5.2", "/usr/local/bin/blender-5.2")
+        settings.state.entries.add(entry)
+        settings.state.currentEntryName = ""
+
+        assertNull("getSelectedEntry should return null when currentEntryName is blank", settings.getSelectedEntry())
+
+        // Also verify setActiveEntry with non-matching name clears blenderPath
+        settings.state.blenderPath = "/usr/local/bin/blender-5.2"
+        settings.setActiveEntry("NonExistent")
+        assertEquals("", settings.state.blenderPath)
+    }
+
     fun testMigrationFromLegacyBlenderPath() {
         val settings = BlenderSettings.getInstance(project)
         val legacyState =

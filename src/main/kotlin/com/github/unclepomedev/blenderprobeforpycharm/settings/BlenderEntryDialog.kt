@@ -3,8 +3,8 @@ package com.github.unclepomedev.blenderprobeforpycharm.settings
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
+import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.FormBuilder
@@ -53,22 +53,14 @@ class BlenderEntryDialog(
 
     fun getEntryPath(): String = pathField.text.trim()
 
-    override fun doOKAction() {
+    override fun doValidate(): ValidationInfo? {
         if (getEntryName().isBlank()) {
-            Messages.showErrorDialog(
-                "Please enter a name for the Blender binary.",
-                "Validation Error",
-            )
-            return
+            return ValidationInfo("Please enter a name for the Blender binary.", nameField)
         }
         if (getEntryPath().isBlank()) {
-            Messages.showErrorDialog(
-                "Please specify the Blender executable path.",
-                "Validation Error",
-            )
-            return
+            return ValidationInfo("Please specify the Blender executable path.", pathField)
         }
-        super.doOKAction()
+        return super.doValidate()
     }
 
     private fun autoFillNameIfBlank() {
