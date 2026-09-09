@@ -32,6 +32,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 
+// TODO refactor
 /**
  * Service responsible for generating Python stubs for the Blender API. It runs a Blender process in
  * the background to extract API information and generate stub files.
@@ -116,7 +117,7 @@ class BlenderStubService(private val project: Project) {
             )
     }
 
-    private fun prepareGeneratorEnvironment(tempDir: File, indicator: ProgressIndicator): String {
+    fun prepareGeneratorEnvironment(tempDir: File, indicator: ProgressIndicator): String {
         indicator.text = "Preparing generator scripts..."
 
         val manifestPath = "python/file_list.txt"
@@ -166,7 +167,7 @@ class BlenderStubService(private val project: Project) {
         }
     }
 
-    private fun runBlenderProcess(
+    fun runBlenderProcess(
         blenderPath: String,
         scriptPath: String,
         outputDir: File,
