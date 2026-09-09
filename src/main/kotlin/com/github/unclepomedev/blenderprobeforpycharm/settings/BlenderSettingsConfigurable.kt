@@ -4,8 +4,8 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.CollectionComboBoxModel
-import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.dsl.listCellRenderer.textListCellRenderer
 import com.intellij.util.ui.FormBuilder
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
@@ -56,19 +56,13 @@ class BlenderSettingsConfigurable(project: Project) : Configurable {
     }
 
     private fun setupComboBoxRenderer() {
-        currentExecutableComboBox.renderer =
-            SimpleListCellRenderer.create("") { value ->
-                if (value == AUTO_DETECT_OPTION) {
-                    "$AUTO_DETECT_OPTION (Recommended if blup is configured)"
-                } else {
-                    val matchingEntry = entriesTablePanel.findEntryByName(value)
-                    if (matchingEntry != null) {
-                        "${matchingEntry.name} (${matchingEntry.path})"
-                    } else {
-                        value ?: ""
-                    }
-                }
+        currentExecutableComboBox.renderer = textListCellRenderer { value ->
+            if (value == AUTO_DETECT_OPTION) {
+                "$AUTO_DETECT_OPTION (Recommended if blup is configured)"
+            } else {
+                entriesTablePanel.findEntryByName(value)?.let { "${it.name} (${it.path})" } ?: value
             }
+        }
     }
 
     private fun createTopFormPanel(): JPanel {
