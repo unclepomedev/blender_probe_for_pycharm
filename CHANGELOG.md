@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-09
+
+### Added
+- Multi-binary Blender Executable Management:
+  - Configure and manage multiple Blender executables in a list (Settings > Tools > Blender Probe), similar to Python interpreters in PyCharm.
+
 ## [0.3.2] - 2026-07-13
 
 ### Added
