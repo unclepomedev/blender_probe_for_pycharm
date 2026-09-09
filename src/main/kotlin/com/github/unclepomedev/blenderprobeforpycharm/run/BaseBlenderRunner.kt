@@ -114,13 +114,11 @@ abstract class BaseBlenderRunner<T : BlenderExecutionState> : AsyncProgramRunner
         ApplicationManager.getApplication().runReadAction {
             val detection = BlenderManifestDetector.detectAddon(project)
             if (!detection.isResolved) {
-                val message = "Failed to resolve add-on:\n" + detection.formatMessage()
                 BlenderNotificationUtils.showNotificationWithSettings(
                     project,
-                    "Addon Detection Failed",
+                    "Addon Manifest Not Found",
                     detection.formatMessage(),
                 )
-                throw ExecutionException(message)
             }
             state.cachedAddonName = detection.moduleName
             state.cachedSourceRoot = detection.sourceRoot ?: project.basePath
