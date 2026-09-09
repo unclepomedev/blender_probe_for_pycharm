@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+- Improved Blender add-on detection when multiple manifests are present by consistently selecting the most appropriate candidate.
 - Internally changed the JetBrains API usage.
 
 ## [0.4.0] - 2026-09-09
