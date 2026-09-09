@@ -101,9 +101,11 @@ class BlenderSettingsTest : BaseBlenderTest() {
 
         assertNull("getSelectedEntry should return null when currentEntryName is blank", settings.getSelectedEntry())
 
-        // Also verify setActiveEntry with non-matching name clears blenderPath
+        // Also verify setActiveEntry with non-matching name clears currentEntryName and blenderPath
+        settings.state.currentEntryName = "Blender 5.2"
         settings.state.blenderPath = "/usr/local/bin/blender-5.2"
         settings.setActiveEntry("NonExistent")
+        assertEquals("", settings.state.currentEntryName)
         assertEquals("", settings.state.blenderPath)
     }
 

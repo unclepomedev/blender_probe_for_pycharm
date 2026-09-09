@@ -121,14 +121,16 @@ class BlenderSettings(private val project: Project) :
 
     /**
      * Sets the active Blender entry by name. Updates both [State.currentEntryName] and
-     * [State.blenderPath]. If [name] does not match any entry, [State.blenderPath] is cleared.
+     * [State.blenderPath]. If [name] does not match any entry, [State.currentEntryName] and
+     * [State.blenderPath] are cleared.
      */
     fun setActiveEntry(name: String) {
-        myState.currentEntryName = name
         val entry = myState.entries.find { it.name == name }
         if (entry != null) {
+            myState.currentEntryName = entry.name
             myState.blenderPath = entry.path
         } else {
+            myState.currentEntryName = ""
             myState.blenderPath = ""
         }
     }
