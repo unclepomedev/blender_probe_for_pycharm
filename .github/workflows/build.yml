@@ -31,10 +31,18 @@ jobs:
           build-scan-terms-of-use-url: 'https://gradle.com/terms-of-service'
           build-scan-terms-of-use-agree: 'yes'
 
-      - name: Build plugin
-        run: ./gradlew buildPlugin
+      - name: Build plugin and run tests
+        run: ./gradlew buildPlugin check
+
+      - name: Collect Tests Result
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: tests-result
+          path: ${{ github.workspace }}/build/reports/tests
 
       - name: Prepare Plugin Artifact
+        if: ${{ !cancelled() }}
         id: artifact
         shell: bash
         run: |
@@ -49,39 +57,6 @@ jobs:
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
-
-  test:
-    name: Test
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Fetch Sources
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Setup Java
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
-        with:
-          distribution: zulu
-          java-version: 21
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
-        with:
-          build-scan-publish: ${{ github.event_name != 'pull_request' }}
-          build-scan-terms-of-use-url: 'https://gradle.com/terms-of-service'
-          build-scan-terms-of-use-agree: 'yes'
-          cache-read-only: true
-
-      - name: Run Tests
-        run: ./gradlew check
-
-      - name: Collect Tests Result
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: tests-result
-          path: ${{ github.workspace }}/build/reports/tests
 
   pythonTest:
     name: Python tests
@@ -163,7 +138,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [ build, test, pythonTest, inspectCode, verify ]
+    needs: [ build, pythonTest, inspectCode, verify ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
