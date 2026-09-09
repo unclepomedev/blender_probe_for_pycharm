@@ -46,6 +46,19 @@ class BlenderSettingsTest : BaseBlenderTest() {
 
     fun testResolveBlenderPathDoesNotFailWhenBasePathDoesNotExist() {
         val settings = BlenderSettings.getInstance(project)
+        settings.state.blenderPath = ""
+
+        val basePath = project.basePath
+        assertNotNull("Project basePath should not be null", basePath)
+        val baseDir = java.io.File(basePath!!)
+        if (baseDir.exists()) {
+            baseDir.deleteRecursively()
+        }
+        assertFalse(
+            "Project basePath should not exist to verify fallback behavior",
+            baseDir.exists(),
+        )
+
         // Ensure no exception is thrown when resolving path with non-existent basePath
         try {
             settings.resolveBlenderPath()
