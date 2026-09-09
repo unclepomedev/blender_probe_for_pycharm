@@ -6,6 +6,7 @@ import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.components.*
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
@@ -86,7 +87,7 @@ class BlenderSettings(private val project: Project) :
             val cmd =
                 GeneralCommandLine("blup", "which")
                     .apply {
-                        if (basePath != null) {
+                        if (basePath != null && File(basePath).isDirectory) {
                             withWorkDirectory(basePath)
                         }
                     }
