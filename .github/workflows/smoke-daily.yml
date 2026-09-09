@@ -33,6 +33,7 @@ jobs:
       - name: Setup blup + Blender (daily)
         uses: unclepomedev/setup-blup@bb3f2f8d206213451dcbced6663180a84a42064c # v0
         with:
+          blender-version: 'daily'
           daily: true
           cache: true
 
