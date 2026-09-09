@@ -128,6 +128,13 @@ class BlenderSettingsTest : BaseBlenderTest() {
             "/Applications/Blender.app/Contents/MacOS/Blender",
             settings.resolveBlenderPath(),
         )
+
+        // Path with .exe extension should strip extension in migrated entry name
+        val exeLegacyState = BlenderSettings.State(blenderPath = "/usr/local/bin/blender.exe")
+        settings.state.entries.clear()
+        settings.loadState(exeLegacyState)
+        assertEquals("blender", settings.state.entries.first().name)
+        assertEquals("blender", settings.state.currentEntryName)
     }
 
     fun testConfigurableUIStateAndPersistence() {

@@ -85,7 +85,8 @@ class BlenderSettings(private val project: Project) :
     /** Migrates legacy single blenderPath to entries list if entries is empty. */
     private fun migrateIfNeeded() {
         if (myState.entries.isEmpty() && myState.blenderPath.isNotBlank()) {
-            val entryName = File(myState.blenderPath).name.ifBlank { "Blender" }
+            val file = File(myState.blenderPath)
+            val entryName = file.nameWithoutExtension.ifBlank { file.name }.ifBlank { "Blender" }
             myState.entries.add(BlenderEntry(name = entryName, path = myState.blenderPath))
             myState.currentEntryName = entryName
         }
