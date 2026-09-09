@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Internally changed the JetBrains API usage.
+
 ## [0.4.0] - 2026-09-09
 
 ### Added
