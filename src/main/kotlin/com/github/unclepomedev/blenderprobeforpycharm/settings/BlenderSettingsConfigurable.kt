@@ -30,6 +30,7 @@ class BlenderSettingsConfigurable(private val project: Project) :
                     val descriptor =
                         FileChooserDescriptorFactory.createSingleFileOrExecutableAppDescriptor()
                             .withTitle("Select Blender Executable")
+                    @Suppress("UnstableApiUsage") // textFieldWithBrowseButton is experimental
                     textFieldWithBrowseButton(
                             project = project,
                             fileChooserDescriptor = descriptor,

@@ -12,31 +12,6 @@ import com.jetbrains.python.psi.*
  * checking for properties.
  */
 class BlenderPropertySuppressor : InspectionSuppressor {
-
-    companion object {
-        private val ALLOWED_IDS =
-            setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints", "PyPep8Naming")
-
-        private val BLENDER_PROPS =
-            setOf(
-                "StringProperty",
-                "IntProperty",
-                "BoolProperty",
-                "FloatProperty",
-                "EnumProperty",
-                "PointerProperty",
-                "CollectionProperty",
-                "FloatVectorProperty",
-                "IntVectorProperty",
-                "BoolVectorProperty",
-                "RemoveProperty",
-            )
-
-        // Matches Blender naming convention (e.g. MY_ADDON_OT_op_name). Allows underscores in the
-        // prefix.
-        private val BLENDER_NAMING_REGEX = Regex("^[A-Z][A-Z0-9_]+_[A-Z]{2}_[a-z0-9_]+$")
-    }
-
     /**
      * Checks if the given inspection tool should be suppressed for the element.
      *
@@ -107,3 +82,24 @@ class BlenderPropertySuppressor : InspectionSuppressor {
         return SuppressQuickFix.EMPTY_ARRAY
     }
 }
+
+private val ALLOWED_IDS = setOf("PyTypeChecker", "PyAnnotation", "PyTypeHints", "PyPep8Naming")
+
+private val BLENDER_PROPS =
+    setOf(
+        "StringProperty",
+        "IntProperty",
+        "BoolProperty",
+        "FloatProperty",
+        "EnumProperty",
+        "PointerProperty",
+        "CollectionProperty",
+        "FloatVectorProperty",
+        "IntVectorProperty",
+        "BoolVectorProperty",
+        "RemoveProperty",
+    )
+
+// Matches Blender naming convention (e.g. MY_ADDON_OT_op_name). Allows underscores in the
+// prefix.
+private val BLENDER_NAMING_REGEX = Regex("^[A-Z][A-Z0-9_]+_[A-Z]{2}_[a-z0-9_]+$")

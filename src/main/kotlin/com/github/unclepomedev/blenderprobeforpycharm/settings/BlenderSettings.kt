@@ -38,6 +38,7 @@ class BlenderSettings(private val project: Project) :
 
     companion object {
         private val LOG = Logger.getInstance(BlenderSettings::class.java)
+        private const val BLUP_TIMEOUT_MS = 2000
 
         /**
          * Retrieves the instance of BlenderSettings for the given project.
@@ -79,17 +80,21 @@ class BlenderSettings(private val project: Project) :
     }
 
     private fun detectPathViaBlup(): String? {
-        val basePath = project.basePath ?: return null
+        val basePath = project.basePath
 
         try {
             val cmd =
                 GeneralCommandLine("blup", "which")
-                    .withWorkDirectory(basePath)
+                    .apply {
+                        if (basePath != null) {
+                            withWorkDirectory(basePath)
+                        }
+                    }
                     .withCharset(StandardCharsets.UTF_8)
                     .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
             val handler = CapturingProcessHandler(cmd)
-            val output = handler.runProcess(2000) // 2 sec timeout
+            val output = handler.runProcess(BLUP_TIMEOUT_MS)
 
             if (output.exitCode == 0) {
                 val path = output.stdout.trim()

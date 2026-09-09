@@ -1,32 +1,25 @@
-name: Smoke
+name: Smoke (daily build)
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   smoke:
-    name: Smoke (${{ matrix.os }}, Blender ${{ matrix.blender-version }})
+    name: Smoke (${{ matrix.os }}, daily)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
-        blender-version: [ "4.5.13", "5.2.1" ]
 
     steps:
       - name: Fetch Sources
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
 
       - name: Setup Java
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
@@ -36,22 +29,20 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
-        with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
 
-      - name: Setup blup + Blender ${{ matrix.blender-version }}
+      - name: Setup blup + Blender (daily)
         uses: unclepomedev/setup-blup@bb3f2f8d206213451dcbced6663180a84a42064c # v0
         with:
-          blender-version: ${{ matrix.blender-version }}
+          daily: true
           cache: true
-
-      - name: Install Xvfb (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Setup Mesa3D (Windows)
         if: runner.os == 'Windows'
         uses: ssciwr/setup-mesa-dist-win@2dfeaebfa514f74c2b8cd8d27108c31486d33e72 # v3
+
+      - name: Install Xvfb (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
 
       - name: Run smoke tests (Linux)
         if: runner.os == 'Linux'
@@ -67,5 +58,5 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: smoke-test-result-${{ matrix.os }}-${{ matrix.blender-version }}
+          name: smoke-daily-result-${{ matrix.os }}
           path: build/reports/tests/smokeTest

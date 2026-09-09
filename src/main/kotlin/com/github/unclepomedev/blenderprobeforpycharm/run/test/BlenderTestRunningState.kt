@@ -16,6 +16,7 @@ import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.ProgramRunner
 import com.intellij.execution.testframework.sm.SMTestRunnerConnectionUtil
 import com.intellij.execution.ui.ConsoleView
+import com.intellij.openapi.project.Project
 import com.intellij.util.io.BaseOutputReader
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -69,32 +70,56 @@ class BlenderTestRunningState(
      */
     override fun startProcess(): ProcessHandler {
         val project = environment.project
+        val blenderPath = resolveBlenderPath(project)
+        val basePath = resolveBasePath(project)
+        val testDir = resolveTestDir()
+        val scriptFile = resolveScriptFile(basePath)
+
+        val cmd = buildCommandLine(basePath, blenderPath, scriptFile.absolutePath, testDir)
+        return createProcessHandler(cmd)
+    }
+
+    private fun resolveBlenderPath(project: Project): String {
         val blenderPath =
             cachedBlenderPath ?: BlenderSettings.getInstance(project).resolveBlenderPath()
-
         if (blenderPath.isNullOrEmpty()) {
             throw ExecutionException(
                 "Blender executable not found. Please configure it in Settings or ensure 'blup' is installed."
             )
         }
+        return blenderPath
+    }
 
+    private fun resolveBasePath(project: Project): String =
+        project.basePath ?: throw ExecutionException("Project base path is invalid.")
+
+    private fun resolveTestDir(): String {
         val testDir = configuration.testDir
         if (testDir.isEmpty()) {
             throw ExecutionException("Test directory is not specified in Run Configuration.")
         }
+        return testDir
+    }
 
-        val basePath = project.basePath ?: throw ExecutionException("Project base path is invalid.")
+    private fun resolveScriptFile(basePath: String): File {
         val projectScript = File(basePath, "tests/run_tests.py")
-        val scriptFile =
-            if (projectScript.exists()) {
-                projectScript
-            } else {
-                ScriptResourceUtils.extractResourceScript(
-                    "python/run_tests.py",
-                    "blender_test_runner",
-                )
-            }
+        return if (projectScript.exists()) {
+            projectScript
+        } else {
+            ScriptResourceUtils.extractResourceScript(
+                "python/run_tests.py",
+                "blender_test_runner",
+            )
+        }
+    }
 
+    private fun buildCommandLine(
+        basePath: String,
+        blenderPath: String,
+        scriptPath: String,
+        testDir: String,
+    ): GeneralCommandLine {
+        val project = environment.project
         val sourceRoot =
             cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
         val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
@@ -102,20 +127,22 @@ class BlenderTestRunningState(
         val parameters =
             buildParameters(
                 BlenderSettings.getInstance(project).state.useFactoryStartup,
-                scriptFile.absolutePath,
+                scriptPath,
                 testDir,
             )
 
-        val cmd =
-            GeneralCommandLine()
-                .withExePath(blenderPath)
-                .withParameters(parameters)
-                .withCharset(StandardCharsets.UTF_8)
-                .withWorkDirectory(basePath)
-                .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
-                .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
-                .withEnvironment("PYTHONDONTWRITEBYTECODE", "1")
+        return GeneralCommandLine()
+            .withExePath(blenderPath)
+            .withParameters(parameters)
+            .withCharset(StandardCharsets.UTF_8)
+            .withWorkDirectory(basePath)
+            .withEnvironment("BLENDER_PROBE_PROJECT_ROOT", sourceRoot)
+            .withEnvironment("BLENDER_PROBE_ADDON_NAME", addonName)
+            .withEnvironment("PYTHONDONTWRITEBYTECODE", "1")
+            .withEnvironment("PYTHONUNBUFFERED", "1")
+    }
 
+    private fun createProcessHandler(cmd: GeneralCommandLine): ProcessHandler {
         val processHandler =
             object : OSProcessHandler(cmd) {
                 override fun readerOptions(): BaseOutputReader.Options {

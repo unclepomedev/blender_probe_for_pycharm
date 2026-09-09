@@ -15,7 +15,7 @@ import com.intellij.util.Alarm
 @Service(Service.Level.PROJECT)
 class BlenderAutoReloadService(private val project: Project) : Disposable {
 
-    @Suppress("UnstableApiUsage") private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
+    private val alarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val delayMillis = 500
 
     /**
