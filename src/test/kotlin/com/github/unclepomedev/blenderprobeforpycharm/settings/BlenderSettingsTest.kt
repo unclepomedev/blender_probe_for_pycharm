@@ -43,4 +43,16 @@ class BlenderSettingsTest : BaseBlenderTest() {
         settings.loadState(newState)
         assertFalse(settings.state.useFactoryStartup)
     }
+
+    fun testResolveBlenderPathDoesNotFailWhenBasePathDoesNotExist() {
+        val settings = BlenderSettings.getInstance(project)
+        // Ensure no exception is thrown when resolving path with non-existent basePath
+        try {
+            settings.resolveBlenderPath()
+        } catch (e: Exception) {
+            fail(
+                "resolveBlenderPath should not throw an exception when basePath does not exist: ${e.message}"
+            )
+        }
+    }
 }
