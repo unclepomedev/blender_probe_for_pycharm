@@ -43,12 +43,6 @@ class ReloadAddonAction : AnAction() {
                             > {
                                 BlenderManifestDetector.detectAddon(project)
                             }
-                        if (!detection.isResolved) {
-                            ApplicationManager.getApplication().invokeLater {
-                                notifyDetectionFailed(project, detection)
-                            }
-                            return
-                        }
                         performReload(project, port, detection)
                     }
                 }
@@ -74,15 +68,6 @@ class ReloadAddonAction : AnAction() {
         )
     }
 
-    private fun notifyDetectionFailed(project: Project, detection: AddonDetectionResult) {
-        BlenderNotificationUtils.showNotificationWithSettings(
-            project,
-            "Addon Detection Failed",
-            detection.formatMessage(),
-            NotificationType.ERROR,
-        )
-    }
-
     private fun notifyReloadSuccess(
         project: Project,
         addonName: String,
@@ -92,11 +77,13 @@ class ReloadAddonAction : AnAction() {
             append("Reload command sent for '$addonName'.\n")
             append(detection.formatMessage())
         }
+        val notificationType =
+            if (detection.isResolved) NotificationType.INFORMATION else NotificationType.WARNING
         BlenderNotificationUtils.showNotificationWithSettings(
             project,
             "Addon Reloaded",
             successContent,
-            NotificationType.INFORMATION,
+            notificationType,
         )
     }
 
