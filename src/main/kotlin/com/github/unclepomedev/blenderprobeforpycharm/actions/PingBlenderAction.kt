@@ -3,6 +3,7 @@ package com.github.unclepomedev.blenderprobeforpycharm.actions
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ui.Messages
 import java.io.OutputStreamWriter
 import java.net.Socket
@@ -28,7 +29,7 @@ class PingBlenderAction : AnAction() {
             return
         }
 
-        com.intellij.openapi.application.ApplicationManager.getApplication().executeOnPooledThread {
+        ApplicationManager.getApplication().executeOnPooledThread {
             try {
                 val socket = Socket()
                 socket.connect(java.net.InetSocketAddress("127.0.0.1", port), 3_000)
@@ -44,11 +45,11 @@ class PingBlenderAction : AnAction() {
                     writer.write(json)
                     writer.flush()
                 }
-                com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().invokeLater {
                     Messages.showInfoMessage("Ping sent to Blender!", "Blender Probe")
                 }
             } catch (ex: Exception) {
-                com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().invokeLater {
                     Messages.showErrorDialog(
                         "Could not connect to Blender. Is it running via Blender Probe?\n${ex.message}",
                         "Connection Error",
