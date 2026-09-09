@@ -1,7 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
+import com.github.unclepomedev.blenderprobeforpycharm.manifest.BlenderManifestDetector
 import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestConfigurationType
 import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestRunConfiguration
 import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService
@@ -55,7 +55,7 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
     ) {
         val rootIoFile = VfsUtil.virtualToIoFile(baseDir)
 
-        val slug = BlenderProbeUtils.normalizeModuleName(project.name)
+        val slug = BlenderManifestDetector.normalizeModuleName(project.name)
         val srcDir = File(rootIoFile, slug).apply { mkdirs() }
         val testsDir = File(rootIoFile, "tests").apply { mkdirs() }
         val props =

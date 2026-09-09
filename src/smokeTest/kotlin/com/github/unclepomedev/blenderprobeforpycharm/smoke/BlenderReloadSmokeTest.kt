@@ -25,7 +25,7 @@ class BlenderReloadSmokeTest : BaseSmokeTest() {
 
         val process =
             launchBlender(blenderPath) {
-                // Bypass BlenderProbeUtils' manifest-based detection.
+                // Bypass BlenderManifestDetector's manifest-based detection.
                 cachedAddonName = addonModuleName
                 cachedSourceRoot = root.toString()
             }

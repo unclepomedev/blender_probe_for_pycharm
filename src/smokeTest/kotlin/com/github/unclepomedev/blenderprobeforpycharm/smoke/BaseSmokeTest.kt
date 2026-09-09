@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.smoke
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
+import com.github.unclepomedev.blenderprobeforpycharm.probe.BlenderProbeClient
 import com.github.unclepomedev.blenderprobeforpycharm.run.app.BlenderProbeRunConfigurationFactory
 import com.github.unclepomedev.blenderprobeforpycharm.run.app.BlenderRunConfiguration
 import com.github.unclepomedev.blenderprobeforpycharm.run.app.BlenderRunConfigurationType
@@ -20,11 +21,10 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder
 import com.intellij.execution.runners.ProgramRunner
+import com.intellij.execution.ui.ExecutionConsole
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Key
-import java.io.OutputStreamWriter
-import java.net.InetSocketAddress
-import java.net.Socket
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
@@ -110,14 +110,7 @@ abstract class BaseSmokeTest : BaseBlenderTest() {
 
     /** Sends a probe command using the same wire format as PingBlenderAction/ReloadAddonAction. */
     protected fun sendProbeCommand(port: Int, json: String) {
-        Socket().use { socket ->
-            socket.connect(InetSocketAddress("127.0.0.1", port), 3_000)
-            val writer = OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)
-            val body = json.toByteArray(StandardCharsets.UTF_8)
-            writer.write(String.format("%-64s", body.size.toString()))
-            writer.write(json)
-            writer.flush()
-        }
+        BlenderProbeClient.sendCommand(port, json)
     }
 
     /** Copies a resource file from classpath to the target file path. */
@@ -140,7 +133,7 @@ abstract class BaseSmokeTest : BaseBlenderTest() {
     protected class RunningBlenderProcess(
         private val handler: ProcessHandler,
         val output: StringBuffer,
-        private val console: com.intellij.execution.ui.ExecutionConsole? = null,
+        private val console: ExecutionConsole? = null,
     ) {
         fun await(timeoutSeconds: Long, condition: () -> Boolean): Boolean {
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds)
@@ -161,8 +154,8 @@ abstract class BaseSmokeTest : BaseBlenderTest() {
                     error("Blender process did not terminate within 10s after destroyProcess")
                 }
             } finally {
-                (console as? com.intellij.openapi.Disposable)?.let {
-                    com.intellij.openapi.util.Disposer.dispose(it)
+                (console as? Disposable)?.let {
+                    Disposer.dispose(it)
                 }
             }
         }

@@ -1,8 +1,9 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
+import com.github.unclepomedev.blenderprobeforpycharm.manifest.BlenderManifestDetector
+import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderExecutionState
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.DefaultExecutionResult
 import com.intellij.execution.ExecutionException
@@ -24,13 +25,14 @@ import java.nio.charset.StandardCharsets
  * Represents the state of the Blender process during execution. Handles the startup of the Blender
  * process and communication with the Probe Server.
  */
-class BlenderRunningState(environment: ExecutionEnvironment) : CommandLineState(environment) {
+class BlenderRunningState(environment: ExecutionEnvironment) :
+    CommandLineState(environment), BlenderExecutionState {
 
     var debugPort: Int? = null
     var pydevdPath: String? = null
-    var cachedBlenderPath: String? = null
-    var cachedAddonName: String? = null
-    var cachedSourceRoot: String? = null
+    override var cachedBlenderPath: String? = null
+    override var cachedAddonName: String? = null
+    override var cachedSourceRoot: String? = null
 
     companion object {
         internal fun buildParameters(useFactoryStartup: Boolean, scriptPath: String): List<String> =
@@ -96,9 +98,9 @@ class BlenderRunningState(environment: ExecutionEnvironment) : CommandLineState(
         scriptPath: String,
     ): GeneralCommandLine {
         val projectPath = project.basePath ?: ""
-        val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
-        val sourceRoot =
-            cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
+        val detection = BlenderManifestDetector.detectAddon(project)
+        val addonName = cachedAddonName ?: detection.moduleName
+        val sourceRoot = cachedSourceRoot ?: detection.sourceRoot ?: projectPath
 
         val cmd =
             GeneralCommandLine()

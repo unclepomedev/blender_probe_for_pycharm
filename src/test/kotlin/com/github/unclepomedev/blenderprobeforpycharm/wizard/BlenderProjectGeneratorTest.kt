@@ -1,7 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
+import com.github.unclepomedev.blenderprobeforpycharm.manifest.BlenderManifestDetector
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
@@ -41,7 +41,7 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
             assertNotNull("pyproject.toml should be created", pyproject)
             pyproject?.let {
                 val content = VfsUtil.loadText(it)
-                val expectedSlug = BlenderProbeUtils.normalizeModuleName(project.name)
+                val expectedSlug = BlenderManifestDetector.normalizeModuleName(project.name)
                 assertTrue(
                     "Should contain project name",
                     content.contains("name = \"$expectedSlug\""),
@@ -56,7 +56,7 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                 )
             }
 
-            val expectedSlug = BlenderProbeUtils.normalizeModuleName(project.name)
+            val expectedSlug = BlenderManifestDetector.normalizeModuleName(project.name)
             val packageDir = baseDir.findChild(expectedSlug)
 
             assertNotNull("Package directory '$expectedSlug' should exist", packageDir)
@@ -70,7 +70,7 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
                 if (manifestFile != null) {
                     val manifestContent = VfsUtil.loadText(manifestFile)
-                    assertFalse("Placeholder replaced", manifestContent.contains("\${ADDON_NAME}"))
+                    assertFalse("Placeholder replaced", manifestContent.contains($$"${ADDON_NAME}"))
                     assertTrue("Slug injected", manifestContent.contains("id = \"$expectedSlug\""))
                     assertTrue(
                         "GPL License should be specified",
