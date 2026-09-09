@@ -121,7 +121,7 @@ class BlenderTestRunningState(
         testDir: String,
     ): GeneralCommandLine {
         val project = environment.project
-        val detection = BlenderManifestDetector.detectAddon(project)
+        val detection by lazy { BlenderManifestDetector.detectAddon(project) }
         val sourceRoot = cachedSourceRoot ?: detection.sourceRoot ?: basePath
         val addonName = cachedAddonName ?: detection.moduleName
 

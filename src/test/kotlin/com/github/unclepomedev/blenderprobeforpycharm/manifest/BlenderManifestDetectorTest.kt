@@ -219,4 +219,24 @@ class BlenderManifestDetectorTest : BaseBlenderTest() {
         assertFalse(BlenderManifestDetector.isUnderExcludedDirectory(manifest, contentRoot))
         assertTrue(BlenderManifestDetector.isUnderExcludedDirectory(inner, contentRoot))
     }
+
+    fun testIsUnderExcludedDirectoryWhenContentRootNameIsExcludedDir() {
+        val baseDir = myFixture.tempDirFixture.getFile(".")!!
+
+        var manifestFile: VirtualFile? = null
+        var contentRoot: VirtualFile? = null
+
+        WriteAction.run<Exception> {
+            // Suppose contentRoot itself is named "tests" or "build"
+            val buildRoot = baseDir.createChildDirectory(this, "build")
+            contentRoot = buildRoot
+
+            val myAddon = buildRoot.createChildDirectory(this, "my_addon")
+            manifestFile = myAddon.createChildData(this, "blender_manifest.toml")
+        }
+
+        val manifest = manifestFile!!
+        assertFalse(BlenderManifestDetector.isUnderExcludedDirectory(manifest, contentRoot))
+        assertNull(BlenderManifestDetector.getExclusionReason(manifest, contentRoot))
+    }
 }

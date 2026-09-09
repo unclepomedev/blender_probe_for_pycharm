@@ -84,6 +84,10 @@ abstract class BaseBlenderRunner<T : BlenderExecutionState> : AsyncProgramRunner
                 override fun onThrowable(error: Throwable) {
                     promise.setError(error)
                 }
+
+                override fun onCancel() {
+                    promise.cancel()
+                }
             }
             .queue()
     }

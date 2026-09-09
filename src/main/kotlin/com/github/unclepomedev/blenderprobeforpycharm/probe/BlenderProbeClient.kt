@@ -19,9 +19,26 @@ object BlenderProbeClient {
         return headerBytes + jsonBytes
     }
 
+    /** Escapes a string to be safely embedded inside a JSON string literal. */
+    fun escapeJsonString(value: String): String = buildString {
+        for (char in value) {
+            when (char) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\b' -> append("\\b")
+                '\u000c' -> append("\\f")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                in '\u0000'..'\u001f' -> append(String.format("\\u%04x", char.code))
+                else -> append(char)
+            }
+        }
+    }
+
     /** Creates the JSON command string to reload the specified add-on module. */
     fun createReloadCommandJson(moduleName: String): String {
-        val safeName = moduleName.replace("\\", "\\\\").replace("\"", "\\\"")
+        val safeName = escapeJsonString(moduleName)
         return """{"action": "reload", "module_name": "$safeName"}"""
     }
 

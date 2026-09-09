@@ -98,7 +98,7 @@ class BlenderRunningState(environment: ExecutionEnvironment) :
         scriptPath: String,
     ): GeneralCommandLine {
         val projectPath = project.basePath ?: ""
-        val detection = BlenderManifestDetector.detectAddon(project)
+        val detection by lazy { BlenderManifestDetector.detectAddon(project) }
         val addonName = cachedAddonName ?: detection.moduleName
         val sourceRoot = cachedSourceRoot ?: detection.sourceRoot ?: projectPath
 

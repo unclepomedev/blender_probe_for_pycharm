@@ -18,8 +18,14 @@ class BlenderProbeClientTest {
 
     @Test
     fun testCreateReloadCommandJsonEscapesSpecialCharacters() {
-        val json = BlenderProbeClient.createReloadCommandJson("my\\addon\"test")
-        assertEquals("""{"action": "reload", "module_name": "my\\addon\"test"}""", json)
+        val json =
+            BlenderProbeClient.createReloadCommandJson(
+                "my\\addon\"test\nwith\rcontrol\tchars\u0000"
+            )
+        assertEquals(
+            """{"action": "reload", "module_name": "my\\addon\"test\nwith\rcontrol\tchars\u0000"}""",
+            json,
+        )
     }
 
     @Test

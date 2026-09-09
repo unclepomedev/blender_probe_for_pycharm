@@ -29,20 +29,26 @@ class ReloadAddonAction : AnAction() {
             return
         }
 
-        val detection = BlenderManifestDetector.detectAddon(project)
-        if (!detection.isResolved) {
-            notifyDetectionFailed(project, detection)
-            return
-        }
-
-        executeReloadTask(project, port, detection)
+        executeReloadTask(project, port)
     }
 
-    private fun executeReloadTask(project: Project, port: Int, detection: AddonDetectionResult) {
+    private fun executeReloadTask(project: Project, port: Int) {
         ProgressManager.getInstance()
             .run(
                 object : Task.Backgroundable(project, "Reloading blender addon", false) {
                     override fun run(indicator: ProgressIndicator) {
+                        val detection =
+                            ApplicationManager.getApplication().runReadAction<
+                                AddonDetectionResult
+                            > {
+                                BlenderManifestDetector.detectAddon(project)
+                            }
+                        if (!detection.isResolved) {
+                            ApplicationManager.getApplication().invokeLater {
+                                notifyDetectionFailed(project, detection)
+                            }
+                            return
+                        }
                         performReload(project, port, detection)
                     }
                 }

@@ -221,11 +221,11 @@ object BlenderManifestDetector {
     ): String? {
         var parent: VirtualFile? = file.parent
         while (parent != null) {
-            if (parent.name in EXCLUDED_DIR_NAMES) {
-                return "inside excluded directory '${parent.name}'"
-            }
             if (contentRoot != null && parent == contentRoot) {
                 break
+            }
+            if (parent.name in EXCLUDED_DIR_NAMES) {
+                return "inside excluded directory '${parent.name}'"
             }
             parent = parent.parent
         }
