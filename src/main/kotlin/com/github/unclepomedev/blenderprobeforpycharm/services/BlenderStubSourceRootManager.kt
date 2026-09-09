@@ -31,7 +31,7 @@ internal object BlenderStubSourceRootManager {
                     ProjectRootManager.getInstance(project).fileIndex.getModuleForFile(baseDir)
                 }
             )
-            .expireWith(project)
+            .expireWhen { project.isDisposed }
             .finishOnUiThread(ModalityState.defaultModalityState()) { module ->
                 if (module != null && !module.isDisposed) {
                     ApplicationManager.getApplication().runWriteAction {
