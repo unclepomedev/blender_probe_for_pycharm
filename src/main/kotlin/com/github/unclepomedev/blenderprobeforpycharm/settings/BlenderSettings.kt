@@ -10,6 +10,17 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 
 /**
+ * Represents a configured Blender executable entry.
+ *
+ * @property name A display name for the Blender binary (e.g. "Blender 4.2", "Daily Build").
+ * @property path The absolute path to the Blender executable.
+ */
+data class BlenderEntry(
+    var name: String = "",
+    var path: String = "",
+)
+
+/**
  * Manages project-level settings for Blender Probe. Stores configuration such as the path to the
  * Blender executable.
  */
@@ -24,7 +35,10 @@ class BlenderSettings(private val project: Project) :
     /**
      * Data class to hold the state of the settings.
      *
-     * @property blenderPath The path to the Blender executable.
+     * @property blenderPath Legacy path to the Blender executable. Kept for backwards
+     *   compatibility.
+     * @property entries List of configured Blender executables.
+     * @property currentEntryName Name of the currently selected Blender executable from [entries].
      * @property useFactoryStartup Whether to launch Blender with the `--factory-startup` flag.
      *   Defaults to true to mirror the standard, supported behavior. Disabling it lets Blender load
      *   third-party add-ons and modules from the user environment, which can crash Blender on
@@ -32,6 +46,8 @@ class BlenderSettings(private val project: Project) :
      */
     data class State(
         var blenderPath: String = "",
+        var entries: MutableList<BlenderEntry> = mutableListOf(),
+        var currentEntryName: String = "",
         var useFactoryStartup: Boolean = true,
     )
 
@@ -64,20 +80,60 @@ class BlenderSettings(private val project: Project) :
      */
     override fun loadState(state: State) {
         myState = state
+        migrateIfNeeded()
+    }
+
+    /** Migrates legacy single blenderPath to entries list if entries is empty. */
+    private fun migrateIfNeeded() {
+        if (myState.entries.isEmpty() && myState.blenderPath.isNotBlank()) {
+            val entryName = File(myState.blenderPath).name.ifBlank { "Blender" }
+            myState.entries.add(BlenderEntry(name = entryName, path = myState.blenderPath))
+            myState.currentEntryName = entryName
+        }
+    }
+
+    /** Returns the currently selected [BlenderEntry], or null if none is selected. */
+    fun getSelectedEntry(): BlenderEntry? {
+        if (myState.currentEntryName.isNotBlank()) {
+            myState.entries
+                .find { it.name == myState.currentEntryName }
+                ?.let {
+                    return it
+                }
+        }
+        return myState.entries.firstOrNull()
     }
 
     /**
-     * Resolves the path to the Blender executable. If a path is configured in settings, it is
-     * returned. Otherwise, it attempts to detect the path using the 'blup' tool.
+     * Resolves the path to the Blender executable. If a configured entry is selected, its path is
+     * returned. Otherwise, falls back to legacy blenderPath or attempts to detect the path using
+     * the 'blup' tool.
      *
      * @return The resolved Blender path, or null if not found.
      */
     fun resolveBlenderPath(): String? {
+        val selected = getSelectedEntry()
+        if (selected != null && selected.path.isNotBlank()) {
+            return selected.path
+        }
+
         if (myState.blenderPath.isNotBlank()) {
             return myState.blenderPath
         }
 
         return detectPathViaBlup()
+    }
+
+    /**
+     * Sets the active Blender entry by name. Updates both [State.currentEntryName] and
+     * [State.blenderPath].
+     */
+    fun setActiveEntry(name: String) {
+        myState.currentEntryName = name
+        val entry = myState.entries.find { it.name == name }
+        if (entry != null) {
+            myState.blenderPath = entry.path
+        }
     }
 
     private fun detectPathViaBlup(): String? {

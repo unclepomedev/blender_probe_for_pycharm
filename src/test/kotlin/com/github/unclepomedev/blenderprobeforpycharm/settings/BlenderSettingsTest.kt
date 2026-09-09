@@ -47,6 +47,8 @@ class BlenderSettingsTest : BaseBlenderTest() {
     fun testResolveBlenderPathDoesNotFailWhenBasePathDoesNotExist() {
         val settings = BlenderSettings.getInstance(project)
         settings.state.blenderPath = ""
+        settings.state.entries.clear()
+        settings.state.currentEntryName = ""
 
         val basePath = project.basePath
         assertNotNull("Project basePath should not be null", basePath)
@@ -67,5 +69,70 @@ class BlenderSettingsTest : BaseBlenderTest() {
                 "resolveBlenderPath should not throw an exception when basePath does not exist: ${e.message}"
             )
         }
+    }
+
+    fun testMultipleEntriesAndSwitching() {
+        val settings = BlenderSettings.getInstance(project)
+        settings.loadState(BlenderSettings.State())
+
+        val entry1 = BlenderEntry("Blender 4.1", "/usr/local/bin/blender-4.1")
+        val entry2 = BlenderEntry("Blender 4.2", "/usr/local/bin/blender-4.2")
+        settings.state.entries.add(entry1)
+        settings.state.entries.add(entry2)
+
+        // Select entry1
+        settings.setActiveEntry("Blender 4.1")
+        assertEquals("Blender 4.1", settings.state.currentEntryName)
+        assertEquals("/usr/local/bin/blender-4.1", settings.resolveBlenderPath())
+
+        // Switch to entry2
+        settings.setActiveEntry("Blender 4.2")
+        assertEquals("Blender 4.2", settings.state.currentEntryName)
+        assertEquals("/usr/local/bin/blender-4.2", settings.resolveBlenderPath())
+    }
+
+    fun testMigrationFromLegacyBlenderPath() {
+        val settings = BlenderSettings.getInstance(project)
+        val legacyState =
+            BlenderSettings.State(blenderPath = "/Applications/Blender.app/Contents/MacOS/Blender")
+
+        settings.loadState(legacyState)
+
+        assertEquals(1, settings.state.entries.size)
+        val migratedEntry = settings.state.entries.first()
+        assertEquals("Blender", migratedEntry.name)
+        assertEquals("/Applications/Blender.app/Contents/MacOS/Blender", migratedEntry.path)
+        assertEquals("Blender", settings.state.currentEntryName)
+        assertEquals(
+            "/Applications/Blender.app/Contents/MacOS/Blender",
+            settings.resolveBlenderPath(),
+        )
+    }
+
+    fun testConfigurableUIStateAndPersistence() {
+        val settings = BlenderSettings.getInstance(project)
+        settings.loadState(BlenderSettings.State())
+
+        val configurable = BlenderSettingsConfigurable(project)
+        val panel = configurable.createComponent()
+        assertNotNull(panel)
+
+        // Check initial state
+        assertFalse(configurable.isModified)
+
+        // Modify settings through settings object and test reset
+        settings.state.entries.add(BlenderEntry("Blender Test", "/dummy/path"))
+        settings.setActiveEntry("Blender Test")
+        assertTrue(configurable.isModified)
+
+        configurable.reset()
+        assertFalse(configurable.isModified)
+
+        // Apply saves correctly
+        configurable.apply()
+        assertEquals("Blender Test", settings.state.currentEntryName)
+        assertEquals("/dummy/path", settings.resolveBlenderPath())
+
+        configurable.disposeUIResources()
     }
 }
