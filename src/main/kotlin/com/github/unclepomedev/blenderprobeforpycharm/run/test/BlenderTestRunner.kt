@@ -87,7 +87,7 @@ class BlenderTestRunner : AsyncProgramRunner<RunnerSettings>() {
                     true,
                 ) {
                 override fun run(indicator: ProgressIndicator) {
-                    prepareExecutionState(project, state)
+                    prepareExecutionState(environment.project, state)
                 }
 
                 override fun onSuccess() {
