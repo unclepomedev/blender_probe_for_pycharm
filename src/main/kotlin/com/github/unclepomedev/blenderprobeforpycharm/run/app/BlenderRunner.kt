@@ -1,6 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.RunProfile
@@ -118,9 +118,9 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
         state.cachedBlenderPath = path
 
         ApplicationManager.getApplication().runReadAction {
-            state.cachedAddonName = BlenderProbeUtils.detectAddonModuleName(project)
-            state.cachedSourceRoot =
-                BlenderProbeUtils.getAddonSourceRoot(project) ?: project.basePath
+            val detectionService = BlenderAddonDetectionService.getInstance(project)
+            state.cachedAddonName = detectionService.getAddonModuleName()
+            state.cachedSourceRoot = detectionService.getAddonSourceRoot() ?: project.basePath
         }
         if (executorId == DefaultDebugExecutor.EXECUTOR_ID) {
             state.pydevdPath = PythonHelper.DEBUGGER.pythonPathEntry

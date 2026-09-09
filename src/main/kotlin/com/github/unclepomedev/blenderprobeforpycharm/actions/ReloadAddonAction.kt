@@ -1,7 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.actions
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
@@ -36,7 +36,7 @@ class ReloadAddonAction : AnAction() {
             return
         }
 
-        val addonName = BlenderProbeUtils.detectAddonModuleName(project)
+        val addonName = BlenderAddonDetectionService.getInstance(project).getAddonModuleName()
 
         ProgressManager.getInstance()
             .run(

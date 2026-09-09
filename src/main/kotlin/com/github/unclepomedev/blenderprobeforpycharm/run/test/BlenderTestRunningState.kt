@@ -1,7 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run.test
 
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.DefaultExecutionResult
 import com.intellij.execution.ExecutionException
@@ -120,9 +120,9 @@ class BlenderTestRunningState(
         testDir: String,
     ): GeneralCommandLine {
         val project = environment.project
-        val sourceRoot =
-            cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: basePath
-        val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
+        val detectionService by lazy { BlenderAddonDetectionService.getInstance(project) }
+        val sourceRoot = cachedSourceRoot ?: detectionService.getAddonSourceRoot() ?: basePath
+        val addonName = cachedAddonName ?: detectionService.getAddonModuleName()
 
         val parameters =
             buildParameters(

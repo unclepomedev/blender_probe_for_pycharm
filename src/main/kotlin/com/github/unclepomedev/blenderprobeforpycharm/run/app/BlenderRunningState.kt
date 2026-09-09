@@ -1,8 +1,8 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeManager
-import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.DefaultExecutionResult
 import com.intellij.execution.ExecutionException
@@ -96,9 +96,9 @@ class BlenderRunningState(environment: ExecutionEnvironment) : CommandLineState(
         scriptPath: String,
     ): GeneralCommandLine {
         val projectPath = project.basePath ?: ""
-        val addonName = cachedAddonName ?: BlenderProbeUtils.detectAddonModuleName(project)
-        val sourceRoot =
-            cachedSourceRoot ?: BlenderProbeUtils.getAddonSourceRoot(project) ?: projectPath
+        val detectionService by lazy { BlenderAddonDetectionService.getInstance(project) }
+        val addonName = cachedAddonName ?: detectionService.getAddonModuleName()
+        val sourceRoot = cachedSourceRoot ?: detectionService.getAddonSourceRoot() ?: projectPath
 
         val cmd =
             GeneralCommandLine()
