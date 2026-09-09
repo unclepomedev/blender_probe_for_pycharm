@@ -13,10 +13,13 @@ object BlenderProbeUtils {
     /**
      * Represents the result of detecting a Blender addon in a project.
      *
-     * @property manifestPath The absolute path to the chosen `blender_manifest.toml`, or null if none found.
-     * @property moduleName The detected Python module name (from manifest directory, or fallback normalized project name).
+     * @property manifestPath The absolute path to the chosen `blender_manifest.toml`, or null if
+     *   none found.
+     * @property moduleName The detected Python module name (from manifest directory, or fallback
+     *   normalized project name).
      * @property sourceRoot The absolute path to the source root directory, or null if none found.
-     * @property rejectedCandidates Other candidate `blender_manifest.toml` files found in the project but not chosen.
+     * @property rejectedCandidates Other candidate `blender_manifest.toml` files found in the
+     *   project but not chosen.
      */
     data class AddonDetectionResult(
         val manifestPath: String?,
@@ -48,8 +51,9 @@ object BlenderProbeUtils {
     private fun sortCandidates(candidates: List<VirtualFile>): List<VirtualFile> {
         return candidates.sortedWith(
             compareBy<VirtualFile> { candidate ->
-                candidate.path.count { it == '/' || it == '\\' }
-            }.thenBy { it.path }
+                    candidate.path.count { it == '/' || it == '\\' }
+                }
+                .thenBy { it.path }
         )
     }
 
@@ -64,7 +68,8 @@ object BlenderProbeUtils {
      * 2. Lexicographical order of path (for deterministic ordering)
      *
      * @param project The current project.
-     * @return [AddonDetectionResult] containing the resolved manifest, module name, source root, and rejected candidates.
+     * @return [AddonDetectionResult] containing the resolved manifest, module name, source root,
+     *   and rejected candidates.
      */
     fun detectAddon(project: Project): AddonDetectionResult {
         val candidates = findCandidateManifestFiles(project)
@@ -122,7 +127,8 @@ object BlenderProbeUtils {
 
         fileIndex.iterateContent { file: VirtualFile ->
             if (!file.isDirectory && file.name == "blender_manifest.toml") {
-                if (!isUnderExcludedDirectory(file)) {
+                val contentRoot = fileIndex.getContentRootForFile(file)
+                if (!isUnderExcludedDirectory(file, contentRoot)) {
                     candidates.add(file)
                 }
             }
@@ -132,13 +138,20 @@ object BlenderProbeUtils {
     }
 
     /**
-     * Checks if a file has any ancestor directory in [EXCLUDED_DIR_NAMES].
+     * Checks if a file has any ancestor directory in [EXCLUDED_DIR_NAMES] up to [contentRoot].
+     * Traversal stops when reaching [contentRoot] or when an excluded directory is found.
      */
-    private fun isUnderExcludedDirectory(file: VirtualFile): Boolean {
+    internal fun isUnderExcludedDirectory(
+        file: VirtualFile,
+        contentRoot: VirtualFile? = null,
+    ): Boolean {
         var parent: VirtualFile? = file.parent
         while (parent != null) {
             if (parent.name in EXCLUDED_DIR_NAMES) {
                 return true
+            }
+            if (contentRoot != null && parent == contentRoot) {
+                break
             }
             parent = parent.parent
         }

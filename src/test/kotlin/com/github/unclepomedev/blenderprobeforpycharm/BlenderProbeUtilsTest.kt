@@ -91,7 +91,10 @@ class BlenderProbeUtilsTest : BaseBlenderTest() {
 
         val result = BlenderProbeUtils.detectAddon(project)
         assertEquals("actual_addon", result.moduleName)
-        assertEquals(baseDir.findFileByRelativePath("actual_addon/blender_manifest.toml")?.path, result.manifestPath)
+        assertEquals(
+            baseDir.findFileByRelativePath("actual_addon/blender_manifest.toml")?.path,
+            result.manifestPath,
+        )
         assertEquals(baseDir.path, result.sourceRoot)
         assertEquals(0, result.rejectedCandidates.size)
     }
@@ -134,8 +137,37 @@ class BlenderProbeUtilsTest : BaseBlenderTest() {
         assertEquals(emptyList<Any>(), result.rejectedCandidates)
         assertFalse(result.isAmbiguous)
 
-        assertEquals(BlenderProbeUtils.normalizeModuleName(project.name), BlenderProbeUtils.detectAddonModuleName(project))
+        assertEquals(
+            BlenderProbeUtils.normalizeModuleName(project.name),
+            BlenderProbeUtils.detectAddonModuleName(project),
+        )
         assertNull(BlenderProbeUtils.getAddonSourceRoot(project))
         assertNull(BlenderProbeUtils.findAddonEntryFile(project))
+    }
+
+    fun testIsUnderExcludedDirectoryStopsAtContentRoot() {
+        val baseDir = myFixture.tempDirFixture.getFile(".")!!
+
+        WriteAction.run<Exception> {
+            // Create a hierarchy where ancestor above contentRoot is named "build" or "venv"
+            // e.g. baseDir / build / my_project / addon / blender_manifest.toml
+            val excludedAncestor = baseDir.createChildDirectory(this, "build")
+            val contentRoot = excludedAncestor.createChildDirectory(this, "my_project")
+            val addonDir = contentRoot.createChildDirectory(this, "addon")
+            val manifestFile = addonDir.createChildData(this, "blender_manifest.toml")
+
+            // Without contentRoot boundary, it traverses up to "build" and considers it excluded
+            assertTrue(BlenderProbeUtils.isUnderExcludedDirectory(manifestFile, null))
+
+            // With contentRoot boundary set to contentRoot ("my_project"), traversal stops at
+            // contentRoot
+            // so the "build" directory above contentRoot is ignored
+            assertFalse(BlenderProbeUtils.isUnderExcludedDirectory(manifestFile, contentRoot))
+
+            // Preserves exclusion checks within the contentRoot
+            val innerExcluded = contentRoot.createChildDirectory(this, "tests")
+            val innerManifest = innerExcluded.createChildData(this, "blender_manifest.toml")
+            assertTrue(BlenderProbeUtils.isUnderExcludedDirectory(innerManifest, contentRoot))
+        }
     }
 }
