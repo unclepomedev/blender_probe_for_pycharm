@@ -112,9 +112,8 @@ class BlenderSettingsConfigurable(project: Project) : Configurable {
         if (currentEntries != settings.state.entries) return true
 
         val selectedItem = currentExecutableComboBox.selectedItem as? String
-        val activeName =
-            if (selectedItem == AUTO_DETECT_OPTION || selectedItem == null) "" else selectedItem
-        if (activeName != settings.state.currentEntryName) return true
+        val targetSelection = resolveTargetSelection()
+        if (selectedItem != targetSelection) return true
 
         if (useFactoryStartupCheckBox.isSelected != settings.state.useFactoryStartup) return true
 

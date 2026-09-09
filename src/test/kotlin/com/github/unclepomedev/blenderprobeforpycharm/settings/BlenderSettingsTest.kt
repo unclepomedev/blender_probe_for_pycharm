@@ -99,7 +99,10 @@ class BlenderSettingsTest : BaseBlenderTest() {
         settings.state.entries.add(entry)
         settings.state.currentEntryName = ""
 
-        assertNull("getSelectedEntry should return null when currentEntryName is blank", settings.getSelectedEntry())
+        assertNull(
+            "getSelectedEntry should return null when currentEntryName is blank",
+            settings.getSelectedEntry(),
+        )
 
         // Also verify setActiveEntry with non-matching name clears currentEntryName and blenderPath
         settings.state.currentEntryName = "Blender 5.2"
@@ -145,6 +148,15 @@ class BlenderSettingsTest : BaseBlenderTest() {
 
         configurable.reset()
         assertFalse(configurable.isModified)
+
+        // Legacy/migrated state: blenderPath matches entry path, but currentEntryName is blank
+        settings.state.currentEntryName = ""
+        settings.state.blenderPath = "/dummy/path"
+        configurable.reset()
+        assertFalse(
+            "isModified should be false after reset even if currentEntryName is blank and blenderPath matches entry path",
+            configurable.isModified,
+        )
 
         // Apply saves correctly
         configurable.apply()
