@@ -2,8 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+- A `Blender manifest path` setting (Settings > Tools > Blender Probe). Leave it empty to keep the existing auto-detection, or point it at a specific `blender_manifest.toml` when your project contains more than one.
+
 ### Changed
-- Improved Blender add-on detection when multiple manifests are present by consistently selecting the most appropriate candidate.
+- Add-on detection no longer picks up a `blender_manifest.toml` that ships inside a virtual environment or other excluded directory.
+- Add-on detection now warns when it finds multiple manifests or none at all.
 - Internally changed the JetBrains API usage.
 
 ## [0.4.0] - 2026-09-09
