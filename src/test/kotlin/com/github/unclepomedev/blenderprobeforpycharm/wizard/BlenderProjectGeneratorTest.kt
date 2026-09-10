@@ -138,8 +138,12 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
     fun testConfigureEnvironmentNoBlenderExecutableDoesNotNotify() {
         val generator = BlenderProjectGenerator()
-        val settings = BlenderSettings.getInstance(project)
-        val prevBlenderPath = settings.state.blenderPath
+
+        val mockSettings =
+            object : BlenderSettings(project) {
+                override fun resolveBlenderPath(): String? = null
+            }
+        project.replaceService(BlenderSettings::class.java, mockSettings, testRootDisposable)
 
         val notifications = mutableListOf<Notification>()
         project.messageBus
@@ -153,18 +157,13 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                 },
             )
 
-        try {
-            settings.state.blenderPath = ""
-            generator.configureEnvironment(project, EmptyProgressIndicator())
-            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        generator.configureEnvironment(project, EmptyProgressIndicator())
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
 
-            assertTrue(
-                "No notification should be shown when Blender executable is missing",
-                notifications.isEmpty(),
-            )
-        } finally {
-            settings.state.blenderPath = prevBlenderPath
-        }
+        assertTrue(
+            "No notification should be shown when Blender executable is missing",
+            notifications.isEmpty(),
+        )
     }
 
     fun testScheduleStubGenerationFailureNotifiesUser() {
