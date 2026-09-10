@@ -18,7 +18,7 @@ You can launch Blender with your addon loaded, or use the debugger.
 
 ### Run
 
-1.  Just Click the **Run** button. (The plugin auto-detects your addon root by the `blender_manifest.toml`.)
+1.  Just Click the **Run** button. (The plugin auto-detects your addon root by the `blender_manifest.toml`. If your project contains more than one, see [Configuration](configuration.md).)
 
 <div>
   <img src="images/run.png" alt="Run the addon" style="border: 1px solid #ddd; border-radius: 4px;">

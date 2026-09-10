@@ -18,7 +18,7 @@
 
 ### 実行
 
-1.  **Run** ボタンをクリックするだけです。（プラグインが `blender_manifest.toml` によりアドオンルートを自動検出します。）
+1.  **Run** ボタンをクリックするだけです。（プラグインが `blender_manifest.toml` によりアドオンルートを自動検出します。プロジェクト内に複数のマニフェストが存在する場合は、[設定](configuration.md) を参照してください。）
 
 <div>
   <img src="images/run.png" alt="アドオンの実行" style="border: 1px solid #ddd; border-radius: 4px;">

@@ -30,3 +30,9 @@ If you don't use `blup`, or if you want to quickly switch between multiple Blend
   Enabled by default to match the standard, supported behavior. It skips loading the user's `startup.blend` file across application runs, test runs, and stub generation, ensuring a clean and reproducible environment. Disable it only if your workflow specifically requires loading your custom default startup file.
 
   > **Warning:** Disabling `--factory-startup` loads your customized startup file, which may alter the initial scene or state and lead to unexpected behavior during testing or running.
+
+## Add-on Manifest Location
+
+By default, Blender Probe finds your add-on by searching the project for a `blender_manifest.toml`. Directories such as virtual environments, build output and `tests` are skipped. When more than one manifest remains, the shallowest path is chosen, and the plugin tells you which one it picked.
+
+If that isn't the one you want — or if a dependency in your project ships its own manifest — set **Blender manifest path** (**Settings/Preferences** > **Tools** > **Blender Probe**) to the manifest of your add-on. Leave it empty to keep the automatic search.
