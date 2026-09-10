@@ -116,7 +116,7 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
             )
     }
 
-    internal fun configureEnvironment(project: Project, indicator: ProgressIndicator) {
+    private fun configureEnvironment(project: Project, indicator: ProgressIndicator) {
         DumbService.getInstance(project).waitForSmartMode()
         ApplicationManager.getApplication().invokeLater {
             createDefaultRunConfiguration(project)
@@ -132,7 +132,7 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         scheduleStubGeneration(project, blenderPath)
     }
 
-    internal fun scheduleStubGeneration(project: Project, blenderPath: String) {
+    private fun scheduleStubGeneration(project: Project, blenderPath: String) {
         ApplicationManager.getApplication().invokeLater {
             try {
                 BlenderStubService.getInstance(project).generateStubs(blenderPath)

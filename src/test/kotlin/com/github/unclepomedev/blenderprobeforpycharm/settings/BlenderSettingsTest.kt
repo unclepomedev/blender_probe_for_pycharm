@@ -2,6 +2,9 @@ package com.github.unclepomedev.blenderprobeforpycharm.settings
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
+import com.intellij.configurationStore.deserialize
+import com.intellij.configurationStore.serialize
+import com.intellij.openapi.components.State
 
 class BlenderSettingsTest : BaseBlenderTest() {
 
@@ -27,6 +30,43 @@ class BlenderSettingsTest : BaseBlenderTest() {
 
         settings.loadState(newState)
         assertEquals("C:\\Blender\\blender.exe", settings.state.blenderPath)
+    }
+
+    fun testSaveAndLoadRoundTripViaStateSerializer() {
+        val settings = BlenderSettings.getInstance(project)
+        val testState =
+            BlenderSettings.State(
+                blenderPath = "/custom/blender/path",
+                entries =
+                    mutableListOf(
+                        BlenderEntry("Blender 4.5", "/custom/blender-4.5"),
+                        BlenderEntry("Blender 5.2", "/custom/blender-5.2"),
+                    ),
+                currentEntryName = "Blender 5.2",
+                useFactoryStartup = false,
+                manifestPath = "/path/to/custom/manifest.toml",
+            )
+        settings.loadState(testState)
+
+        val serialized = serialize(settings.state)
+        assertNotNull("Serialized state should not be null", serialized)
+
+        val restoredState = deserialize<BlenderSettings.State>(serialized!!)
+        assertEquals("/custom/blender/path", restoredState.blenderPath)
+        assertEquals(2, restoredState.entries.size)
+        assertEquals("Blender 4.5", restoredState.entries[0].name)
+        assertEquals("/custom/blender-4.5", restoredState.entries[0].path)
+        assertEquals("Blender 5.2", restoredState.entries[1].name)
+        assertEquals("/custom/blender-5.2", restoredState.entries[1].path)
+        assertEquals("Blender 5.2", restoredState.currentEntryName)
+        assertFalse(restoredState.useFactoryStartup)
+        assertEquals("/path/to/custom/manifest.toml", restoredState.manifestPath)
+
+        val stateAnnotation = BlenderSettings::class.java.getAnnotation(State::class.java)
+        assertNotNull("@State annotation should be present on BlenderSettings", stateAnnotation)
+        assertEquals("BlenderProbeSettings", stateAnnotation.name)
+        assertEquals(1, stateAnnotation.storages.size)
+        assertEquals("blender_probe.xml", stateAnnotation.storages[0].value)
     }
 
     fun testFactoryStartupDefaultsToTrue() {

@@ -2,15 +2,12 @@ package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
-import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.notification.Notification
 import com.intellij.notification.Notifications
-import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.testFramework.PlatformTestUtil
-import com.intellij.testFramework.replaceService
 
 class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
@@ -136,14 +133,10 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
         }
     }
 
-    fun testConfigureEnvironmentNoBlenderExecutableDoesNotNotify() {
+    fun testGenerateProjectNoBlenderExecutableDoesNotNotify() {
         val generator = BlenderProjectGenerator()
-
-        val mockSettings =
-            object : BlenderSettings(project) {
-                override fun resolveBlenderPath(): String? = null
-            }
-        project.replaceService(BlenderSettings::class.java, mockSettings, testRootDisposable)
+        val settings = BlenderSettings.getInstance(project)
+        val prevBlenderPath = settings.state.blenderPath
 
         val notifications = mutableListOf<Notification>()
         project.messageBus
@@ -157,26 +150,33 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                 },
             )
 
-        generator.configureEnvironment(project, EmptyProgressIndicator())
-        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        try {
+            settings.state.blenderPath = ""
+            settings.state.entries.clear()
+            settings.state.currentEntryName = ""
 
-        assertTrue(
-            "No notification should be shown when Blender executable is missing",
-            notifications.isEmpty(),
-        )
+            val basePath = project.basePath ?: error("Project base path is null")
+            val baseDir =
+                LocalFileSystem.getInstance().findFileByPath(basePath)
+                    ?: error("VirtualFile not found for $basePath")
+            val module = myFixture.module
+
+            generator.generateProject(project, baseDir, Any(), module)
+            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+
+            assertTrue(
+                "No notification should be shown when Blender executable is missing",
+                notifications.isEmpty(),
+            )
+        } finally {
+            settings.state.blenderPath = prevBlenderPath
+        }
     }
 
     fun testScheduleStubGenerationFailureNotifiesUser() {
         val generator = BlenderProjectGenerator()
-        val failureReason = "Blender process crashed unexpectedly"
-
-        val mockStubService =
-            object : BlenderStubService(project) {
-                override fun generateStubs(blenderPath: String) {
-                    throw RuntimeException(failureReason)
-                }
-            }
-        project.replaceService(BlenderStubService::class.java, mockStubService, testRootDisposable)
+        val settings = BlenderSettings.getInstance(project)
+        val prevBlenderPath = settings.state.blenderPath
 
         val notifications = mutableListOf<Notification>()
         project.messageBus
@@ -190,16 +190,28 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                 },
             )
 
-        generator.scheduleStubGeneration(project, "/path/to/blender")
-        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        try {
+            settings.state.blenderPath = "/nonexistent/dummy/blender"
 
-        assertEquals("Exactly one notification should be published", 1, notifications.size)
-        val notification = notifications[0]
-        assertEquals("Blender Probe Notification Group", notification.groupId)
-        assertEquals("Generation Failed", notification.title)
-        assertTrue(
-            "Notification content should contain failure reason",
-            notification.content.contains(failureReason),
-        )
+            val basePath = project.basePath ?: error("Project base path is null")
+            val baseDir =
+                LocalFileSystem.getInstance().findFileByPath(basePath)
+                    ?: error("VirtualFile not found for $basePath")
+            val module = myFixture.module
+
+            generator.generateProject(project, baseDir, Any(), module)
+            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+
+            assertEquals("Exactly one notification should be published", 1, notifications.size)
+            val notification = notifications[0]
+            assertEquals("Blender Probe Notification Group", notification.groupId)
+            assertEquals("Generation Failed", notification.title)
+            assertTrue(
+                "Notification content should contain failure message",
+                notification.content.contains("Failed to generate stubs:"),
+            )
+        } finally {
+            settings.state.blenderPath = prevBlenderPath
+        }
     }
 }

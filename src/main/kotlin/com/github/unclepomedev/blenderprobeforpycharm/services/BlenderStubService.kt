@@ -10,7 +10,7 @@ import java.io.File
  * Service responsible for generating Python stubs for the Blender API. It runs a Blender process in
  * the background to extract API information and generate stub files.
  */
-open class BlenderStubService(private val project: Project) {
+class BlenderStubService(private val project: Project) {
 
     private val notifier = BlenderStubNotifier(project)
 
@@ -30,7 +30,7 @@ open class BlenderStubService(private val project: Project) {
      *
      * @param blenderPath The path to the Blender executable.
      */
-    open fun generateStubs(blenderPath: String) {
+    fun generateStubs(blenderPath: String) {
         val basePath = project.basePath ?: return
         val outputDir = File(basePath, ".blender_stubs")
 
