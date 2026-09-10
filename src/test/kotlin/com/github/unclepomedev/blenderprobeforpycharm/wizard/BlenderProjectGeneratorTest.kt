@@ -2,9 +2,15 @@ package com.github.unclepomedev.blenderprobeforpycharm.wizard
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
+import com.intellij.notification.Notification
+import com.intellij.notification.Notifications
+import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.testFramework.PlatformTestUtil
+import com.intellij.testFramework.replaceService
 
 class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
@@ -128,5 +134,73 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
         } finally {
             settings.state.blenderPath = prevBlenderPath
         }
+    }
+
+    fun testConfigureEnvironmentNoBlenderExecutableDoesNotNotify() {
+        val generator = BlenderProjectGenerator()
+        val settings = BlenderSettings.getInstance(project)
+        val prevBlenderPath = settings.state.blenderPath
+
+        val notifications = mutableListOf<Notification>()
+        project.messageBus
+            .connect(testRootDisposable)
+            .subscribe(
+                Notifications.TOPIC,
+                object : Notifications {
+                    override fun notify(notification: Notification) {
+                        notifications.add(notification)
+                    }
+                },
+            )
+
+        try {
+            settings.state.blenderPath = ""
+            generator.configureEnvironment(project, EmptyProgressIndicator())
+            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+
+            assertTrue(
+                "No notification should be shown when Blender executable is missing",
+                notifications.isEmpty(),
+            )
+        } finally {
+            settings.state.blenderPath = prevBlenderPath
+        }
+    }
+
+    fun testScheduleStubGenerationFailureNotifiesUser() {
+        val generator = BlenderProjectGenerator()
+        val failureReason = "Blender process crashed unexpectedly"
+
+        val mockStubService =
+            object : BlenderStubService(project) {
+                override fun generateStubs(blenderPath: String) {
+                    throw RuntimeException(failureReason)
+                }
+            }
+        project.replaceService(BlenderStubService::class.java, mockStubService, testRootDisposable)
+
+        val notifications = mutableListOf<Notification>()
+        project.messageBus
+            .connect(testRootDisposable)
+            .subscribe(
+                Notifications.TOPIC,
+                object : Notifications {
+                    override fun notify(notification: Notification) {
+                        notifications.add(notification)
+                    }
+                },
+            )
+
+        generator.scheduleStubGeneration(project, "/path/to/blender")
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+
+        assertEquals("Exactly one notification should be published", 1, notifications.size)
+        val notification = notifications[0]
+        assertEquals("Blender Probe Notification Group", notification.groupId)
+        assertEquals("Generation Failed", notification.title)
+        assertTrue(
+            "Notification content should contain failure reason",
+            notification.content.contains(failureReason),
+        )
     }
 }
