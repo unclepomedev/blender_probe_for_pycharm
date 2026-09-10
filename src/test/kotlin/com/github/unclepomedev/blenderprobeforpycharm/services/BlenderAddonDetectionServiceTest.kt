@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.services
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
+import com.github.unclepomedev.blenderprobeforpycharm.BlenderManifestChangeListener
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.intellij.openapi.application.WriteAction
 import java.util.concurrent.Callable
@@ -307,5 +308,98 @@ class BlenderAddonDetectionServiceTest : BaseBlenderTest() {
                 executor.shutdownNow()
             }
         }
+    }
+
+    fun testIsAncestorOrSelfSegmentAware() {
+        val listener = BlenderManifestChangeListener(project)
+
+        // Exact match
+        assertTrue(listener.isAncestorOrSelf("/foo/bar", "/foo/bar"))
+        assertTrue(listener.isAncestorOrSelf("/foo/bar/", "/foo/bar"))
+        assertTrue(listener.isAncestorOrSelf("/foo/bar", "/foo/bar/"))
+
+        // Child path
+        assertTrue(listener.isAncestorOrSelf("/foo/bar", "/foo/bar/blender_manifest.toml"))
+        assertTrue(listener.isAncestorOrSelf("/foo/bar", "/foo/bar/sub/blender_manifest.toml"))
+
+        // Segment-aware: /foo/bar_baz must NOT be treated as under /foo/bar
+        assertFalse(listener.isAncestorOrSelf("/foo/bar", "/foo/bar_baz"))
+        assertFalse(listener.isAncestorOrSelf("/foo/bar", "/foo/bar_baz/blender_manifest.toml"))
+        assertFalse(listener.isAncestorOrSelf("/foo/bar_baz", "/foo/bar/blender_manifest.toml"))
+    }
+
+    fun testVfsInvalidationOnDirectoryRenameAboveManifest() {
+        val baseDir = myFixture.tempDirFixture.getFile(".")!!
+        val service = BlenderAddonDetectionService.getInstance(project)
+
+        var parentDir: com.intellij.openapi.vfs.VirtualFile? = null
+        WriteAction.run<Exception> {
+            parentDir = baseDir.createChildDirectory(this, "initial_dir")
+            parentDir.createChildData(this, "blender_manifest.toml")
+        }
+
+        // Cache initial result
+        val firstResult = service.getDetectionResult()
+        assertEquals("initial_dir", firstResult.moduleName)
+        assertSame(firstResult, service.getDetectionResult())
+
+        // Rename parent directory
+        WriteAction.run<Exception> {
+            parentDir!!.rename(this, "renamed_dir")
+        }
+
+        // Cache should be invalidated because parent directory changed
+        val secondResult = service.getDetectionResult()
+        assertNotSame(firstResult, secondResult)
+        assertEquals("renamed_dir", secondResult.moduleName)
+    }
+
+    fun testVfsInvalidationOnDirectoryDeleteAboveManifest() {
+        val baseDir = myFixture.tempDirFixture.getFile(".")!!
+        val service = BlenderAddonDetectionService.getInstance(project)
+
+        var parentDir: com.intellij.openapi.vfs.VirtualFile? = null
+        WriteAction.run<Exception> {
+            parentDir = baseDir.createChildDirectory(this, "to_delete_dir")
+            parentDir.createChildData(this, "blender_manifest.toml")
+        }
+
+        val firstResult = service.getDetectionResult()
+        assertEquals("to_delete_dir", firstResult.moduleName)
+
+        // Delete parent directory
+        WriteAction.run<Exception> {
+            parentDir!!.delete(this)
+        }
+
+        // Cache should be invalidated
+        val secondResult = service.getDetectionResult()
+        assertNotSame(firstResult, secondResult)
+        assertEquals(BlenderProbeUtils.normalizeModuleName(project.name), secondResult.moduleName)
+        assertNull(secondResult.manifestPath)
+    }
+
+    fun testVfsDirectoryEventElsewhereDoesNotInvalidateCache() {
+        val baseDir = myFixture.tempDirFixture.getFile(".")!!
+        val service = BlenderAddonDetectionService.getInstance(project)
+
+        WriteAction.run<Exception> {
+            val addonDir = baseDir.createChildDirectory(this, "stable_addon")
+            addonDir.createChildData(this, "blender_manifest.toml")
+        }
+
+        val firstResult = service.getDetectionResult()
+        assertEquals("stable_addon", firstResult.moduleName)
+
+        // Create, rename, and delete an unrelated directory (e.g. __pycache__ or build output)
+        WriteAction.run<Exception> {
+            val otherDir = baseDir.createChildDirectory(this, "unrelated_dir")
+            otherDir.rename(this, "unrelated_dir_renamed")
+            otherDir.delete(this)
+        }
+
+        // Cache must still hold the exact same cached instance
+        val secondResult = service.getDetectionResult()
+        assertSame(firstResult, secondResult)
     }
 }
