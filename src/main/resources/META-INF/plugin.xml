@@ -40,6 +40,8 @@
                 serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings"/>
         <projectService
                 serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService"/>
+        <projectService
+                serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService"/>
         <projectConfigurable
                 parentId="tools"
                 instance="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettingsConfigurable"
@@ -58,6 +60,8 @@
     </extensions>
     <projectListeners>
         <listener class="com.github.unclepomedev.blenderprobeforpycharm.BlenderSaveListener"
+                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+        <listener class="com.github.unclepomedev.blenderprobeforpycharm.BlenderManifestChangeListener"
                   topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     </projectListeners>
 </idea-plugin>
