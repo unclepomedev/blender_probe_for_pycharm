@@ -11,6 +11,7 @@ import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
@@ -76,31 +77,42 @@ abstract class BaseBlenderRunner<T> : AsyncProgramRunner<RunnerSettings>()
         return promise
     }
 
+    internal fun createPreparationTask(
+        environment: ExecutionEnvironment,
+        state: T,
+        promise: AsyncPromise<RunContentDescriptor?>,
+    ): Task.Backgroundable {
+        return object : Task.Backgroundable(environment.project, preparationTaskTitle, true) {
+            override fun run(indicator: ProgressIndicator) {
+                prepareExecutionState(environment.project, state, environment.executor.id)
+            }
+
+            override fun onSuccess() {
+                if (promise.state == Promise.State.REJECTED) return
+                try {
+                    val descriptor = startSession(environment, state)
+                    promise.setResult(descriptor)
+                } catch (e: Exception) {
+                    promise.setError(e)
+                }
+            }
+
+            override fun onThrowable(error: Throwable) {
+                promise.setError(error)
+            }
+
+            override fun onCancel() {
+                promise.setError(ProcessCanceledException())
+            }
+        }
+    }
+
     private fun queuePreparationTask(
         environment: ExecutionEnvironment,
         state: T,
         promise: AsyncPromise<RunContentDescriptor?>,
     ) {
-        object : Task.Backgroundable(environment.project, preparationTaskTitle, true) {
-                override fun run(indicator: ProgressIndicator) {
-                    prepareExecutionState(environment.project, state, environment.executor.id)
-                }
-
-                override fun onSuccess() {
-                    if (promise.state == Promise.State.REJECTED) return
-                    try {
-                        val descriptor = startSession(environment, state)
-                        promise.setResult(descriptor)
-                    } catch (e: Exception) {
-                        promise.setError(e)
-                    }
-                }
-
-                override fun onThrowable(error: Throwable) {
-                    promise.setError(error)
-                }
-            }
-            .queue()
+        createPreparationTask(environment, state, promise).queue()
     }
 
     protected open fun prepareExecutionState(
