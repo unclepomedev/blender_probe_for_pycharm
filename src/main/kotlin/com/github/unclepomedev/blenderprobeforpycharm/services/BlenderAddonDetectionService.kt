@@ -16,6 +16,7 @@ class BlenderAddonDetectionService(project: Project) {
     private val detector = BlenderAddonDetector(project)
     private val reporter = BlenderAddonDetectionReporter(project)
     private var cachedResult: AddonDetectionResult? = null
+    private var generation: Long = 0L
 
     internal sealed class DetectionNotificationState {
         data class Ambiguous(
@@ -31,10 +32,34 @@ class BlenderAddonDetectionService(project: Project) {
     }
 
     /** Returns the cached detection result or computes a new one if not cached. */
-    fun getDetectionResult(): AddonDetectionResult =
-        synchronized(lock) {
-            cachedResult ?: computeAndCacheResult()
+    fun getDetectionResult(): AddonDetectionResult {
+        while (true) {
+            val startGeneration =
+                synchronized(lock) {
+                    cachedResult?.let {
+                        return it
+                    }
+                    generation
+                }
+
+            // Execute read action outside monitor lock to avoid deadlock with write actions
+            val computed =
+                ApplicationManager.getApplication().runReadAction<AddonDetectionResult> {
+                    detector.detect()
+                }
+
+            synchronized(lock) {
+                if (generation == startGeneration) {
+                    reporter.report(computed)
+                    cachedResult = computed
+                    return computed
+                }
+                cachedResult?.let {
+                    return it
+                }
+            }
         }
+    }
 
     /**
      * Invalidates the cached detection result. The last notification state is retained so that
@@ -42,6 +67,7 @@ class BlenderAddonDetectionService(project: Project) {
      */
     fun invalidateCache() {
         synchronized(lock) {
+            generation++
             cachedResult = null
         }
     }
@@ -53,21 +79,15 @@ class BlenderAddonDetectionService(project: Project) {
     fun getAddonSourceRoot(): String? = getDetectionResult().sourceRoot
 
     /** Finds the primary manifest entry file for the addon, or null if none found. */
-    fun findAddonEntryFile(): VirtualFile? = detector.findPrimaryManifest()
+    fun findAddonEntryFile(): VirtualFile? =
+        ApplicationManager.getApplication().runReadAction<VirtualFile?> {
+            detector.findPrimaryManifest()
+        }
 
     internal fun getLastNotificationState(): DetectionNotificationState? =
         synchronized(lock) {
             reporter.getLastNotificationState()
         }
-
-    private fun computeAndCacheResult(): AddonDetectionResult {
-        val result = ApplicationManager.getApplication().runReadAction<AddonDetectionResult> {
-            detector.detect()
-        }
-        reporter.report(result)
-        cachedResult = result
-        return result
-    }
 
     companion object {
         const val MANIFEST_FILE_NAME = BlenderAddonDetector.MANIFEST_FILE_NAME

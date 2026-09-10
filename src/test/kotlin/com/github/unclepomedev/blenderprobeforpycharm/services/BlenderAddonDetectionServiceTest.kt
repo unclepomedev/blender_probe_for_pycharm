@@ -3,6 +3,9 @@ package com.github.unclepomedev.blenderprobeforpycharm.services
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.intellij.openapi.application.WriteAction
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class BlenderAddonDetectionServiceTest : BaseBlenderTest() {
 
@@ -269,5 +272,40 @@ class BlenderAddonDetectionServiceTest : BaseBlenderTest() {
             BlenderProbeUtils.normalizeModuleName(project.name),
             service.getAddonModuleName(),
         )
+    }
+
+    fun testConcurrentCacheMissAndInvalidationDoesNotDeadlock() {
+        val baseDir = myFixture.tempDirFixture.getFile(".")!!
+        val service = BlenderAddonDetectionService.getInstance(project)
+
+        val iterations = 30
+        for (i in 0 until iterations) {
+            service.invalidateCache()
+
+            val executor = Executors.newSingleThreadExecutor()
+            try {
+                // Background thread reads detection result concurrently
+                val detectionFuture =
+                    executor.submit(
+                        Callable {
+                            service.getDetectionResult()
+                        }
+                    )
+
+                // EDT performs VFS write action triggering manifest listener invalidation
+                WriteAction.run<Exception> {
+                    val dir = baseDir.createChildDirectory(this, "concurrent_addon_$i")
+                    val file = dir.createChildData(this, "blender_manifest.toml")
+                    file.delete(this)
+                    dir.delete(this)
+                }
+
+                // Detection on background thread must complete without deadlock
+                val detectionResult = detectionFuture.get(5, TimeUnit.SECONDS)
+                assertNotNull(detectionResult)
+            } finally {
+                executor.shutdownNow()
+            }
+        }
     }
 }
