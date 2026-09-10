@@ -70,7 +70,7 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
                 if (manifestFile != null) {
                     val manifestContent = VfsUtil.loadText(manifestFile)
-                    assertFalse("Placeholder replaced", manifestContent.contains("\${ADDON_NAME}"))
+                    assertFalse("Placeholder replaced", manifestContent.contains($$"${ADDON_NAME}"))
                     assertTrue("Slug injected", manifestContent.contains("id = \"$expectedSlug\""))
                     assertTrue(
                         "GPL License should be specified",

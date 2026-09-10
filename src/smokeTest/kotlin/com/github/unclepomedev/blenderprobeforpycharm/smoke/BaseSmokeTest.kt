@@ -20,6 +20,8 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder
 import com.intellij.execution.runners.ProgramRunner
+import com.intellij.execution.ui.ExecutionConsole
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.Key
 import java.io.OutputStreamWriter
 import java.net.InetSocketAddress
@@ -140,7 +142,7 @@ abstract class BaseSmokeTest : BaseBlenderTest() {
     protected class RunningBlenderProcess(
         private val handler: ProcessHandler,
         val output: StringBuffer,
-        private val console: com.intellij.execution.ui.ExecutionConsole? = null,
+        private val console: ExecutionConsole? = null,
     ) {
         fun await(timeoutSeconds: Long, condition: () -> Boolean): Boolean {
             val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds)
@@ -162,7 +164,7 @@ abstract class BaseSmokeTest : BaseBlenderTest() {
                 }
             } finally {
                 (console as? com.intellij.openapi.Disposable)?.let {
-                    com.intellij.openapi.util.Disposer.dispose(it)
+                    Disposer.dispose(it)
                 }
             }
         }

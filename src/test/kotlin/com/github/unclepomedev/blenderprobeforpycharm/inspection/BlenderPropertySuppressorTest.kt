@@ -6,11 +6,13 @@ import com.jetbrains.python.PythonFileType
 import com.jetbrains.python.psi.PyAnnotation
 import com.jetbrains.python.psi.PyClass
 import com.jetbrains.python.psi.PyFile
+import com.jetbrains.python.psi.PyReferenceExpression
 
 class BlenderPropertySuppressorTest : BaseBlenderTest() {
 
     private val suppressor = BlenderPropertySuppressor()
 
+    @Suppress("UnstableApiUsage") // getName, getNameIdentifier
     fun testBlenderNamingConvention() {
         val psiFile =
             myFixture.configureByText(
@@ -73,7 +75,7 @@ class BlenderPropertySuppressorTest : BaseBlenderTest() {
         val elementInPropA =
             PsiTreeUtil.findChildrenOfType(
                     propA,
-                    com.jetbrains.python.psi.PyReferenceExpression::class.java,
+                    PyReferenceExpression::class.java,
                 )
                 .last()
 
@@ -87,7 +89,7 @@ class BlenderPropertySuppressorTest : BaseBlenderTest() {
         val elementInPropB =
             PsiTreeUtil.findChildrenOfType(
                     propB,
-                    com.jetbrains.python.psi.PyReferenceExpression::class.java,
+                    PyReferenceExpression::class.java,
                 )
                 .last()
 
@@ -101,7 +103,7 @@ class BlenderPropertySuppressorTest : BaseBlenderTest() {
         val elementInPropC =
             PsiTreeUtil.findChildrenOfType(
                     propC,
-                    com.jetbrains.python.psi.PyReferenceExpression::class.java,
+                    PyReferenceExpression::class.java,
                 )
                 .last()
 
