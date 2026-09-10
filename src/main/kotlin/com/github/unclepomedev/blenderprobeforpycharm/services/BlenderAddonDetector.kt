@@ -7,7 +7,6 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
-import java.io.File
 
 /** Responsible for finding and detecting Blender add-on manifests within a project. */
 internal class BlenderAddonDetector(private val project: Project) {
@@ -38,16 +37,10 @@ internal class BlenderAddonDetector(private val project: Project) {
     fun findPrimaryManifest(): VirtualFile? {
         val overridePath = BlenderSettings.getInstance(project).state.manifestPath.trim()
         if (overridePath.isNotEmpty()) {
-            val virtualFile = findVirtualFileByPath(overridePath)
-            if (
-                virtualFile == null ||
-                    !virtualFile.isValid ||
-                    virtualFile.isDirectory ||
-                    virtualFile.name != MANIFEST_FILE_NAME
-            ) {
-                return null
+            return when (val validation = validateOverride(overridePath)) {
+                is OverrideValidation.Valid -> validation.file
+                is OverrideValidation.Invalid -> null
             }
-            return virtualFile
         }
 
         val candidates = findCandidateManifestFiles()
@@ -55,46 +48,55 @@ internal class BlenderAddonDetector(private val project: Project) {
     }
 
     private fun detectOverride(overridePath: String): AddonDetectionResult {
+        return when (val validation = validateOverride(overridePath)) {
+            is OverrideValidation.Valid -> createResultFromManifest(validation.file, emptyList())
+            is OverrideValidation.Invalid ->
+                createInvalidOverrideResult(validation.path, validation.reason)
+        }
+    }
+
+    private sealed class OverrideValidation {
+        data class Valid(val file: VirtualFile) : OverrideValidation()
+
+        data class Invalid(val path: String, val reason: ManifestOverrideFailure) :
+            OverrideValidation()
+    }
+
+    private fun validateOverride(overridePath: String): OverrideValidation {
         val virtualFile = findVirtualFileByPath(overridePath)
         if (virtualFile == null || !virtualFile.isValid || !virtualFile.exists()) {
-            return createInvalidOverrideResult(overridePath)
+            return OverrideValidation.Invalid(overridePath, ManifestOverrideFailure.NOT_FOUND)
         }
         if (virtualFile.isDirectory) {
-            return createInvalidOverrideResult(overridePath)
+            return OverrideValidation.Invalid(overridePath, ManifestOverrideFailure.IS_DIRECTORY)
         }
         if (virtualFile.name != MANIFEST_FILE_NAME) {
-            return createInvalidOverrideResult(overridePath)
+            return OverrideValidation.Invalid(
+                overridePath,
+                ManifestOverrideFailure.NOT_MANIFEST_NAME,
+            )
         }
-
-        return createResultFromManifest(virtualFile, emptyList())
+        return OverrideValidation.Valid(virtualFile)
     }
 
     private fun findVirtualFileByPath(path: String): VirtualFile? {
         val vfm = VirtualFileManager.getInstance()
-        val direct = vfm.findFileByUrl(path)
-        if (direct != null) return direct
-
-        val local = LocalFileSystem.getInstance().findFileByPath(path)
-        if (local != null) return local
-
-        val ioFile = File(path)
-        val fromIo = LocalFileSystem.getInstance().findFileByIoFile(ioFile)
-        if (fromIo != null) return fromIo
-
-        val withFileUrl = vfm.findFileByUrl("file://$path")
-        if (withFileUrl != null) return withFileUrl
-
-        // In test fixtures, temp:/// URL protocol is used, where path starts with "/src/..."
-        return vfm.findFileByUrl("temp://$path") ?: vfm.findFileByUrl("temp:///$path")
+        return vfm.findFileByUrl(path)
+            ?: LocalFileSystem.getInstance().findFileByPath(path)
+            ?: vfm.findFileByUrl("file://$path")
     }
 
-    private fun createInvalidOverrideResult(overridePath: String): AddonDetectionResult {
+    private fun createInvalidOverrideResult(
+        overridePath: String,
+        reason: ManifestOverrideFailure,
+    ): AddonDetectionResult {
         return AddonDetectionResult(
             manifestPath = null,
             moduleName = BlenderProbeUtils.normalizeModuleName(project.name),
             sourceRoot = null,
             rejectedCandidates = emptyList(),
             invalidOverridePath = overridePath,
+            invalidOverrideReason = reason,
         )
     }
 
