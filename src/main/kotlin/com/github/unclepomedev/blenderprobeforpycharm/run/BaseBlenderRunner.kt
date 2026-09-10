@@ -18,38 +18,33 @@ import org.jetbrains.concurrency.AsyncPromise
 import org.jetbrains.concurrency.Promise
 
 /**
- * Base program runner for executing Blender tasks (applications, tests, etc.).
- * Encapsulates the common preparation, path resolution, and execution orchestration.
+ * Base program runner for executing Blender tasks (applications, tests, etc.). Encapsulates the
+ * common preparation, path resolution, and execution orchestration.
  */
 abstract class BaseBlenderRunner<T> : AsyncProgramRunner<RunnerSettings>()
-where T : CommandLineState, T : BlenderExecutionState {
+    where T : CommandLineState, T : BlenderExecutionState {
 
     /**
-     * Checks if the given state is supported by this runner and casts it to [T],
-     * or returns null if not supported.
+     * Checks if the given state is supported by this runner and casts it to [T], or returns null if
+     * not supported.
      */
     protected abstract fun checkAndCastState(state: RunProfileState): T?
 
-    /**
-     * Title displayed in the background task progress while preparing execution.
-     */
+    /** Title displayed in the background task progress while preparing execution. */
     protected abstract val preparationTaskTitle: String
 
-    /**
-     * Hook called synchronously before queuing the background preparation task.
-     */
+    /** Hook called synchronously before queuing the background preparation task. */
     protected open fun preExecute(environment: ExecutionEnvironment, state: T) {}
 
-    /**
-     * Starts the execution session after state preparation.
-     */
+    /** Starts the execution session after state preparation. */
     protected abstract fun startSession(
         environment: ExecutionEnvironment,
         state: T,
     ): RunContentDescriptor
 
     /**
-     * Optional hook for runner-specific preparation after common blender and addon paths are resolved.
+     * Optional hook for runner-specific preparation after common blender and addon paths are
+     * resolved.
      */
     protected open fun postPrepareExecutionState(
         project: Project,
@@ -87,24 +82,25 @@ where T : CommandLineState, T : BlenderExecutionState {
         promise: AsyncPromise<RunContentDescriptor?>,
     ) {
         object : Task.Backgroundable(environment.project, preparationTaskTitle, true) {
-            override fun run(indicator: ProgressIndicator) {
-                prepareExecutionState(environment.project, state, environment.executor.id)
-            }
+                override fun run(indicator: ProgressIndicator) {
+                    prepareExecutionState(environment.project, state, environment.executor.id)
+                }
 
-            override fun onSuccess() {
-                if (promise.state == Promise.State.REJECTED) return
-                try {
-                    val descriptor = startSession(environment, state)
-                    promise.setResult(descriptor)
-                } catch (e: Exception) {
-                    promise.setError(e)
+                override fun onSuccess() {
+                    if (promise.state == Promise.State.REJECTED) return
+                    try {
+                        val descriptor = startSession(environment, state)
+                        promise.setResult(descriptor)
+                    } catch (e: Exception) {
+                        promise.setError(e)
+                    }
+                }
+
+                override fun onThrowable(error: Throwable) {
+                    promise.setError(error)
                 }
             }
-
-            override fun onThrowable(error: Throwable) {
-                promise.setError(error)
-            }
-        }.queue()
+            .queue()
     }
 
     protected open fun prepareExecutionState(
@@ -127,9 +123,7 @@ where T : CommandLineState, T : BlenderExecutionState {
         postPrepareExecutionState(project, state, executorId)
     }
 
-    /**
-     * Standard implementation for starting a run session using [CommandLineState.execute].
-     */
+    /** Standard implementation for starting a run session using [CommandLineState.execute]. */
     protected fun startRunSession(
         state: T,
         environment: ExecutionEnvironment,

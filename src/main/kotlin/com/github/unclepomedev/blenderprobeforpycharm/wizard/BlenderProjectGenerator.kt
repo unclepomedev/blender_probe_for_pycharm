@@ -54,10 +54,18 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
         module: Module,
     ) {
         val rootIoFile = VfsUtil.virtualToIoFile(baseDir)
+        createProjectFiles(project, rootIoFile)
+        VfsUtil.markDirtyAndRefresh(true, true, true, baseDir)
+        schedulePostGenerationSetup(project)
+    }
 
+    private fun createProjectFiles(project: Project, rootIoFile: File) {
         val slug = BlenderProbeUtils.normalizeModuleName(project.name)
         val srcDir = File(rootIoFile, slug).apply { mkdirs() }
         val testsDir = File(rootIoFile, "tests").apply { mkdirs() }
+        val githubDir = File(rootIoFile, ".github").apply { mkdirs() }
+        val workflowsDir = File(githubDir, "workflows").apply { mkdirs() }
+
         val props =
             mapOf(
                 "ADDON_NAME" to project.name,
@@ -65,49 +73,67 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
                 "AUTHOR" to (System.getProperty("user.name") ?: "Developer"),
             )
 
+        createSourceFiles(srcDir, props)
+        createTestFiles(testsDir, props)
+        createRootFiles(rootIoFile, props)
+        createWorkflowFiles(githubDir, workflowsDir, props)
+    }
+
+    private fun createSourceFiles(srcDir: File, props: Map<String, Any>) {
         createFileFromTemplate("BlenderAddon_Manifest.toml", srcDir, "blender_manifest.toml", props)
         createWheelsDir(srcDir)
         createFileFromTemplate("BlenderAddon_Init.py", srcDir, "__init__.py", props)
         createFileFromTemplate("BlenderAddon_Ops.py", srcDir, "operators.py", props)
         createFileFromTemplate("BlenderAddon_Panel.py", srcDir, "panel.py", props)
+    }
+
+    private fun createTestFiles(testsDir: File, props: Map<String, Any>) {
         createFileFromTemplate("BlenderAddon_RunTests.py", testsDir, "run_tests.py", props)
         createFileFromTemplate("BlenderAddon_Test.py", testsDir, "test_sample.py", props)
+    }
+
+    private fun createRootFiles(rootIoFile: File, props: Map<String, Any>) {
         createFileFromTemplate("BlenderAddon_License.txt", rootIoFile, "LICENSE", props)
         createFileFromTemplate("BlenderAddon_Pyproject.toml", rootIoFile, "pyproject.toml", props)
         createFileFromTemplate("BlenderAddon_Gitignore.gitignore", rootIoFile, ".gitignore", props)
+    }
 
-        val githubDir = File(rootIoFile, ".github").apply { mkdirs() }
-        val workflowsDir = File(githubDir, "workflows").apply { mkdirs() }
-
+    private fun createWorkflowFiles(githubDir: File, workflowsDir: File, props: Map<String, Any>) {
         createFileFromTemplate("BlenderAddon_Ci.yml", workflowsDir, "ci.yml", props)
         createFileFromTemplate("BlenderAddon_Dependabot.yml", githubDir, "dependabot.yml", props)
+    }
 
-        VfsUtil.markDirtyAndRefresh(true, true, true, baseDir)
+    private fun schedulePostGenerationSetup(project: Project) {
         ProgressManager.getInstance()
             .run(
                 object : Task.Backgroundable(project, "Configuring Blender environment", false) {
                     override fun run(indicator: ProgressIndicator) {
-                        DumbService.getInstance(project).waitForSmartMode()
-                        ApplicationManager.getApplication().invokeLater {
-                            createDefaultRunConfiguration(project)
-                        }
-
-                        indicator.text = "Detecting Blender executable..."
-                        val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
-
-                        if (blenderPath != null) {
-                            ApplicationManager.getApplication().invokeLater {
-                                try {
-                                    BlenderStubService.getInstance(project)
-                                        .generateStubs(blenderPath)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            }
-                        }
+                        configureEnvironment(project, indicator)
                     }
                 }
             )
+    }
+
+    private fun configureEnvironment(project: Project, indicator: ProgressIndicator) {
+        DumbService.getInstance(project).waitForSmartMode()
+        ApplicationManager.getApplication().invokeLater {
+            createDefaultRunConfiguration(project)
+        }
+
+        indicator.text = "Detecting Blender executable..."
+        val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath() ?: return
+
+        scheduleStubGeneration(project, blenderPath)
+    }
+
+    private fun scheduleStubGeneration(project: Project, blenderPath: String) {
+        ApplicationManager.getApplication().invokeLater {
+            try {
+                BlenderStubService.getInstance(project).generateStubs(blenderPath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun createDefaultRunConfiguration(project: Project) {
