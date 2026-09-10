@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.settings
 
 import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 
 class BlenderSettingsTest : BaseBlenderTest() {
 
@@ -169,6 +170,53 @@ class BlenderSettingsTest : BaseBlenderTest() {
         configurable.apply()
         assertEquals("Blender Test", settings.state.currentEntryName)
         assertEquals("/dummy/path", settings.resolveBlenderPath())
+
+        configurable.disposeUIResources()
+    }
+
+    fun testManifestPathDefaultEmptyAndPersists() {
+        val settings = BlenderSettings.getInstance(project)
+        settings.loadState(BlenderSettings.State())
+        assertEquals("", settings.state.manifestPath)
+
+        settings.state.manifestPath = "/path/to/manifest/blender_manifest.toml"
+        assertEquals("/path/to/manifest/blender_manifest.toml", settings.state.manifestPath)
+    }
+
+    fun testConfigurableManifestPathModifiedAndApply() {
+        val settings = BlenderSettings.getInstance(project)
+        settings.loadState(BlenderSettings.State())
+        val detectionService = BlenderAddonDetectionService.getInstance(project)
+
+        val configurable = BlenderSettingsConfigurable(project)
+        configurable.createComponent()
+        configurable.reset()
+
+        assertFalse(configurable.isModified)
+
+        // Modify manifest path via UI field and verify isModified
+        configurable.manifestPathField.text = "/custom/blender_manifest.toml"
+        assertTrue(configurable.isModified)
+
+        // Reset restores previous setting
+        configurable.reset()
+        assertFalse(configurable.isModified)
+        assertEquals("", configurable.manifestPathField.text)
+
+        // Cache a result in detectionService
+        val initialResult = detectionService.getDetectionResult()
+
+        // Apply new manifest path
+        configurable.manifestPathField.text = "/custom/blender_manifest.toml"
+        assertTrue(configurable.isModified)
+        configurable.apply()
+
+        assertFalse(configurable.isModified)
+        assertEquals("/custom/blender_manifest.toml", settings.state.manifestPath)
+
+        // Detection service cache must be invalidated
+        val newResult = detectionService.getDetectionResult()
+        assertNotSame(initialResult, newResult)
 
         configurable.disposeUIResources()
     }

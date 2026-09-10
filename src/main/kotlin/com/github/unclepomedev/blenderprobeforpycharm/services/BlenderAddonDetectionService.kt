@@ -29,6 +29,8 @@ class BlenderAddonDetectionService(project: Project) {
             val moduleName: String,
             val sourceRoot: String,
         ) : DetectionNotificationState()
+
+        data class InvalidOverride(val configuredPath: String) : DetectionNotificationState()
     }
 
     /** Returns the cached detection result or computes a new one if not cached. */

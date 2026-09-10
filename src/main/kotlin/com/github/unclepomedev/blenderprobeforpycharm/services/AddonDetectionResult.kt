@@ -18,6 +18,7 @@ data class AddonDetectionResult(
     val moduleName: String,
     val sourceRoot: String?,
     val rejectedCandidates: List<VirtualFile> = emptyList(),
+    val invalidOverridePath: String? = null,
 ) {
     val isAmbiguous: Boolean
         get() = rejectedCandidates.isNotEmpty()
