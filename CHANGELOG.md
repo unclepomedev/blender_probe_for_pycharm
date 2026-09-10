@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-10
+
 ### Added
 - A `Blender manifest path` setting (Settings > Tools > Blender Probe). Leave it empty to keep the existing auto-detection, or point it at a specific `blender_manifest.toml` when your project contains more than one.
 
