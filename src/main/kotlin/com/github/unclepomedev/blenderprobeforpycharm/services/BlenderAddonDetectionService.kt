@@ -89,6 +89,11 @@ class BlenderAddonDetectionService(project: Project) {
             reporter.getLastNotificationState()
         }
 
+    internal fun getCachedManifestPath(): String? =
+        synchronized(lock) {
+            cachedResult?.manifestPath
+        }
+
     companion object {
         const val MANIFEST_FILE_NAME = BlenderAddonDetector.MANIFEST_FILE_NAME
 
