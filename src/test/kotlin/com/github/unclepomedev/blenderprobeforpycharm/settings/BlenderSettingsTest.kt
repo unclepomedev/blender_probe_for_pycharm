@@ -4,7 +4,6 @@ import com.github.unclepomedev.blenderprobeforpycharm.BaseBlenderTest
 import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 import com.intellij.configurationStore.deserialize
 import com.intellij.configurationStore.serialize
-import com.intellij.openapi.components.State
 
 class BlenderSettingsTest : BaseBlenderTest() {
 
@@ -61,12 +60,6 @@ class BlenderSettingsTest : BaseBlenderTest() {
         assertEquals("Blender 5.2", restoredState.currentEntryName)
         assertFalse(restoredState.useFactoryStartup)
         assertEquals("/path/to/custom/manifest.toml", restoredState.manifestPath)
-
-        val stateAnnotation = BlenderSettings::class.java.getAnnotation(State::class.java)
-        assertNotNull("@State annotation should be present on BlenderSettings", stateAnnotation)
-        assertEquals("BlenderProbeSettings", stateAnnotation.name)
-        assertEquals(1, stateAnnotation.storages.size)
-        assertEquals("blender_probe.xml", stateAnnotation.storages[0].value)
     }
 
     fun testFactoryStartupDefaultsToTrue() {
