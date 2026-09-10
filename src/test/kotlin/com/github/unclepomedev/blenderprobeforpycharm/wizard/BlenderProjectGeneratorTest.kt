@@ -12,7 +12,6 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.testFramework.PlatformTestUtil
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
@@ -32,16 +31,11 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
 
         action()
 
-        val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
-        while (taskLatch.count > 0 && System.currentTimeMillis() < deadline) {
-            PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
-            Thread.sleep(10)
-        }
-        assertTrue(
+        PlatformTestUtil.waitWithEventsDispatching(
             "Timed out waiting for task '$taskTitle' to finish",
-            taskLatch.await(0, TimeUnit.MILLISECONDS),
+            { taskLatch.count == 0L },
+            10,
         )
-        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
     }
 
     fun testGenerateProjectStructure() {
@@ -56,9 +50,7 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                 ?: error("VirtualFile not found for $basePath")
         val module = myFixture.module
 
-        waitForTaskCompletion("Configuring Blender environment") {
-            generator.generateProject(project, baseDir, Any(), module)
-        }
+        generator.generateProject(project, baseDir, Any(), module)
         baseDir.refresh(false, true)
 
         assertNotNull("License should be created", baseDir.findChild("LICENSE"))
@@ -224,20 +216,13 @@ class BlenderProjectGeneratorTest : BaseBlenderTest() {
                 ?: error("VirtualFile not found for $basePath")
         val module = myFixture.module
 
-        waitForTaskCompletion("Configuring Blender environment") {
-            generator.generateProject(project, baseDir, Any(), module)
-        }
+        generator.generateProject(project, baseDir, Any(), module)
 
-        val deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
-        while (notificationLatch.count > 0 && System.currentTimeMillis() < deadline) {
-            PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
-            Thread.sleep(10)
-        }
-        assertTrue(
+        PlatformTestUtil.waitWithEventsDispatching(
             "Timed out waiting for notification",
-            notificationLatch.await(0, TimeUnit.MILLISECONDS),
+            { notificationLatch.count == 0L },
+            10,
         )
-        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
 
         assertEquals("Exactly one notification should be published", 1, notifications.size)
         val notification = notifications[0]
