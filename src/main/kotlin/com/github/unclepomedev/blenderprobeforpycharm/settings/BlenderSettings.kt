@@ -42,12 +42,15 @@ class BlenderSettings(private val project: Project) :
      * @property useFactoryStartup Whether to launch Blender with the `--factory-startup` flag.
      *   Defaults to true to mirror the standard, supported behavior, skipping the user's
      *   `startup.blend` file across application runs, test runs, and stub generation.
+     * @property manifestPath Path to the override manifest file. If empty, add-on manifest is
+     *   auto-detected.
      */
     data class State(
         var blenderPath: String = "",
         var entries: MutableList<BlenderEntry> = mutableListOf(),
         var currentEntryName: String = "",
         var useFactoryStartup: Boolean = true,
+        var manifestPath: String = "",
     )
 
     private var myState = State()

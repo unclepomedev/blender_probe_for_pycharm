@@ -1,8 +1,11 @@
 package com.github.unclepomedev.blenderprobeforpycharm.settings
 
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
+import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.dsl.listCellRenderer.textListCellRenderer
@@ -16,7 +19,7 @@ import javax.swing.JPanel
  * Provides configuration UI for Blender Probe settings. Allows managing a list of Blender
  * executables like Python interpreters in PyCharm, and easily switching the active binary.
  */
-class BlenderSettingsConfigurable(project: Project) : Configurable {
+class BlenderSettingsConfigurable(private val project: Project) : Configurable {
 
     companion object {
         const val AUTO_DETECT_OPTION = "<Auto-detect via blup>"
@@ -30,6 +33,15 @@ class BlenderSettingsConfigurable(project: Project) : Configurable {
             "Launch Blender with --factory-startup",
             true,
         )
+    internal val manifestPathField =
+        TextFieldWithBrowseButton().apply {
+            val descriptor =
+                FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
+                    .withTitle("Select Blender Manifest")
+                    .withDescription("Select the blender_manifest.toml file for this add-on")
+            addBrowseFolderListener(project, descriptor)
+            (textField as? com.intellij.ui.components.JBTextField)?.emptyText?.text = "Auto-detect"
+        }
 
     private val entriesTablePanel =
         BlenderEntriesTablePanel(project) {
@@ -69,6 +81,7 @@ class BlenderSettingsConfigurable(project: Project) : Configurable {
         return FormBuilder.createFormBuilder()
             .addLabeledComponent("Active Blender executable:", currentExecutableComboBox)
             .addComponent(useFactoryStartupCheckBox)
+            .addLabeledComponent("Manifest file override:", manifestPathField)
             .panel
     }
 
@@ -111,10 +124,15 @@ class BlenderSettingsConfigurable(project: Project) : Configurable {
 
         if (useFactoryStartupCheckBox.isSelected != settings.state.useFactoryStartup) return true
 
+        if (manifestPathField.text.trim() != settings.state.manifestPath) return true
+
         return false
     }
 
     override fun apply() {
+        val oldManifestPath = settings.state.manifestPath
+        val newManifestPath = manifestPathField.text.trim()
+
         settings.state.entries = entriesTablePanel.getEntries().toMutableList()
 
         val selectedItem = currentExecutableComboBox.selectedItem as? String
@@ -126,11 +144,17 @@ class BlenderSettingsConfigurable(project: Project) : Configurable {
         }
 
         settings.state.useFactoryStartup = useFactoryStartupCheckBox.isSelected
+        settings.state.manifestPath = newManifestPath
+
+        if (oldManifestPath != newManifestPath) {
+            BlenderAddonDetectionService.getInstance(project).invalidateCache()
+        }
     }
 
     override fun reset() {
         entriesTablePanel.setEntries(settings.state.entries)
         useFactoryStartupCheckBox.isSelected = settings.state.useFactoryStartup
+        manifestPathField.text = settings.state.manifestPath
 
         val targetSelection = resolveTargetSelection()
         updateComboBox(selectName = targetSelection)
