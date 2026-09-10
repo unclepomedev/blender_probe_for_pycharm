@@ -4,6 +4,7 @@ import com.github.unclepomedev.blenderprobeforpycharm.BlenderProbeUtils
 import com.github.unclepomedev.blenderprobeforpycharm.icons.BlenderProbeIcons
 import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestConfigurationType
 import com.github.unclepomedev.blenderprobeforpycharm.run.test.BlenderTestRunConfiguration
+import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubNotifier
 import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.RunManager
@@ -12,6 +13,7 @@ import com.intellij.facet.ui.ValidationResult
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.ide.util.projectWizard.SettingsStep
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
@@ -114,24 +116,30 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
             )
     }
 
-    private fun configureEnvironment(project: Project, indicator: ProgressIndicator) {
+    internal fun configureEnvironment(project: Project, indicator: ProgressIndicator) {
         DumbService.getInstance(project).waitForSmartMode()
         ApplicationManager.getApplication().invokeLater {
             createDefaultRunConfiguration(project)
         }
 
         indicator.text = "Detecting Blender executable..."
-        val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath() ?: return
+        val blenderPath = BlenderSettings.getInstance(project).resolveBlenderPath()
+        if (blenderPath == null) {
+            LOG.info("Blender executable not found, skipping stub generation.")
+            return
+        }
 
         scheduleStubGeneration(project, blenderPath)
     }
 
-    private fun scheduleStubGeneration(project: Project, blenderPath: String) {
+    internal fun scheduleStubGeneration(project: Project, blenderPath: String) {
         ApplicationManager.getApplication().invokeLater {
             try {
                 BlenderStubService.getInstance(project).generateStubs(blenderPath)
             } catch (e: Exception) {
-                e.printStackTrace()
+                val reason = e.message ?: e.javaClass.simpleName
+                LOG.warn("Failed to generate Blender stubs: $reason", e)
+                BlenderStubNotifier(project).notifyFailed(reason)
             }
         }
     }
@@ -197,6 +205,10 @@ class BlenderProjectGenerator : DirectoryProjectGenerator<Any> {
     private fun createWheelsDir(srcDir: File) {
         val wheelsDir = File(srcDir, "wheels").apply { mkdirs() }
         File(wheelsDir, "README.md").writeText(WHEELS_README)
+    }
+
+    companion object {
+        private val LOG = Logger.getInstance(BlenderProjectGenerator::class.java)
     }
 }
 

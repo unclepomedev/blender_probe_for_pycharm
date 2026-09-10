@@ -24,7 +24,7 @@ internal class BlenderAddonDetectionReporter(private val project: Project) {
     private fun logDetection(result: AddonDetectionResult) {
         if (result.invalidOverridePath != null) {
             LOG.warn(
-                "Configured manifest path override is missing or invalid: ${result.invalidOverridePath}"
+                "Configured manifest path override is missing or invalid (${result.invalidOverrideReason}): ${result.invalidOverridePath}"
             )
             return
         }
@@ -55,14 +55,24 @@ internal class BlenderAddonDetectionReporter(private val project: Project) {
 
     private fun notifyInvalidOverride(result: AddonDetectionResult) {
         val configuredPath = result.invalidOverridePath ?: return
-        val currentState = DetectionNotificationState.InvalidOverride(configuredPath)
+        val reason = result.invalidOverrideReason
+        val currentState = DetectionNotificationState.InvalidOverride(configuredPath, reason)
         if (lastNotificationState == currentState) return
 
         lastNotificationState = currentState
-        val message =
-            "The configured manifest path '$configuredPath' is missing or is not a valid blender_manifest.toml file. " +
-                "Auto-detection was not performed."
-        showNotification("Invalid Manifest Override", message, NotificationType.WARNING)
+        val reasonDescription =
+            when (reason) {
+                ManifestOverrideFailure.NOT_FOUND ->
+                    "The configured manifest path '$configuredPath' does not exist."
+                ManifestOverrideFailure.IS_DIRECTORY ->
+                    "The configured manifest path '$configuredPath' is a directory, not a file."
+                ManifestOverrideFailure.NOT_MANIFEST_NAME ->
+                    "The configured manifest file '$configuredPath' is not named '${BlenderAddonDetector.MANIFEST_FILE_NAME}'."
+                null ->
+                    "The configured manifest path '$configuredPath' is missing or is not a valid ${BlenderAddonDetector.MANIFEST_FILE_NAME} file."
+            }
+        val message = "$reasonDescription Auto-detection was not performed."
+        showNotification("Invalid Manifest Override", message)
     }
 
     private fun notifyAmbiguous(result: AddonDetectionResult) {
@@ -76,7 +86,7 @@ internal class BlenderAddonDetectionReporter(private val project: Project) {
 
         lastNotificationState = currentState
         val message = buildAmbiguousMessage(result)
-        showNotification("Ambiguous Add-on Detection", message, NotificationType.WARNING)
+        showNotification("Ambiguous Add-on Detection", message)
     }
 
     private fun notifyNoManifest(result: AddonDetectionResult) {
@@ -93,7 +103,7 @@ internal class BlenderAddonDetectionReporter(private val project: Project) {
             "No blender_manifest.toml found in project. " +
                 "Add-on module name and root were derived from the project instead: " +
                 "module name '${result.moduleName}', root '$fallbackRoot'."
-        showNotification("No Add-on Manifest Found", message, NotificationType.WARNING)
+        showNotification("No Add-on Manifest Found", message)
     }
 
     private fun buildAmbiguousMessage(result: AddonDetectionResult): String = buildString {
@@ -106,10 +116,10 @@ internal class BlenderAddonDetectionReporter(private val project: Project) {
         )
     }
 
-    private fun showNotification(title: String, content: String, type: NotificationType) {
+    private fun showNotification(title: String, content: String) {
         NotificationGroupManager.getInstance()
             .getNotificationGroup(NOTIFICATION_GROUP_ID)
-            ?.createNotification(title, content, type)
+            ?.createNotification(title, content, NotificationType.WARNING)
             ?.notify(project)
     }
 

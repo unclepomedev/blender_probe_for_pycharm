@@ -427,8 +427,8 @@ class BlenderAddonDetectionServiceTest : BaseBlenderTest() {
         assertTrue(defaultResult.isAmbiguous)
 
         val targetManifest = manifest2!!
-        // Set override to manifest2
-        settings.state.manifestPath = targetManifest.path
+        // Set override to manifest2 (using URL in test fixture since temp:/// VFS is used)
+        settings.state.manifestPath = targetManifest.url
         service.invalidateCache()
         val overrideResult = service.getDetectionResult()
         assertEquals("addon_beta", overrideResult.moduleName)
@@ -483,11 +483,11 @@ class BlenderAddonDetectionServiceTest : BaseBlenderTest() {
 
         val state = service.getLastNotificationState()
         assertTrue(state is BlenderAddonDetectionService.DetectionNotificationState.InvalidOverride)
-        assertEquals(
-            nonExistentPath,
-            (state as BlenderAddonDetectionService.DetectionNotificationState.InvalidOverride)
-                .configuredPath,
-        )
+        val invalidState =
+            state as BlenderAddonDetectionService.DetectionNotificationState.InvalidOverride
+        assertEquals(nonExistentPath, invalidState.configuredPath)
+        assertEquals(ManifestOverrideFailure.NOT_FOUND, invalidState.reason)
+        assertEquals(ManifestOverrideFailure.NOT_FOUND, result.invalidOverrideReason)
 
         assertNull(service.findAddonEntryFile())
     }
@@ -505,15 +505,54 @@ class BlenderAddonDetectionServiceTest : BaseBlenderTest() {
         }
 
         val targetNotManifest = notManifestFile!!
-        settings.state.manifestPath = targetNotManifest.path
+        settings.state.manifestPath = targetNotManifest.url
         service.invalidateCache()
 
         val result = service.getDetectionResult()
         assertNull(result.manifestPath)
-        assertEquals(targetNotManifest.path, result.invalidOverridePath)
+        assertEquals(targetNotManifest.url, result.invalidOverridePath)
+        assertEquals(ManifestOverrideFailure.NOT_MANIFEST_NAME, result.invalidOverrideReason)
         assertNotSame("addon_dir", result.moduleName)
 
         val state = service.getLastNotificationState()
         assertTrue(state is BlenderAddonDetectionService.DetectionNotificationState.InvalidOverride)
+        val invalidState =
+            state as BlenderAddonDetectionService.DetectionNotificationState.InvalidOverride
+        assertEquals(targetNotManifest.url, invalidState.configuredPath)
+        assertEquals(ManifestOverrideFailure.NOT_MANIFEST_NAME, invalidState.reason)
+
+        assertNull(service.findAddonEntryFile())
+    }
+
+    fun testManifestOverrideDirectoryReportsClearly() {
+        val baseDir = myFixture.tempDirFixture.getFile(".")!!
+        val service = BlenderAddonDetectionService.getInstance(project)
+        val settings = BlenderSettings.getInstance(project)
+
+        var dirTarget: VirtualFile? = null
+        WriteAction.run<Exception> {
+            val dir = baseDir.createChildDirectory(this, "some_addon_dir")
+            dir.createChildData(this, "blender_manifest.toml")
+            dirTarget = dir
+        }
+
+        val targetDir = dirTarget!!
+        settings.state.manifestPath = targetDir.url
+        service.invalidateCache()
+
+        val result = service.getDetectionResult()
+        assertNull(result.manifestPath)
+        assertEquals(targetDir.url, result.invalidOverridePath)
+        assertEquals(ManifestOverrideFailure.IS_DIRECTORY, result.invalidOverrideReason)
+        assertNotSame("some_addon_dir", result.moduleName)
+
+        val state = service.getLastNotificationState()
+        assertTrue(state is BlenderAddonDetectionService.DetectionNotificationState.InvalidOverride)
+        val invalidState =
+            state as BlenderAddonDetectionService.DetectionNotificationState.InvalidOverride
+        assertEquals(targetDir.url, invalidState.configuredPath)
+        assertEquals(ManifestOverrideFailure.IS_DIRECTORY, invalidState.reason)
+
+        assertNull(service.findAddonEntryFile())
     }
 }

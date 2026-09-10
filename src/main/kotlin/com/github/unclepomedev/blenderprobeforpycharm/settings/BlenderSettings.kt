@@ -24,12 +24,7 @@ data class BlenderEntry(
  * Manages project-level settings for Blender Probe. Stores configuration such as the path to the
  * Blender executable.
  */
-@Service(Service.Level.PROJECT)
-@State(
-    name = "BlenderProbeSettings",
-    storages = [Storage("blender_probe.xml")],
-)
-class BlenderSettings(private val project: Project) :
+open class BlenderSettings(private val project: Project) :
     PersistentStateComponent<BlenderSettings.State> {
 
     /**
@@ -110,7 +105,7 @@ class BlenderSettings(private val project: Project) :
      *
      * @return The resolved Blender path, or null if not found.
      */
-    fun resolveBlenderPath(): String? {
+    open fun resolveBlenderPath(): String? {
         val selected = getSelectedEntry()
         if (selected != null && selected.path.isNotBlank()) {
             return selected.path
