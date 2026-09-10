@@ -109,8 +109,8 @@ class BlenderEntriesTablePanel(
 
     fun setEntries(entries: List<BlenderEntry>) {
         tableModel.rowCount = 0
-        for (entry in entries) {
-            tableModel.addRow(arrayOf(entry.name, entry.path))
+        for ((name, path) in entries) {
+            tableModel.addRow(arrayOf(name, path))
         }
     }
 

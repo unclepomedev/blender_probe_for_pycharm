@@ -1,22 +1,15 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run.app
 
-import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
-import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
+import com.github.unclepomedev.blenderprobeforpycharm.run.BaseBlenderRunner
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.RunProfile
 import com.intellij.execution.configurations.RunProfileState
-import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.executors.DefaultDebugExecutor
 import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.execution.process.ProcessHandler
-import com.intellij.execution.runners.AsyncProgramRunner
 import com.intellij.execution.runners.ExecutionEnvironment
-import com.intellij.execution.runners.RunContentBuilder
 import com.intellij.execution.ui.RunContentDescriptor
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebugProcessStarter
@@ -26,16 +19,16 @@ import com.intellij.xdebugger.XDebuggerManager
 import com.jetbrains.python.PythonHelper
 import com.jetbrains.python.debugger.PyDebugProcess
 import java.net.ServerSocket
-import org.jetbrains.concurrency.AsyncPromise
-import org.jetbrains.concurrency.Promise
 
 /**
  * Program runner for executing Blender. Supports both Run and Debug modes. In Debug mode, it
  * attaches the Python debugger.
  */
-class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
+class BlenderRunner : BaseBlenderRunner<BlenderRunningState>() {
 
     override fun getRunnerId(): String = "BlenderRunner"
+
+    override val preparationTaskTitle: String = "Preparing Blender execution..."
 
     private val log = Logger.getInstance(BlenderRunner::class.java)
 
@@ -51,89 +44,28 @@ class BlenderRunner : AsyncProgramRunner<RunnerSettings>() {
             executorId == DefaultDebugExecutor.EXECUTOR_ID) && profile is BlenderRunConfiguration
     }
 
-    /**
-     * Executes the run profile asynchronously.
-     *
-     * @param environment The execution environment.
-     * @param state The run profile state.
-     * @return A promise that resolves to the run content descriptor.
-     */
-    override fun execute(
-        environment: ExecutionEnvironment,
-        state: RunProfileState,
-    ): Promise<RunContentDescriptor?> {
-        val promise = AsyncPromise<RunContentDescriptor?>()
+    override fun checkAndCastState(state: RunProfileState): BlenderRunningState? =
+        state as? BlenderRunningState
 
-        if (state !is BlenderRunningState) {
-            promise.setResult(null)
-            return promise
-        }
-
-        queuePreparationTask(environment, state, promise)
-
-        return promise
-    }
-
-    private fun queuePreparationTask(
-        environment: ExecutionEnvironment,
-        state: BlenderRunningState,
-        promise: AsyncPromise<RunContentDescriptor?>,
-    ) {
-        object : Task.Backgroundable(environment.project, "Preparing Blender execution...", true) {
-                override fun run(indicator: ProgressIndicator) {
-                    prepareExecutionState(environment.project, state, environment.executor.id)
-                }
-
-                override fun onSuccess() {
-                    if (promise.state == Promise.State.REJECTED) return
-                    try {
-                        val descriptor =
-                            if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
-                                startDebugSession(state, environment)
-                            } else {
-                                startRunSession(state, environment)
-                            }
-                        promise.setResult(descriptor)
-                    } catch (e: Exception) {
-                        promise.setError(e)
-                    }
-                }
-
-                override fun onThrowable(error: Throwable) {
-                    promise.setError(error)
-                }
-            }
-            .queue()
-    }
-
-    private fun prepareExecutionState(
+    override fun postPrepareExecutionState(
         project: Project,
         state: BlenderRunningState,
         executorId: String,
     ) {
-        val path =
-            BlenderSettings.getInstance(project).resolveBlenderPath()
-                ?: throw ExecutionException("Blender executable not found. Check settings.")
-
-        state.cachedBlenderPath = path
-
-        ApplicationManager.getApplication().runReadAction {
-            val detectionService = BlenderAddonDetectionService.getInstance(project)
-            state.cachedAddonName = detectionService.getAddonModuleName()
-            state.cachedSourceRoot = detectionService.getAddonSourceRoot() ?: project.basePath
-        }
         if (executorId == DefaultDebugExecutor.EXECUTOR_ID) {
             state.pydevdPath = PythonHelper.DEBUGGER.pythonPathEntry
         }
     }
 
-    private fun startRunSession(
-        state: BlenderRunningState,
+    override fun startSession(
         environment: ExecutionEnvironment,
+        state: BlenderRunningState,
     ): RunContentDescriptor {
-        val executionResult = state.execute(environment.executor, this)
-        return RunContentBuilder(executionResult, environment)
-            .showRunContent(environment.contentToReuse)
+        return if (environment.executor.id == DefaultDebugExecutor.EXECUTOR_ID) {
+            startDebugSession(state, environment)
+        } else {
+            startRunSession(state, environment)
+        }
     }
 
     private fun startDebugSession(

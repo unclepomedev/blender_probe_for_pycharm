@@ -1,6 +1,7 @@
 package com.github.unclepomedev.blenderprobeforpycharm.run.test
 
 import com.github.unclepomedev.blenderprobeforpycharm.ScriptResourceUtils
+import com.github.unclepomedev.blenderprobeforpycharm.run.BlenderExecutionState
 import com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService
 import com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings
 import com.intellij.execution.DefaultExecutionResult
@@ -28,10 +29,10 @@ import java.nio.charset.StandardCharsets
 class BlenderTestRunningState(
     environment: ExecutionEnvironment,
     private val configuration: BlenderTestRunConfiguration,
-) : CommandLineState(environment) {
-    var cachedBlenderPath: String? = null
-    var cachedAddonName: String? = null
-    var cachedSourceRoot: String? = null
+) : CommandLineState(environment), BlenderExecutionState {
+    override var cachedBlenderPath: String? = null
+    override var cachedAddonName: String? = null
+    override var cachedSourceRoot: String? = null
 
     companion object {
         internal fun buildParameters(
