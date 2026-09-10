@@ -35,4 +35,4 @@ If you don't use `blup`, or if you want to quickly switch between multiple Blend
 
 By default, Blender Probe finds your add-on by searching the project for a `blender_manifest.toml`. Directories such as virtual environments, build output and `tests` are skipped. When more than one manifest remains, the shallowest path is chosen, and the plugin tells you which one it picked.
 
-If that isn't the one you want — or if a dependency in your project ships its own manifest — set **Blender manifest path** (**Settings/Preferences** > **Tools** > **Blender Probe**) to the manifest of your add-on. Leave it empty to keep the automatic search.
+If that isn't the one you want — or if a dependency in your project ships its own manifest — set **Manifest file override** (**Settings/Preferences** > **Tools** > **Blender Probe**) to the manifest of your add-on. Leave it empty to keep the automatic search.
