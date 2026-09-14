@@ -37,10 +37,6 @@
         <notificationGroup id="Blender Probe Notification Group"
                            displayType="BALLOON"/>
         <projectService
-                serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.settings.BlenderSettings"/>
-        <projectService
-                serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.services.BlenderStubService"/>
-        <projectService
                 serviceImplementation="com.github.unclepomedev.blenderprobeforpycharm.services.BlenderAddonDetectionService"/>
         <projectConfigurable
                 parentId="tools"
