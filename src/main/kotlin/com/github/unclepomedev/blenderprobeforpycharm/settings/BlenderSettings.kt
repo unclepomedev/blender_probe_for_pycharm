@@ -24,6 +24,7 @@ data class BlenderEntry(
  * Manages project-level settings for Blender Probe. Stores configuration such as the path to the
  * Blender executable.
  */
+@Service(Service.Level.PROJECT)
 @State(
     name = "BlenderProbeSettings",
     storages = [Storage("blender_probe.xml")],

@@ -1,5 +1,6 @@
 package com.github.unclepomedev.blenderprobeforpycharm.services
 
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
@@ -10,6 +11,7 @@ import java.io.File
  * Service responsible for generating Python stubs for the Blender API. It runs a Blender process in
  * the background to extract API information and generate stub files.
  */
+@Service(Service.Level.PROJECT)
 class BlenderStubService(private val project: Project) {
 
     private val notifier = BlenderStubNotifier(project)
