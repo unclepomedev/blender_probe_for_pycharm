@@ -26,8 +26,7 @@
     {
       "description": "Python (uv)",
       "matchManagers": [
-        "pep621",
-        "uv"
+        "pep621"
       ],
       "groupName": "python dependencies",
       "automerge": false
